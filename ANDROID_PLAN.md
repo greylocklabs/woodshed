@@ -358,9 +358,10 @@ with timer and notification, keep-awake, auto-advance, interruption-safe state.
 Emits into the same event log. *Now you can compare planned sessions against
 card sessions on your own logged history.*
 
-**M3 — Audio.** Sample-accurate metronome on a streaming `AudioTrack`, drone at
-arbitrary pitch, tempo control per exercise. Measure latency before considering
-Oboe. *Session mode stops needing a second device on the stand.*
+**M3 — Audio.** Drone at arbitrary pitch, tempo control per exercise. The
+sample-accurate metronome on a streaming `AudioTrack` already shipped with the
+card screens. Measure latency before considering Oboe. *Session mode stops
+needing a second device on the stand.*
 
 **M4 — Vocabulary deck.** Lick capture — title, notes, optional photo of
 manuscript, optional audio memo — plus `PER_KEY` cards over the circle of

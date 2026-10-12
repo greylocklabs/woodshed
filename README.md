@@ -4,9 +4,11 @@ Notes, data, and a build plan for **Woodshed**, an Android practice app for
 horn players. Carried out of an abandoned attempt to build jazz practice tools
 into [larakelley.com](https://github.com/lararosekelley/larakelley.com).
 
-The app is at milestone M1 of `ANDROID_PLAN.md`: browse 258 tunes with keys
-written for your transposition, pick tunes to learn, and practice them as cards
-scheduled by spaced repetition. Every graded rep is logged.
+The app is at milestone M1 of `ANDROID_PLAN.md`: search and filter 258 tunes
+with keys written for your transposition, pick tunes to learn, and practice them
+as cards scheduled by spaced repetition, with a metronome on the stand. A dice
+tab rolls a random card within constraints. Each tune can carry a comfort rating
+and a checklist of keys you know it in. Every graded rep is logged.
 
 ## What is here
 

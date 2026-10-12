@@ -4,11 +4,14 @@ import androidx.room.withTransaction
 import com.larakelley.woodshed.data.db.ExerciseEntity
 import com.larakelley.woodshed.data.db.ReviewEventEntity
 import com.larakelley.woodshed.data.db.StandardEntity
+import com.larakelley.woodshed.data.db.TuneKnowledgeEntity
 import com.larakelley.woodshed.data.db.TuneStateEntity
 import com.larakelley.woodshed.data.db.WoodshedDatabase
 import com.larakelley.woodshed.domain.CardState
+import com.larakelley.woodshed.domain.Comfort
 import com.larakelley.woodshed.domain.Grade
 import com.larakelley.woodshed.domain.Key
+import com.larakelley.woodshed.domain.KeyMask
 import com.larakelley.woodshed.domain.KeyPolicy
 import com.larakelley.woodshed.domain.Lifecycle
 import com.larakelley.woodshed.domain.Scheduler
@@ -49,9 +52,20 @@ class PracticeService(
     if (states.get(standardId) == null) states.upsert(TuneStateEntity(standardId, Lifecycle.WISHLIST, wishlistedAt = now()))
   }
 
-  /** Only a tune that has never been practiced can leave the lists entirely; anything else is retired. */
-  suspend fun removeFromWishlist(standardId: Long) {
-    if (states.get(standardId)?.lifecycle == Lifecycle.WISHLIST) states.delete(standardId)
+  /** Back to the plain library: scheduling state goes, review history and comfort notes stay. */
+  suspend fun removeFromMyTunes(standardId: Long) = states.delete(standardId)
+
+  suspend fun setComfort(standardId: Long, comfort: Comfort?) = updateKnowledge(standardId) { it.copy(comfort = comfort) }
+
+  /** Toggles a key, in concert pitch, as known for the tune. */
+  suspend fun toggleKnownKey(standardId: Long, concertPitchClass: Int) =
+    updateKnowledge(standardId) { it.copy(knownKeys = KeyMask.toggle(it.knownKeys, concertPitchClass)) }
+
+  suspend fun knownKeys(standardId: Long): Int = db.tuneKnowledge().get(standardId)?.knownKeys ?: 0
+
+  private suspend fun updateKnowledge(standardId: Long, change: (TuneKnowledgeEntity) -> TuneKnowledgeEntity) = db.withTransaction {
+    val current = db.tuneKnowledge().get(standardId) ?: TuneKnowledgeEntity(standardId)
+    db.tuneKnowledge().upsert(change(current).copy(updatedAt = now()))
   }
 
   /** Starts learning now, outside the daily limit. */
@@ -120,6 +134,23 @@ class PracticeService(
       return Card(tune, state, exercise, concertKeyFor(tune.commonKeyRaw, state.keyPolicy, state.cyclePosition), transposition, t)
     }
     return null
+  }
+
+  /** A random card within [constraints]; see [roll]. */
+  suspend fun roll(constraints: DiceConstraints): Roll? =
+    roll(
+      tunes = db.standards().all(),
+      states = states.all().associateBy { it.standardId },
+      knowledge = db.tuneKnowledge().all().associateBy { it.standardId },
+      exercises = db.exercises().all(),
+      c = constraints,
+      random = random,
+    )
+
+  /** A rolled tune that is in the practice queue can be graded like any other card. */
+  fun cardFor(roll: Roll, transposition: Transposition): Card? {
+    val state = roll.state?.takeIf { it.lifecycle == Lifecycle.LEARNING || it.lifecycle == Lifecycle.REPERTOIRE } ?: return null
+    return Card(roll.tune, state, roll.exercise, roll.concertKey, transposition, now())
   }
 
   /** What each grade would schedule, for labelling the buttons. */

@@ -27,6 +27,7 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.larakelley.woodshed.audio.MetronomeState
 import com.larakelley.woodshed.domain.Grade
 
 /** The Practice tab when no session is running. */
@@ -58,7 +59,14 @@ fun PracticeHome(ui: PracticeUi, onStart: () -> Unit, onSetDailyNewLimit: (Int) 
 
 /** A running session: one card at a time, graded with large buttons usable while holding a horn. */
 @Composable
-fun ReviewScreen(ui: PracticeUi, onGrade: (Grade) -> Unit, onStop: () -> Unit) {
+fun ReviewScreen(
+  ui: PracticeUi,
+  onGrade: (Grade) -> Unit,
+  onStop: () -> Unit,
+  metronome: MetronomeState = MetronomeState(),
+  onToggleMetronome: () -> Unit = {},
+  onSetBpm: (Int) -> Unit = {},
+) {
   val view = LocalView.current
   DisposableEffect(Unit) {
     view.keepScreenOn = true
@@ -91,20 +99,7 @@ fun ReviewScreen(ui: PracticeUi, onGrade: (Grade) -> Unit, onStop: () -> Unit) {
       Text(card.exercise, style = MaterialTheme.typography.headlineSmall)
       Text(card.instructions, style = MaterialTheme.typography.titleMedium)
     }
-    // Full-height columns: one imprecise thumb tap from a music stand should land.
-    Row(Modifier.fillMaxWidth().fillMaxHeight(0.33f).padding(8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-      card.buttons.forEach { (grade, delay) ->
-        Button(
-          onClick = { onGrade(grade) },
-          modifier = Modifier.weight(1f).fillMaxHeight().testTag("grade-${grade.name.lowercase()}"),
-          colors = if (grade == Grade.AGAIN) ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error) else ButtonDefaults.buttonColors(),
-        ) {
-          Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(grade.name.lowercase().replaceFirstChar { it.uppercase() }, style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Center)
-            Text(delay, style = MaterialTheme.typography.bodyMedium)
-          }
-        }
-      }
-    }
+    MetronomeBar(metronome, onToggleMetronome, onSetBpm)
+    GradeButtons(card.buttons, onGrade, Modifier.fillMaxHeight(0.3f))
   }
 }
