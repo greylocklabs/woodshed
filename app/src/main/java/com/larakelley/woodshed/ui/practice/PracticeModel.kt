@@ -10,6 +10,8 @@ import com.larakelley.woodshed.data.db.ExerciseEntity
 import com.larakelley.woodshed.data.db.StandardEntity
 import com.larakelley.woodshed.data.db.TuneStateEntity
 import com.larakelley.woodshed.domain.ClickTrack
+import com.larakelley.woodshed.ui.browse.ExerciseRow
+import com.larakelley.woodshed.ui.browse.exerciseRow
 import com.larakelley.woodshed.domain.Focus
 import com.larakelley.woodshed.domain.Grade
 import com.larakelley.woodshed.domain.Lifecycle
@@ -81,8 +83,8 @@ fun sessionTunes(standards: List<StandardEntity>, states: List<TuneStateEntity>,
     .map { it.first }
 }
 
-/** One row of a plan, as the setup screen lists it. */
-data class PlanItem(val block: PlanBlock, val title: String, val detail: String)
+/** One row of a plan, as the setup screen lists it. [exercise] is the block's exercise, for its details. */
+data class PlanItem(val block: PlanBlock, val title: String, val detail: String, val exercise: ExerciseRow? = null)
 
 data class SetupUi(
   val minutes: Int = 30,
@@ -200,8 +202,8 @@ class PracticeViewModel(
   }
 
   private fun planItem(block: PlanBlock): PlanItem = when (block) {
-    is PlanBlock.Exercise -> exercises[block.exerciseId].let { PlanItem(block, it?.name ?: "Exercise", it?.category ?: "") }
-    is PlanBlock.Tune -> PlanItem(block, titles[block.tuneId] ?: "Tune", exercises[block.exerciseId]?.name ?: "")
+    is PlanBlock.Exercise -> exercises[block.exerciseId].let { PlanItem(block, it?.name ?: "Exercise", it?.category ?: "", it?.let(::exerciseRow)) }
+    is PlanBlock.Tune -> exercises[block.exerciseId].let { PlanItem(block, titles[block.tuneId] ?: "Tune", it?.name ?: "", it?.let(::exerciseRow)) }
   }
 
   fun start() {

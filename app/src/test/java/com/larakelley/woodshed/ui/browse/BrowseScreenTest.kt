@@ -89,6 +89,19 @@ class BrowseScreenTest {
   }
 
   @Test
+  fun exerciseOpensToItsDetails() {
+    showWithLiveState()
+    compose.onNodeWithText("Exercises").performClick()
+    compose.onNodeWithText("Lip slurs").performClick()
+
+    compose.onNodeWithTag("exercise-instruments").assertExists()
+    compose.onNodeWithText("Brass").assertExists()
+    compose.onNodeWithText("72 bpm").assertExists()
+    compose.onNodeWithText("Back to exercises").performClick()
+    compose.onNodeWithText("Long tones").assertExists()
+  }
+
+  @Test
   fun searchNarrowsTheTuneList() {
     showWithLiveState()
     compose.onNodeWithTag("search").performTextInput("dolphin")
