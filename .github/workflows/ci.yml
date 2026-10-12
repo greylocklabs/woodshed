@@ -1,0 +1,87 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      # The Android app arrives partway up the first stack; branches before it have only the Python tools.
+      - name: Setup Java
+        if: hashFiles('gradlew') != ''
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Setup Android SDK
+        if: hashFiles('gradlew') != ''
+        uses: android-actions/setup-android@v3
+
+      - name: Setup Gradle
+        if: hashFiles('gradlew') != ''
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Android lint
+        if: hashFiles('gradlew') != ''
+        run: ./gradlew lintDebug
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      - name: Card prototype tests
+        working-directory: tools
+        run: python -m unittest -v test_cards
+
+      - name: Setup Java
+        if: hashFiles('gradlew') != ''
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Setup Android SDK
+        if: hashFiles('gradlew') != ''
+        uses: android-actions/setup-android@v3
+
+      - name: Setup Gradle
+        if: hashFiles('gradlew') != ''
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Unit and Robolectric tests
+        if: hashFiles('gradlew') != ''
+        run: ./gradlew testDebugUnitTest
+
+  commitlint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Lint commit messages
+        uses: wagoid/commitlint-github-action@v6
+        with:
+          configFile: commitlint.config.cjs
