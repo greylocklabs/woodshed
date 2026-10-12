@@ -2,13 +2,17 @@ package com.larakelley.woodshed.data
 
 import androidx.room.withTransaction
 import com.larakelley.woodshed.data.db.ReviewEventEntity
+import com.larakelley.woodshed.data.db.StandardEntity
 import com.larakelley.woodshed.data.db.TuneKnowledgeEntity
+import com.larakelley.woodshed.data.db.TuneOverrideEntity
 import com.larakelley.woodshed.data.db.TuneStateEntity
 import com.larakelley.woodshed.data.db.WoodshedDatabase
 import com.larakelley.woodshed.domain.Comfort
 import com.larakelley.woodshed.domain.Grade
+import com.larakelley.woodshed.domain.Key
 import com.larakelley.woodshed.domain.KeyPolicy
 import com.larakelley.woodshed.domain.Lifecycle
+import com.larakelley.woodshed.domain.Tonality
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -26,6 +30,10 @@ data class Backup(
   val version: Int = VERSION,
   @SerialName("exported_at") val exportedAt: Long,
   val settings: BackupSettings,
+  /** Tunes the user added, restored before anything that refers to them. */
+  @SerialName("my_tunes") val myTunes: List<BackupMyTune> = emptyList(),
+  /** The user's edits to seeded tunes. */
+  val edits: List<BackupEdit> = emptyList(),
   val tunes: List<BackupTune>,
   val knowledge: List<BackupKnowledge>,
   val reviews: List<BackupReview>,
@@ -44,6 +52,37 @@ data class BackupSettings(
   @SerialName("theme_mode") val themeMode: String? = null,
   @SerialName("session_minutes") val sessionMinutes: Int? = null,
   @SerialName("session_focus") val sessionFocus: List<String> = emptyList(),
+)
+
+@Serializable
+data class BackupMyTune(
+  val slug: String,
+  val title: String,
+  val composer: String? = null,
+  val year: Int? = null,
+  val bars: Int? = null,
+  @SerialName("time_signature") val timeSignature: String? = null,
+  val form: String? = null,
+  val style: String? = null,
+  val key: String? = null,
+  val tonality: Tonality? = null,
+  val collection: String = "Standards",
+)
+
+@Serializable
+data class BackupEdit(
+  val slug: String,
+  val title: String? = null,
+  val composer: String? = null,
+  val year: Int? = null,
+  val bars: Int? = null,
+  @SerialName("time_signature") val timeSignature: String? = null,
+  val form: String? = null,
+  val style: String? = null,
+  val key: String? = null,
+  val tonality: Tonality? = null,
+  val collection: String? = null,
+  @SerialName("updated_at") val updatedAt: Long = 0,
 )
 
 @Serializable
@@ -90,7 +129,7 @@ data class BackupReview(
 )
 
 /** What a restore brought back, and how many rows named tunes this install does not have. */
-data class RestoreResult(val tunes: Int, val knowledge: Int, val reviews: Int, val skipped: Int)
+data class RestoreResult(val tunes: Int, val knowledge: Int, val reviews: Int, val skipped: Int, val myTunes: Int = 0, val edits: Int = 0)
 
 class BackupException(message: String) : Exception(message)
 
@@ -112,6 +151,13 @@ class BackupService(
     val backup = Backup(
       exportedAt = now(),
       settings = repository.backupSettings(),
+      myTunes = db.standards().userCreated().filter { it.archivedAt == null }.map {
+        BackupMyTune(it.slug, it.title, it.composer, it.year, it.bars, it.timeSignature, it.form, it.style, it.keyName, it.tonality, it.collection)
+      },
+      edits = db.tuneOverrides().all().mapNotNull { o ->
+        val slug = slugs[o.standardId] ?: return@mapNotNull null
+        BackupEdit(slug, o.title, o.composer, o.year, o.bars, o.timeSignature, o.form, o.style, o.keyName, o.tonality, o.collection, o.updatedAt)
+      },
       tunes = db.tuneStates().all().mapNotNull { s ->
         val slug = slugs[s.standardId] ?: return@mapNotNull null
         BackupTune(slug, s.lifecycle, s.keyPolicy, s.cyclePosition, s.notes, s.wishlistedAt, s.introducedAt, s.reps, s.lapses, s.intervalDays, s.ease, s.dueAt, s.lastReviewedAt)
@@ -142,7 +188,29 @@ class BackupService(
     if (backup.version > Backup.VERSION) throw BackupException("This backup is from a newer version of Woodshed.")
 
     val result = db.withTransaction {
+      // The user's own tunes first, so state and history below can find them. Ones not in the backup are archived.
+      val keep = backup.myTunes.map { it.slug }.toSet()
+      for (old in db.standards().userCreated()) {
+        if (old.slug !in keep && old.archivedAt == null) db.standards().update(listOf(old.copy(archivedAt = now())))
+      }
+      for (t in backup.myTunes) {
+        val row = StandardEntity(
+          slug = t.slug, title = t.title, composer = t.composer, year = t.year, bars = t.bars, timeSignature = t.timeSignature, form = t.form,
+          style = t.style, keyName = t.key, keyPitchClass = Key.pitchClassOf(t.key), tonality = t.tonality, collection = t.collection, userCreated = true,
+        )
+        val existing = db.standards().bySlug(t.slug)
+        if (existing == null) db.standards().insert(row) else db.standards().update(listOf(row.copy(id = existing.id)))
+      }
       val ids = db.standards().all().associate { it.slug to it.id }
+      db.tuneOverrides().deleteAll()
+      var edits = 0
+      for (e in backup.edits) {
+        val id = ids[e.slug] ?: continue
+        db.tuneOverrides().upsert(
+          TuneOverrideEntity(id, e.title, e.composer, e.year, e.bars, e.timeSignature, e.form, e.style, e.key, Key.pitchClassOf(e.key), e.tonality, e.collection, e.updatedAt)
+        )
+        edits++
+      }
       val exercises = db.exercises().all().associate { it.name to it.id }
       db.reviewEvents().deleteAll()
       db.tuneKnowledge().deleteAll()
@@ -187,7 +255,7 @@ class BackupService(
         )
         reviews++
       }
-      RestoreResult(tunes, knowledge, reviews, skipped)
+      RestoreResult(tunes, knowledge, reviews, skipped, backup.myTunes.size, edits)
     }
     repository.applyBackupSettings(backup.settings)
     return result

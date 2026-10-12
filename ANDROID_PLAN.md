@@ -377,9 +377,11 @@ point at which the guesses can be replaced with measurements.*
 **M6 — Your own material.** User-owned rows beside the seed, never touched by
 re-seeding, and included in the backup file:
 
-- **Your tunes:** add, edit and delete tunes. They behave like seeded tunes in
-  lists, sessions and the Random tab. Editing a seeded tune stores an override
-  rather than changing the seed row.
+- **Your tunes (shipped):** add, edit and delete tunes. They behave like seeded
+  tunes in lists, sessions and the Random tab, and their slugs start with
+  `user-`, which the seed may not use. Editing a seeded tune stores only the
+  changed fields as an override, so seed corrections still show through and
+  "Reset to the original" drops the edits. Deleting archives the tune.
 - **Playlists:** named, ordered lists of tunes, such as a gig set or the tunes
   for a jam. A playlist can be the tune pool for a session or a roll.
 - **Transcribe tab:** solos to learn by ear. Each one names the tune, soloist,

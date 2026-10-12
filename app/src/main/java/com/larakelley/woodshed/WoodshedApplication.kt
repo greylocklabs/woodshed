@@ -6,6 +6,7 @@ import com.larakelley.woodshed.audio.Metronome
 import com.larakelley.woodshed.audio.Tuner
 import com.larakelley.woodshed.data.BackupService
 import com.larakelley.woodshed.data.PracticeService
+import com.larakelley.woodshed.data.TuneLibrary
 import com.larakelley.woodshed.data.WoodshedRepository
 import com.larakelley.woodshed.data.db.WoodshedDatabase
 import kotlinx.coroutines.CoroutineScope
@@ -26,6 +27,8 @@ class WoodshedApplication : Application() {
   val practice: PracticeService by lazy { PracticeService(database) }
 
   val backups: BackupService by lazy { BackupService(database, repository) }
+
+  val tunes: TuneLibrary by lazy { TuneLibrary(database) }
 
   private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 

@@ -8,9 +8,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -63,7 +66,11 @@ import com.larakelley.woodshed.domain.titleSortKey
 import com.larakelley.woodshed.theme.BackButton
 import com.larakelley.woodshed.theme.CallieChip
 import com.larakelley.woodshed.theme.StickerButton
+import com.larakelley.woodshed.theme.neutralSticker
 import com.larakelley.woodshed.ui.report.ReportButton
+
+/** The editor's target while adding a tune rather than editing one. */
+private const val NEW_TUNE = "+new"
 
 /** Shown before each tab name in the main navigation. */
 private val TAB_EMOJI = mapOf(
@@ -94,6 +101,8 @@ fun BrowseScreen(
   var settingsOpen by rememberSaveable { mutableStateOf(false) }
   var tab by rememberSaveable { mutableIntStateOf(0) }
   var openSlug by rememberSaveable { mutableStateOf<String?>(null) }
+  /** A tune's slug while editing it, [NEW_TUNE] while adding one, or null. */
+  var editing by rememberSaveable { mutableStateOf<String?>(null) }
   var openExercise by rememberSaveable { mutableStateOf<String?>(null) }
   val tabs = buildList {
     if (practiceTab != null) add("Practice")
@@ -117,10 +126,22 @@ fun BrowseScreen(
       settings({ settingsOpen = false }, Modifier.padding(padding))
       return@Scaffold
     }
+    editing?.let { target ->
+      val tune = state.tunes.firstOrNull { it.slug == target }
+      TuneEditor(
+        tune,
+        onSave = { draft -> actions.saveTune(tune?.id, draft) { slug -> openSlug = slug; editing = null } },
+        onDelete = { tune?.let { actions.deleteTune(it.id) }; openSlug = null; editing = null },
+        onReset = { tune?.let { actions.resetTune(it.id) }; editing = null },
+        onBack = { editing = null },
+        modifier = Modifier.padding(padding),
+      )
+      return@Scaffold
+    }
     val open = state.tunes.firstOrNull { it.slug == openSlug }
     if (open != null) {
       BackHandler { openSlug = null }
-      TuneDetail(open, actions, now, onBack = { openSlug = null }, modifier = Modifier.padding(padding))
+      TuneDetail(open, actions, now, onBack = { openSlug = null }, onEdit = { editing = open.slug }, modifier = Modifier.padding(padding))
       return@Scaffold
     }
     val exercise = state.exercises.firstOrNull { it.name == openExercise }
@@ -144,7 +165,7 @@ fun BrowseScreen(
         "Metronome" -> metronomeTab?.invoke()
         "Tuner" -> tunerTab?.invoke()
         "Tunes" -> {
-          TuneFilters(state, onTuneFilter)
+          TuneFilters(state, onTuneFilter, onAdd = { editing = NEW_TUNE })
           TuneList(state.tunes, alphabetical = state.tuneFilter.sort == TuneSort.TITLE, onOpen = { openSlug = it })
         }
         else -> {
@@ -198,7 +219,7 @@ private fun SearchField(query: String, placeholder: String, onChange: (String) -
 }
 
 @Composable
-private fun TuneFilters(state: BrowseState, onFilter: ((TuneFilter) -> TuneFilter) -> Unit) {
+private fun TuneFilters(state: BrowseState, onFilter: ((TuneFilter) -> TuneFilter) -> Unit, onAdd: () -> Unit) {
   val f = state.tuneFilter
   SearchField(f.query, "Search title or composer") { q -> onFilter { it.copy(query = q) } }
   Row(Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -211,11 +232,16 @@ private fun TuneFilters(state: BrowseState, onFilter: ((TuneFilter) -> TuneFilte
     }
     DropdownChip("Sort", f.sort.label, TuneSort.entries.map { it.label to it }) { o -> onFilter { it.copy(sort = o ?: TuneSort.TITLE) } }
   }
-  Text(
-    if (state.tunes.size == state.totalTunes) "${state.totalTunes} tunes" else "${state.tunes.size} of ${state.totalTunes} tunes",
-    style = MaterialTheme.typography.labelLarge,
-    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp).testTag("tune-count"),
-  )
+  Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+    Text(
+      if (state.tunes.size == state.totalTunes) "${state.totalTunes} tunes" else "${state.tunes.size} of ${state.totalTunes} tunes",
+      style = MaterialTheme.typography.labelLarge,
+      modifier = Modifier.weight(1f).testTag("tune-count"),
+    )
+    StickerButton(onClick = onAdd, modifier = Modifier.height(40.dp).testTag("add-tune"), contentPadding = PaddingValues(horizontal = 14.dp)) {
+      Text("+ Add tune", style = MaterialTheme.typography.labelLarge)
+    }
+  }
 }
 
 @Composable
@@ -292,13 +318,21 @@ private fun TuneList(tunes: List<TuneRow>, alphabetical: Boolean, onOpen: (Strin
 }
 
 @Composable
-private fun TuneDetail(tune: TuneRow, actions: TuneActions, now: () -> Long, onBack: () -> Unit, modifier: Modifier = Modifier) {
+private fun TuneDetail(tune: TuneRow, actions: TuneActions, now: () -> Long, onBack: () -> Unit, onEdit: () -> Unit, modifier: Modifier = Modifier) {
   val state = tune.state
   val id = tune.id
   var confirmRemove by rememberSaveable { mutableStateOf(false) }
   Column(modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-    BackButton("Back to tunes", onBack)
+    Row(verticalAlignment = Alignment.CenterVertically) {
+      BackButton("Back to tunes", onBack, Modifier.weight(1f, fill = false))
+      Spacer(Modifier.weight(1f))
+      StickerButton(onClick = onEdit, sticker = neutralSticker, modifier = Modifier.height(40.dp).testTag("edit-tune")) { Text("✏️ Edit", style = MaterialTheme.typography.labelLarge) }
+    }
     Text(tune.title, style = MaterialTheme.typography.headlineMedium)
+    when {
+      tune.userCreated -> Text("🪵 Your tune", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary, modifier = Modifier.testTag("your-tune"))
+      tune.edited -> Text("✏️ Edited by you", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary, modifier = Modifier.testTag("edited-tune"))
+    }
     if (tune.credit.isNotEmpty()) Text(tune.credit)
     if (tune.shape.isNotEmpty()) Text(tune.shape)
     Text(tune.key, style = MaterialTheme.typography.titleLarge)
