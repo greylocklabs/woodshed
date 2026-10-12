@@ -45,6 +45,9 @@ class BrowseModelTest {
     assertEquals(listOf("Long tones", "Overtone series"), exerciseRows(exercises, ExerciseFilter(instrument = Instrument.TENOR_SAX)).map { it.name })
     assertEquals(listOf("Long tones", "Lip slurs"), exerciseRows(exercises, ExerciseFilter(instrument = Instrument.TROMBONE)).map { it.name })
     assertEquals(3, exerciseRows(exercises).size)
+    // With none chosen, exercises for any instrument the user plays; one they no longer play counts as none.
+    assertEquals(listOf("Long tones", "Lip slurs"), exerciseRows(exercises, mine = setOf(Instrument.TRUMPET, Instrument.PIANO)).map { it.name })
+    assertEquals(listOf("Long tones", "Lip slurs"), exerciseRows(exercises, ExerciseFilter(instrument = Instrument.TENOR_SAX), mine = setOf(Instrument.TRUMPET)).map { it.name })
     // A piano has no family of its own and does not blow, so tone work drops out too.
     assertEquals(emptyList<String>(), exerciseRows(exercises, ExerciseFilter(instrument = Instrument.PIANO)).map { it.name })
   }

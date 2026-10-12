@@ -137,6 +137,8 @@ data class BrowseState(
   val totalTunes: Int = 0,
   val exercises: List<ExerciseRow> = emptyList(),
   val totalExercises: Int = 0,
+  /** The instruments the user plays; the exercise filter offers only these. Empty means every instrument. */
+  val myInstruments: List<Instrument> = Instrument.entries,
   val tuneFilter: TuneFilter = TuneFilter(),
   val exerciseFilter: ExerciseFilter = ExerciseFilter(),
   val styles: List<String> = emptyList(),
@@ -221,9 +223,14 @@ fun sortTunes(rows: List<TuneRow>, sort: TuneSort): List<TuneRow> = when (sort) 
   TuneSort.COMFORT -> rows.sortedWith(compareByDescending<TuneRow, Comfort?>(nullsFirst()) { it.knowledge?.comfort })
 }
 
-fun exerciseRows(exercises: List<ExerciseEntity>, filter: ExerciseFilter = ExerciseFilter()): List<ExerciseRow> =
-  exercises
-    .filter { filter.instrument?.suits(it.families, it.category) ?: true }
+/**
+ * Exercises for [filter]'s instrument, or with none chosen, for any of [mine]; an empty [mine] keeps everything.
+ * An instrument the user no longer plays counts as none chosen.
+ */
+fun exerciseRows(exercises: List<ExerciseEntity>, filter: ExerciseFilter = ExerciseFilter(), mine: Collection<Instrument> = emptyList()): List<ExerciseRow> {
+  val chosen = filter.instrument?.takeIf { mine.isEmpty() || it in mine }
+  return exercises
+    .filter { e -> if (chosen != null) chosen.suits(e.families, e.category) else mine.isEmpty() || mine.any { it.suits(e.families, e.category) } }
     .filter { filter.category == null || it.category == filter.category }
     .filter { matchesQuery(filter.query, it.name, it.description) }
     .sortedWith(
@@ -235,6 +242,7 @@ fun exerciseRows(exercises: List<ExerciseEntity>, filter: ExerciseFilter = Exerc
       }
     )
     .map(::exerciseRow)
+}
 
 /** What the tune detail screen can do to a tune. */
 data class TuneActions(
@@ -260,11 +268,15 @@ class BrowseViewModel(private val repository: WoodshedRepository, private val pr
 
   private data class TunePart(val all: List<TuneRow>, val filter: TuneFilter, val rows: List<TuneRow>)
 
-  private data class ExercisePart(val all: List<ExerciseEntity>, val filter: ExerciseFilter, val rows: List<ExerciseRow>)
+  private data class ExercisePart(val all: List<ExerciseEntity>, val filter: ExerciseFilter, val mine: List<Instrument>, val rows: List<ExerciseRow>)
 
   private val tunePart = combine(library, tuneFilter) { rows, filter -> TunePart(rows, filter, filterTunes(rows, filter)) }
 
-  private val exercisePart = combine(repository.exercises, exerciseFilter) { exercises, filter -> ExercisePart(exercises, filter, exerciseRows(exercises, filter)) }
+  private val exercisePart = combine(repository.exercises, exerciseFilter, repository.myInstruments) { exercises, filter, mine ->
+    val offered = Instrument.entries.filter { mine.isEmpty() || it in mine }
+    val shown = filter.copy(instrument = filter.instrument?.takeIf { it in offered })
+    ExercisePart(exercises, shown, offered, exerciseRows(exercises, shown, mine))
+  }
 
   val state: StateFlow<BrowseState> =
     combine(tunePart, exercisePart, repository.transposition, repository.seedError) { tunes, ex, transposition, error ->
@@ -273,7 +285,8 @@ class BrowseViewModel(private val repository: WoodshedRepository, private val pr
           tunes = tunes.rows,
           totalTunes = tunes.all.size,
           exercises = ex.rows,
-          totalExercises = ex.all.size,
+          totalExercises = exerciseRows(ex.all, mine = ex.mine).size,
+          myInstruments = ex.mine,
           tuneFilter = tunes.filter,
           exerciseFilter = ex.filter,
           styles = tunes.all.mapNotNull { it.style }.distinct().sorted(),

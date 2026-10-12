@@ -154,7 +154,7 @@ fun BrowseScreen(
   }
 }
 
-/** A filter chip that opens a menu of options; "Any" clears it when [allowAny]. */
+/** A filter chip that opens a menu of options; [anyLabel] clears it when [allowAny]. */
 /** The logo and name, in the display face. */
 @Composable
 private fun AppTitle() {
@@ -165,12 +165,19 @@ private fun AppTitle() {
 }
 
 @Composable
-fun <T> DropdownChip(name: String, current: String, options: List<Pair<String, T>>, allowAny: Boolean = false, onSelect: (T?) -> Unit) {
+fun <T> DropdownChip(
+  name: String,
+  current: String,
+  options: List<Pair<String, T>>,
+  allowAny: Boolean = false,
+  anyLabel: String = "Any",
+  onSelect: (T?) -> Unit,
+) {
   var open by rememberSaveable { mutableStateOf(false) }
   Box {
     CallieChip(selected = open, onClick = { open = true }, label = { Text("$name: $current") }, modifier = Modifier.testTag("chip-$name"))
     DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
-      if (allowAny) DropdownMenuItem(text = { Text("Any") }, onClick = { onSelect(null); open = false })
+      if (allowAny) DropdownMenuItem(text = { Text(anyLabel) }, onClick = { onSelect(null); open = false })
       options.forEach { (label, value) -> DropdownMenuItem(text = { Text(label) }, onClick = { onSelect(value); open = false }) }
     }
   }
@@ -214,7 +221,9 @@ private fun ExerciseFilters(state: BrowseState, onFilter: ((ExerciseFilter) -> E
   val f = state.exerciseFilter
   SearchField(f.query, "Search exercises") { q -> onFilter { it.copy(query = q) } }
   Row(Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-    DropdownChip("Instrument", f.instrument?.label ?: "Any", Instrument.entries.map { it.label to it }, allowAny = true) { i -> onFilter { it.copy(instrument = i) } }
+    DropdownChip("Instrument", f.instrument?.label ?: "All mine", state.myInstruments.map { it.label to it }, allowAny = true, anyLabel = "All mine") { i ->
+      onFilter { it.copy(instrument = i) }
+    }
     DropdownChip("Category", f.category ?: "Any", state.categories.map { it to it }, allowAny = true) { c -> onFilter { it.copy(category = c) } }
     DropdownChip("Sort", f.sort.label, ExerciseSort.entries.map { it.label to it }) { o -> onFilter { it.copy(sort = o ?: ExerciseSort.CATEGORY) } }
   }
