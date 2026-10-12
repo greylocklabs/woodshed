@@ -102,7 +102,7 @@ class MainActivity : ComponentActivity() {
               settings = { onBack, modifier ->
                 SettingsScreen(
                   settingsUi,
-                  SettingsActions(settings::setInstrument, settings::setThemeMode, settings::export, settings::restore),
+                  SettingsActions(settings::setInstrument, settings::toggleMyInstrument, settings::setTransposition, settings::setThemeMode, settings::export, settings::restore),
                   onBack = { settings.clearMessage(); onBack() },
                   modifier = modifier,
                 )

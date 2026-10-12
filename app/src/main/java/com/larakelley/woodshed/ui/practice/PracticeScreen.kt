@@ -85,9 +85,13 @@ private fun SessionSetup(ui: PracticeUi, actions: SetupActions) {
       item {
         ui.summary?.takeIf { it.reviewedToday > 0 }?.let { Text("Reviewed today: ${it.reviewedToday}", modifier = Modifier.padding(bottom = 8.dp)) }
         Text("What are you playing?", style = MaterialTheme.typography.titleMedium)
-        Text("Sets the key music is written in and keeps exercises to ones for your horn", style = MaterialTheme.typography.bodySmall)
+        Text(
+          if (setup.instrumentsChosen) "Sets the key music is written in and keeps exercises to ones for your instrument"
+          else "Sets the key and exercises. Choose the instruments you play in Settings to shorten this list.",
+          style = MaterialTheme.typography.bodySmall,
+        )
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-          Instrument.entries.forEach { i ->
+          setup.instruments.forEach { i ->
             FilterChip(
               selected = setup.instrument == i,
               onClick = { actions.setInstrument(i) },

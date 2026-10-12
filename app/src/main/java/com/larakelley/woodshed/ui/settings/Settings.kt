@@ -5,24 +5,18 @@ import android.net.Uri
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -33,7 +27,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.LinkAnnotation
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextLinkStyles
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withLink
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -42,10 +43,15 @@ import com.larakelley.woodshed.data.BackupService
 import com.larakelley.woodshed.data.ThemeMode
 import com.larakelley.woodshed.data.WoodshedRepository
 import com.larakelley.woodshed.domain.Instrument
+import com.larakelley.woodshed.domain.InstrumentGroup
 import com.larakelley.woodshed.domain.Transposition
-import com.larakelley.woodshed.theme.BackButton
+import com.larakelley.woodshed.theme.Helper
 import com.larakelley.woodshed.theme.LocalCallie
+import com.larakelley.woodshed.theme.PillChoice
+import com.larakelley.woodshed.theme.SectionLabel
 import com.larakelley.woodshed.theme.StickerButton
+import com.larakelley.woodshed.theme.SwitchRow
+import com.larakelley.woodshed.theme.neutralSticker
 import java.text.DateFormat
 import java.time.LocalDate
 import java.util.Date
@@ -61,6 +67,7 @@ import kotlinx.coroutines.withContext
 
 data class SettingsUi(
   val instrument: Instrument? = null,
+  val myInstruments: Set<Instrument> = emptySet(),
   val transposition: Transposition = Transposition.C,
   val themeMode: ThemeMode = ThemeMode.SYSTEM,
   val lastBackupAt: Long? = null,
@@ -78,11 +85,24 @@ class SettingsViewModel(
   private val message = MutableStateFlow<String?>(null)
 
   val ui: StateFlow<SettingsUi> =
-    combine(repository.instrument, repository.transposition, repository.themeMode, repository.lastBackupAt, message) { i, t, m, last, msg ->
-      SettingsUi(i, t, m, last, msg, version)
+    combine(
+      combine(repository.instrument, repository.myInstruments, repository.transposition, ::Triple),
+      repository.themeMode,
+      repository.lastBackupAt,
+      message,
+    ) { (i, mine, t), m, last, msg ->
+      SettingsUi(i, mine, t, m, last, msg, version)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SettingsUi(version = version))
 
   fun setInstrument(i: Instrument) = repository.setInstrument(i)
+
+  fun setTransposition(t: Transposition) = repository.setTransposition(t)
+
+  /** Adds or removes an instrument from the ones the user plays. */
+  fun toggleMyInstrument(i: Instrument, plays: Boolean) {
+    val mine = repository.myInstruments.value
+    repository.setMyInstruments(if (plays) mine + i else mine - i)
+  }
 
   fun setThemeMode(m: ThemeMode) = repository.setThemeMode(m)
 
@@ -120,15 +140,85 @@ class SettingsViewModel(
 /** What the settings page can do; the file pickers are handled inside it. */
 data class SettingsActions(
   val setInstrument: (Instrument) -> Unit = {},
+  val toggleMyInstrument: (Instrument, Boolean) -> Unit = { _, _ -> },
+  val setTransposition: (Transposition) -> Unit = {},
   val setThemeMode: (ThemeMode) -> Unit = {},
   val export: (Uri, ContentResolver) -> Unit = { _, _ -> },
   val restore: (Uri, ContentResolver) -> Unit = { _, _ -> },
 )
 
-@OptIn(ExperimentalLayoutApi::class)
+enum class SettingsTab(val label: String) {
+  GENERAL("General"),
+  INSTRUMENTS("Instruments"),
+  BACKUP("Backup"),
+  ABOUT("About"),
+}
+
+const val KO_FI = "https://ko-fi.com/sayonara_lara"
+const val AUTHOR_SITE = "https://larakelley.com"
+
+/** Laid out like Callie's settings: a title with a close sticker, pill tabs, then labelled sections. */
 @Composable
 fun SettingsScreen(ui: SettingsUi, actions: SettingsActions, onBack: () -> Unit, modifier: Modifier = Modifier) {
   BackHandler(onBack = onBack)
+  var tab by rememberSaveable { mutableStateOf(SettingsTab.GENERAL) }
+  Column(modifier.fillMaxSize()) {
+    Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+      Text("Settings", style = MaterialTheme.typography.headlineMedium, modifier = Modifier.weight(1f))
+      StickerButton(onClick = onBack, sticker = neutralSticker, modifier = Modifier.size(44.dp).testTag("close-settings"), contentPadding = PaddingValues(0.dp)) {
+        Text("×", style = MaterialTheme.typography.titleLarge)
+      }
+    }
+    PillChoice(SettingsTab.entries.map { it.label to it }, tab, { tab = it }, Modifier.padding(horizontal = 12.dp, vertical = 12.dp), tagPrefix = "tab")
+    Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp).padding(bottom = 24.dp)) {
+      when (tab) {
+        SettingsTab.GENERAL -> GeneralTab(ui, actions)
+        SettingsTab.INSTRUMENTS -> InstrumentsTab(ui, actions)
+        SettingsTab.BACKUP -> BackupTab(ui, actions)
+        SettingsTab.ABOUT -> AboutTab(ui)
+      }
+    }
+  }
+}
+
+@Composable
+private fun GeneralTab(ui: SettingsUi, actions: SettingsActions) {
+  SectionLabel("Appearance")
+  PillChoice(ThemeMode.entries.map { it.label to it }, ui.themeMode, actions.setThemeMode, tagPrefix = "theme")
+  SectionLabel("Keys")
+  PillChoice(Transposition.entries.map { it.name to it }, ui.transposition, actions.setTransposition, tagPrefix = "key")
+  Helper(
+    ui.instrument?.let { "Your ${it.label.lowercase()} reads in ${it.transposition.name}. Pick another key here for a one-off, such as reading a part for another horn." }
+      ?: "Keys are written for this transposition. Choosing an instrument sets it for you."
+  )
+}
+
+@Composable
+private fun InstrumentsTab(ui: SettingsUi, actions: SettingsActions) {
+  val offered = Instrument.entries.filter { ui.myInstruments.isEmpty() || it in ui.myInstruments }
+  SectionLabel("Playing now")
+  if (offered.isNotEmpty()) {
+    PillChoice(offered.map { it.label to it }, ui.instrument, { it?.let(actions.setInstrument) }, tagPrefix = "now")
+  }
+  Helper("Sets the key music is written in and which exercises sessions suggest. You can also change it when you start a session.")
+  SectionLabel("Instruments I play")
+  Helper("Only these are offered when you start a session. With none chosen, every instrument is.")
+  InstrumentGroup.entries.forEach { group ->
+    SectionLabel(group.label)
+    Instrument.entries.filter { it.group == group }.forEach { i ->
+      SwitchRow(
+        label = i.label,
+        checked = i in ui.myInstruments,
+        onChange = { actions.toggleMyInstrument(i, it) },
+        helper = if (i.family == null) "Reads in ${i.transposition.name}. Exercises for every instrument; ones for this instrument are still to come." else "Reads in ${i.transposition.name}",
+        modifier = Modifier.testTag("plays-${i.name.lowercase()}"),
+      )
+    }
+  }
+}
+
+@Composable
+private fun BackupTab(ui: SettingsUi, actions: SettingsActions) {
   val resolver = LocalContext.current.contentResolver
   val saveFile = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
     uri?.let { actions.export(it, resolver) }
@@ -136,69 +226,27 @@ fun SettingsScreen(ui: SettingsUi, actions: SettingsActions, onBack: () -> Unit,
   val openFile = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> uri?.let { actions.restore(it, resolver) } }
   var confirmRestore by rememberSaveable { mutableStateOf(false) }
 
-  Column(modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-    BackButton("Back", onBack)
-    Text("Settings", style = MaterialTheme.typography.headlineMedium)
-
-    Section("🎷 Instrument")
-    Text("Sets the key music is written in and which exercises sessions suggest.", style = MaterialTheme.typography.bodySmall)
-    Instrument.entries.forEach { i ->
-      Row(
-        Modifier.fillMaxWidth().clickable { actions.setInstrument(i) }.testTag("instrument-${i.name.lowercase()}"),
-        verticalAlignment = Alignment.CenterVertically,
-      ) {
-        RadioButton(selected = ui.instrument == i, onClick = { actions.setInstrument(i) })
-        Text(i.label, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
-        Text("Reads in ${i.transposition.name}", style = MaterialTheme.typography.bodySmall, color = LocalCallie.current.textMuted)
-      }
-    }
-    if (ui.instrument != null && ui.instrument.transposition != ui.transposition) {
-      Text(
-        "Keys are showing in ${ui.transposition.name} for now; the key button at the top changes that without changing your instrument.",
-        style = MaterialTheme.typography.bodySmall,
-        color = LocalCallie.current.textMuted,
-      )
-    }
-
-    Section("🎨 Appearance")
-    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-      ThemeMode.entries.forEach { m ->
-        FilterChip(selected = ui.themeMode == m, onClick = { actions.setThemeMode(m) }, label = { Text(m.label) }, modifier = Modifier.testTag("theme-${m.name}"))
-      }
-    }
-
-    Section("💾 Backup")
-    Text(
-      "Save your tunes, comfort, known keys, review history and settings to a file. Choose Google Drive, Dropbox or " +
-        "a folder on this phone when the picker opens, then restore from that file on any device.",
-      style = MaterialTheme.typography.bodyMedium,
-    )
-    Text(
-      ui.lastBackupAt?.let { "Last saved ${DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT).format(Date(it))}" } ?: "Not backed up from this phone yet",
-      style = MaterialTheme.typography.bodySmall,
-      color = LocalCallie.current.textMuted,
-      modifier = Modifier.testTag("last-backup"),
-    )
-    StickerButton(onClick = { saveFile.launch("woodshed-backup-${LocalDate.now()}.json") }, modifier = Modifier.fillMaxWidth().height(56.dp).testTag("export")) {
-      Text("Save a backup")
-    }
-    OutlinedButton(onClick = { confirmRestore = true }, modifier = Modifier.fillMaxWidth().testTag("restore")) { Text("Restore from a backup") }
-    ui.message?.let { Text(it, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.testTag("backup-message")) }
-    Text(
-      "Android also backs Woodshed up to your Google account with the rest of the phone, when device backup is on.",
-      style = MaterialTheme.typography.bodySmall,
-      color = LocalCallie.current.textMuted,
-    )
-
-    Section("🪵 About")
-    Text("Woodshed ${ui.version}", style = MaterialTheme.typography.bodyMedium)
-    Text(
-      "Tune data draws on standardrepertoire.com by David Miller, jazzstandards.com, Wikipedia, iReal Pro charts and the " +
-        "Jazz Chord Progressions Corpus. The Nunito and Fraunces typefaces are used under the SIL Open Font License.",
-      style = MaterialTheme.typography.bodySmall,
-      color = LocalCallie.current.textMuted,
-    )
+  SectionLabel("Backup file")
+  Text(
+    "Save your tunes, comfort, known keys, review history and settings to a file. Choose Google Drive, Dropbox or " +
+      "a folder on this phone when the picker opens, then restore from that file on any device.",
+    style = MaterialTheme.typography.bodyMedium,
+  )
+  Helper(
+    ui.lastBackupAt?.let { "Last saved ${DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT).format(Date(it))}" } ?: "Not backed up from this phone yet",
+    Modifier.padding(vertical = 8.dp).testTag("last-backup"),
+  )
+  StickerButton(onClick = { saveFile.launch("woodshed-backup-${LocalDate.now()}.json") }, modifier = Modifier.fillMaxWidth().height(52.dp).testTag("export")) {
+    Text("Save a backup")
   }
+  StickerButton(
+    onClick = { confirmRestore = true },
+    sticker = neutralSticker,
+    modifier = Modifier.fillMaxWidth().height(52.dp).padding(top = 8.dp).testTag("restore"),
+  ) { Text("Restore from a backup") }
+  ui.message?.let { Text(it, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 8.dp).testTag("backup-message")) }
+  SectionLabel("Automatic")
+  Helper("Android also backs Woodshed up to your Google account with the rest of the phone, when device backup is on.")
 
   if (confirmRestore) {
     AlertDialog(
@@ -216,7 +264,27 @@ fun SettingsScreen(ui: SettingsUi, actions: SettingsActions, onBack: () -> Unit,
 }
 
 @Composable
-private fun Section(title: String) {
-  HorizontalDivider(Modifier.padding(top = 8.dp))
-  Text(title, style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(top = 4.dp))
+private fun AboutTab(ui: SettingsUi) {
+  val uris = LocalUriHandler.current
+  val accent = LocalCallie.current.accent
+  SectionLabel("Woodshed ${ui.version}")
+  Text(
+    buildAnnotatedString {
+      append("Made with \u2764\uFE0F in Brooklyn by ")
+      withLink(LinkAnnotation.Url(AUTHOR_SITE, TextLinkStyles(SpanStyle(color = accent, fontWeight = FontWeight.Bold)))) { append("Lara Kelley") }
+      append(".")
+    },
+    style = MaterialTheme.typography.bodyLarge,
+    modifier = Modifier.testTag("made-by"),
+  )
+  SectionLabel("Support")
+  Helper("Woodshed is free. If it helps your practice, you can buy Lara a coffee.")
+  StickerButton(onClick = { uris.openUri(KO_FI) }, modifier = Modifier.fillMaxWidth().height(52.dp).padding(top = 8.dp).testTag("donate")) {
+    Text("\u2615 Donate on Ko-fi")
+  }
+  SectionLabel("Credits")
+  Helper(
+    "Tune data draws on standardrepertoire.com by David Miller, jazzstandards.com, Wikipedia, iReal Pro charts and the " +
+      "Jazz Chord Progressions Corpus. The Nunito and Fraunces typefaces are used under the SIL Open Font License."
+  )
 }
