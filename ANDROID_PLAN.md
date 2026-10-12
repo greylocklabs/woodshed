@@ -211,7 +211,7 @@ phase-to-category mapping in `DESIGN.md` is complete and exact against the data
 
 - **Planner.** Greedy weighted fill as above, seeded from the exercise pool
   filtered by the user's instrument families. Remember that empty `families`
-  means "applies to everything", which is 37 of the 44 rows — the common case,
+  means "applies to everything", which is 36 of the 44 rows — the common case,
   so make that the default in code rather than a special case.
 - **Runner.** A foreground service so the timer survives the app going to
   background mid-session, with a notification showing current exercise and
@@ -252,8 +252,8 @@ Four rules, all of them lessons the old branches paid for:
   Re-seeding must refresh scraped metadata and leave lifecycle, notes and
   archived state alone. Getting this boundary explicit up front removed a whole
   class of bug last time.
-- **Keep "unknown" distinguishable from "empty."** 44 tunes have no documented
-  form, 3 no key, 1 no style. Nullable columns, not empty strings — collapse the
+- **Keep "unknown" distinguishable from "empty."** 16 tunes have no documented
+  form, 2 no key, 1 no style. Nullable columns, not empty strings — collapse the
   distinction on import and it is gone permanently.
 
 **Known quirks: preserve, don't normalise.** Compound styles (`Latin/Swing`,
@@ -382,9 +382,9 @@ are fitted to memory decay for discrete facts. Playing a tune well is not
 recall. Intervals may still be a good *surfacing* mechanism even if the
 underlying model is wrong — the event log is the hedge that lets you find out.
 
-**Is the instrument-family scoping right?** Only 7 of 44 exercises are
-family-scoped, and `DESIGN.md` already doubts the calls — plenty of sax players
-double-tongue. Cheap to fix in data, so worth a second opinion from someone who
+**Is the instrument-family scoping right?** Only 8 of 44 exercises are
+family-scoped, and the calls were checked against published pedagogy rather than
+a teacher. Cheap to fix in data, so still worth a second opinion from someone who
 teaches.
 
 **What does the app do with 201 tunes you will never learn?** A wishlist that

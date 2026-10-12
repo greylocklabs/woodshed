@@ -2,7 +2,7 @@
   {
     "name": "Long tones",
     "category": "Tone",
-    "description": "Low to mid range, eight counts a note, tuner drone on the pitch. Watch the needle, not the clock.",
+    "description": "Low to mid range, eight counts a note against a drone. Tune by ear first, then check the tuner.",
     "minutes": 10,
     "difficulty": 2,
     "tempo_bpm": 60,
@@ -22,7 +22,7 @@
     "category": "Tone",
     "description": "Finger low Bb and voice up the overtone series, then match each overtone against its real fingering.",
     "minutes": 8,
-    "difficulty": 4,
+    "difficulty": 3,
     "tempo_bpm": null,
     "families": [
       "Saxophone"
@@ -53,9 +53,9 @@
   {
     "name": "Harmonics",
     "category": "Tone",
-    "description": "Finger low C and blow up the harmonic series. Keep the air speed even as the partials climb.",
+    "description": "Finger your lowest note (low D on piccolo) and blow up the harmonic series. Keep the air speed even as the partials climb.",
     "minutes": 8,
-    "difficulty": 4,
+    "difficulty": 3,
     "tempo_bpm": null,
     "families": [
       "Flute"
@@ -64,9 +64,9 @@
   {
     "name": "Register break crossings",
     "category": "Tone",
-    "description": "Slur across the break both directions, throat A to B, then chromatically either side of it.",
+    "description": "Slur across the break both directions, throat A to B with the right hand down, then chromatically either side of it.",
     "minutes": 8,
-    "difficulty": 4,
+    "difficulty": 3,
     "tempo_bpm": null,
     "families": [
       "Clarinet"
@@ -75,7 +75,7 @@
   {
     "name": "Lip slurs",
     "category": "Tone",
-    "description": "Pedal to fifth to octave on each valve or slide position, slurred, no tongue.",
+    "description": "Low partial to the next and back (trumpet C-G-C, trombone Bb-F-Bb) on each valve combination or slide position, slurred, no tongue.",
     "minutes": 10,
     "difficulty": 3,
     "tempo_bpm": 72,
@@ -84,7 +84,7 @@
     ]
   },
   {
-    "name": "Breathing gym",
+    "name": "Breathing cycles",
     "category": "Air & Breathing",
     "description": "In four out four, in two out six, in one out eight. No instrument, just air.",
     "minutes": 5,
@@ -123,10 +123,12 @@
     "name": "Doodle tongue",
     "category": "Articulation",
     "description": "Doo-dle-doo-dle on one pitch, then up a scale. Straight eighths first, then swung.",
-    "minutes": 8,
+    "minutes": 5,
     "difficulty": 4,
     "tempo_bpm": 100,
-    "families": []
+    "families": [
+      "Brass"
+    ]
   },
   {
     "name": "Staccato scales",
@@ -140,14 +142,11 @@
   {
     "name": "Double tonguing",
     "category": "Articulation",
-    "description": "Ta-ka on one pitch, slowly, until the K is indistinguishable from the T.",
+    "description": "Ta-ka in sixteenths on one mid-register pitch, slowly, until the K is indistinguishable from the T.",
     "minutes": 8,
     "difficulty": 4,
     "tempo_bpm": 80,
-    "families": [
-      "Brass",
-      "Flute"
-    ]
+    "families": []
   },
   {
     "name": "Chromatic scale, full range",
@@ -165,14 +164,18 @@
     "minutes": 6,
     "difficulty": 2,
     "tempo_bpm": null,
-    "families": []
+    "families": [
+      "Saxophone",
+      "Clarinet",
+      "Flute"
+    ]
   },
   {
     "name": "Scales in fourths",
     "category": "Technique",
     "description": "Major scale in ascending fourths, one octave then two. Start at 60.",
     "minutes": 8,
-    "difficulty": 4,
+    "difficulty": 3,
     "tempo_bpm": 60,
     "families": []
   },
@@ -206,7 +209,7 @@
   {
     "name": "Bebop scale",
     "category": "Scales & Patterns",
-    "description": "Dominant scale with the added natural seven, so the chord tones land on the beat.",
+    "description": "Dominant scale with the added natural seven, descending from the root on beat one, so the chord tones land on the beat.",
     "minutes": 8,
     "difficulty": 3,
     "tempo_bpm": 90,
@@ -369,7 +372,7 @@
     "name": "Transcribe four bars",
     "category": "Transcription",
     "description": "Four bars of a solo by ear, no chart. Sing it accurately before you play it.",
-    "minutes": 12,
+    "minutes": 15,
     "difficulty": 4,
     "tempo_bpm": null,
     "families": []
@@ -404,7 +407,7 @@
   {
     "name": "Transposition at sight",
     "category": "Reading",
-    "description": "Read a concert-pitch line on a transposing horn, or the reverse. Slowly.",
+    "description": "Read a part written for a different transposition than your horn, such as concert to Bb or Eb, or the reverse. Slowly.",
     "minutes": 8,
     "difficulty": 5,
     "tempo_bpm": null,

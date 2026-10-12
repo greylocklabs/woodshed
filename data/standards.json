@@ -2,7 +2,7 @@
   {
     "title": "A Foggy Day",
     "slug": "a-foggy-day",
-    "composer": "George Gershwin",
+    "composer": "George Gershwin, Ira Gershwin",
     "year": 1937,
     "bars": 34,
     "time_signature": "4/4",
@@ -50,14 +50,14 @@
     "year": 1959,
     "bars": 24,
     "time_signature": "3/4",
-    "form": null,
+    "form": "Blues",
     "style": "Jazz Waltz",
     "common_key": "G"
   },
   {
     "title": "All Of Me",
     "slug": "all-of-me",
-    "composer": "Gerald Marks",
+    "composer": "Gerald Marks, Seymour Simons",
     "year": 1931,
     "bars": 32,
     "time_signature": "4/4",
@@ -79,7 +79,7 @@
   {
     "title": "All The Things You Are",
     "slug": "all-the-things-you-are",
-    "composer": "Jerome Kern",
+    "composer": "Jerome Kern, Oscar Hammerstein II",
     "year": 1939,
     "bars": 36,
     "time_signature": "4/4",
@@ -90,7 +90,7 @@
   {
     "title": "Alone Together",
     "slug": "alone-together",
-    "composer": "Arthur Schwartz",
+    "composer": "Arthur Schwartz, Howard Dietz",
     "year": 1932,
     "bars": 44,
     "time_signature": "4/4",
@@ -112,7 +112,7 @@
   {
     "title": "Angel Eyes",
     "slug": "angel-eyes",
-    "composer": "Matt Dennis",
+    "composer": "Matt Dennis, Earl Brent",
     "year": 1946,
     "bars": 32,
     "time_signature": "4/4",
@@ -123,7 +123,7 @@
   {
     "title": "Anthropology",
     "slug": "anthropology",
-    "composer": "Charlie Parker",
+    "composer": "Charlie Parker, Dizzy Gillespie",
     "year": 1946,
     "bars": 32,
     "time_signature": "4/4",
@@ -149,14 +149,14 @@
     "year": 1951,
     "bars": 12,
     "time_signature": "4/4",
-    "form": null,
+    "form": "Blues",
     "style": "Blues",
     "common_key": "F"
   },
   {
     "title": "Autumn Leaves",
     "slug": "autumn-leaves",
-    "composer": "Joseph Kosma",
+    "composer": "Joseph Kosma, Jacques Prevert, Johnny Mercer",
     "year": 1945,
     "bars": 32,
     "time_signature": "4/4",
@@ -167,7 +167,7 @@
   {
     "title": "Back Home Again In Indiana",
     "slug": "back-home-again-in-indiana",
-    "composer": "James Hanley",
+    "composer": "James F. Hanley, Ballard MacDonald",
     "year": 1917,
     "bars": 32,
     "time_signature": "4/4",
@@ -176,13 +176,13 @@
     "common_key": "F"
   },
   {
-    "title": "Bags Groove",
+    "title": "Bags' Groove",
     "slug": "bags-groove",
     "composer": "Milt Jackson",
     "year": 1954,
     "bars": 12,
     "time_signature": "4/4",
-    "form": null,
+    "form": "Blues",
     "style": "Blues",
     "common_key": "F"
   },
@@ -200,7 +200,7 @@
   {
     "title": "Beautiful Love",
     "slug": "beautiful-love",
-    "composer": "Victor Young",
+    "composer": "Victor Young, Wayne King, Egbert Van Alstyne, Haven Gillespie",
     "year": 1931,
     "bars": 32,
     "time_signature": "4/4",
@@ -211,7 +211,7 @@
   {
     "title": "Bernie's Tune",
     "slug": "bernies-tune",
-    "composer": "Bernie Miller",
+    "composer": "Bernie Miller, Jerry Leiber, Mike Stoller",
     "year": 1952,
     "bars": 32,
     "time_signature": "4/4",
@@ -226,7 +226,7 @@
     "year": 1964,
     "bars": 12,
     "time_signature": "4/4",
-    "form": null,
+    "form": "Blues",
     "style": "Blues",
     "common_key": "Eb"
   },
@@ -234,28 +234,28 @@
     "title": "Billie's Bounce",
     "slug": "billies-bounce",
     "composer": "Charlie Parker",
-    "year": 1954,
+    "year": 1945,
     "bars": 12,
     "time_signature": "4/4",
-    "form": null,
+    "form": "Blues",
     "style": "Blues",
     "common_key": "F"
   },
   {
     "title": "Birks Works",
     "slug": "birks-works",
-    "composer": "Dizzie Gillespie",
+    "composer": "Dizzy Gillespie",
     "year": 1951,
     "bars": 12,
     "time_signature": "4/4",
-    "form": null,
+    "form": "Blues",
     "style": "Blues",
     "common_key": "F-"
   },
   {
     "title": "Black Orpheus",
     "slug": "black-orpheus",
-    "composer": "Luiz Bonfia",
+    "composer": "Luiz Bonfa, Antonio Maria",
     "year": 1959,
     "bars": 32,
     "time_signature": "4/4",
@@ -277,7 +277,7 @@
   {
     "title": "Blue In Green",
     "slug": "blue-in-green",
-    "composer": "Bill Evans",
+    "composer": "Miles Davis",
     "year": 1959,
     "bars": 10,
     "time_signature": "4/4",
@@ -292,7 +292,7 @@
     "year": 1954,
     "bars": 12,
     "time_signature": "4/4",
-    "form": null,
+    "form": "Blues",
     "style": "Blues",
     "common_key": "Bb"
   },
@@ -303,18 +303,18 @@
     "year": 1957,
     "bars": 12,
     "time_signature": "4/4",
-    "form": null,
+    "form": "Blues",
     "style": "Blues",
     "common_key": "Eb"
   },
   {
     "title": "Blues By Five",
     "slug": "blues-by-five",
-    "composer": "Red Garland",
-    "year": null,
+    "composer": "Miles Davis",
+    "year": 1956,
     "bars": 12,
     "time_signature": "4/4",
-    "form": null,
+    "form": "Blues",
     "style": "Blues",
     "common_key": "C"
   },
@@ -325,7 +325,7 @@
     "year": 1951,
     "bars": 12,
     "time_signature": "4/4",
-    "form": null,
+    "form": "Blues",
     "style": "Blues",
     "common_key": "F"
   },
@@ -336,14 +336,14 @@
     "year": 1955,
     "bars": 12,
     "time_signature": "4/4",
-    "form": null,
+    "form": "Blues",
     "style": "Blues",
     "common_key": "G"
   },
   {
     "title": "Bluesette",
     "slug": "bluesette",
-    "composer": "Toots Thielemans",
+    "composer": "Toots Thielemans, Norman Gimbel",
     "year": 1961,
     "bars": 24,
     "time_signature": "3/4",
@@ -354,18 +354,18 @@
   {
     "title": "Body And Soul",
     "slug": "body-and-soul",
-    "composer": "Johnny Green",
+    "composer": "Johnny Green, Edward Heyman, Robert Sour, Frank Eyton",
     "year": 1930,
     "bars": 32,
     "time_signature": "4/4",
     "form": "AABA",
     "style": "Ballad",
-    "common_key": "C#"
+    "common_key": "Db"
   },
   {
     "title": "Broadway",
     "slug": "broadway",
-    "composer": "Wilbur H Bird, Teddy McRae, Henri Woode",
+    "composer": "Wilbur Bird, Teddy McRae, Henri Woode",
     "year": 1940,
     "bars": 32,
     "time_signature": "4/4",
@@ -376,7 +376,7 @@
   {
     "title": "But Beautiful",
     "slug": "but-beautiful",
-    "composer": "Jimmy Van-Heusen",
+    "composer": "Jimmy Van Heusen, Johnny Burke",
     "year": 1947,
     "bars": 32,
     "time_signature": "4/4",
@@ -387,7 +387,7 @@
   {
     "title": "But Not For Me",
     "slug": "but-not-for-me",
-    "composer": "George Gershwin",
+    "composer": "George Gershwin, Ira Gershwin",
     "year": 1930,
     "bars": 32,
     "time_signature": "4/4",
@@ -398,7 +398,7 @@
   {
     "title": "Bye Bye Blackbird",
     "slug": "bye-bye-blackbird",
-    "composer": "Ray Henderson",
+    "composer": "Ray Henderson, Mort Dixon",
     "year": 1926,
     "bars": 32,
     "time_signature": "4/4",
@@ -420,13 +420,13 @@
   {
     "title": "Caravan",
     "slug": "caravan",
-    "composer": "Duke Ellington",
+    "composer": "Duke Ellington, Juan Tizol, Irving Mills",
     "year": 1936,
     "bars": 64,
     "time_signature": "4/4",
     "form": "AABA",
     "style": "Latin/Swing",
-    "common_key": "G"
+    "common_key": "F-"
   },
   {
     "title": "Ceora",
@@ -453,7 +453,7 @@
   {
     "title": "Come Rain Or Come Shine",
     "slug": "come-rain-or-come-shine",
-    "composer": "Harold Arlen",
+    "composer": "Harold Arlen, Johnny Mercer",
     "year": 1946,
     "bars": 32,
     "time_signature": "4/4",
@@ -475,7 +475,7 @@
   {
     "title": "Corcovado",
     "slug": "corcovado",
-    "composer": "Antonio Carlos Jobim",
+    "composer": "Antonio Carlos Jobim, Gene Lees",
     "year": 1960,
     "bars": 34,
     "time_signature": "4/4",
@@ -497,7 +497,7 @@
   {
     "title": "Darn That Dream",
     "slug": "darn-that-dream",
-    "composer": "Jimmy Van-Heusen",
+    "composer": "Jimmy Van Heusen, Eddie DeLange",
     "year": 1939,
     "bars": 32,
     "time_signature": "4/4",
@@ -508,7 +508,7 @@
   {
     "title": "Days Of Wine And Roses",
     "slug": "days-of-wine-and-roses",
-    "composer": "Henry Mancini",
+    "composer": "Henry Mancini, Johnny Mercer",
     "year": 1962,
     "bars": 32,
     "time_signature": "4/4",
@@ -519,7 +519,7 @@
   {
     "title": "Desafinado",
     "slug": "desafinado",
-    "composer": "Antonio Carlos Jobim",
+    "composer": "Antonio Carlos Jobim, Newton Mendonca, Jon Hendricks, Jessie Cavanaugh",
     "year": 1959,
     "bars": 68,
     "time_signature": "4/4",
@@ -541,7 +541,7 @@
   {
     "title": "Don't Get Around Much Anymore",
     "slug": "dont-get-around-much-anymore",
-    "composer": "Duke Ellington",
+    "composer": "Duke Ellington, Bob Russell",
     "year": 1940,
     "bars": 32,
     "time_signature": "4/4",
@@ -552,7 +552,7 @@
   {
     "title": "Donna Lee",
     "slug": "donna-lee",
-    "composer": "Charlie Parker",
+    "composer": "Miles Davis",
     "year": 1947,
     "bars": 32,
     "time_signature": "4/4",
@@ -585,7 +585,7 @@
   {
     "title": "Embraceable You",
     "slug": "embraceable-you",
-    "composer": "George Gershwin",
+    "composer": "George Gershwin, Ira Gershwin",
     "year": 1930,
     "bars": 32,
     "time_signature": "4/4",
@@ -600,7 +600,7 @@
     "year": 1960,
     "bars": 12,
     "time_signature": "4/4",
-    "form": null,
+    "form": "Blues",
     "style": "Blues",
     "common_key": "C#-"
   },
@@ -633,7 +633,7 @@
     "year": 1966,
     "bars": 24,
     "time_signature": "3/4",
-    "form": null,
+    "form": "Blues",
     "style": "Jazz Waltz",
     "common_key": "C-"
   },
@@ -666,7 +666,7 @@
     "year": 1959,
     "bars": 12,
     "time_signature": "4/4",
-    "form": null,
+    "form": "Blues",
     "style": "Blues",
     "common_key": "Bb"
   },
@@ -684,7 +684,7 @@
   {
     "title": "Georgia On My Mind",
     "slug": "georgia-on-my-mind",
-    "composer": "Hoagy Carmichael",
+    "composer": "Hoagy Carmichael, Stuart Gorrell",
     "year": 1930,
     "bars": 32,
     "time_signature": "4/4",
@@ -697,16 +697,16 @@
     "slug": "giant-steps",
     "composer": "John Coltrane",
     "year": 1959,
-    "bars": 24,
+    "bars": 16,
     "time_signature": "4/4",
-    "form": null,
+    "form": "AB",
     "style": "Swing",
     "common_key": "Eb"
   },
   {
     "title": "Good Bait",
     "slug": "good-bait",
-    "composer": "Tadd Dameron",
+    "composer": "Tadd Dameron, Count Basie",
     "year": 1944,
     "bars": 32,
     "time_signature": "4/4",
@@ -715,9 +715,9 @@
     "common_key": "Bb"
   },
   {
-    "title": "Groovin High",
+    "title": "Groovin' High",
     "slug": "groovin-high",
-    "composer": "Dizzie Gillespie",
+    "composer": "Dizzy Gillespie",
     "year": 1944,
     "bars": 32,
     "time_signature": "4/4",
@@ -730,16 +730,16 @@
     "slug": "half-nelson",
     "composer": "Miles Davis",
     "year": 1948,
-    "bars": 24,
+    "bars": 16,
     "time_signature": "4/4",
-    "form": null,
+    "form": "AABC",
     "style": "Swing",
     "common_key": "C"
   },
   {
     "title": "Have You Met Miss Jones",
     "slug": "have-you-met-miss-jones",
-    "composer": "Richard Rogers",
+    "composer": "Richard Rodgers, Lorenz Hart",
     "year": 1937,
     "bars": 32,
     "time_signature": "4/4",
@@ -750,18 +750,18 @@
   {
     "title": "Here's That Rainy Day",
     "slug": "heres-that-rainy-day",
-    "composer": "Jimmy Van-Heusen",
+    "composer": "Jimmy Van Heusen, Johnny Burke",
     "year": 1953,
     "bars": 32,
     "time_signature": "4/4",
-    "form": "AABA",
+    "form": "ABAC",
     "style": "Swing",
     "common_key": "G"
   },
   {
     "title": "Honeysuckle Rose",
     "slug": "honeysuckle-rose",
-    "composer": "Fats Waller",
+    "composer": "Fats Waller, Andy Razaf",
     "year": 1929,
     "bars": 32,
     "time_signature": "4/4",
@@ -794,7 +794,7 @@
   {
     "title": "How High The Moon",
     "slug": "how-high-the-moon",
-    "composer": "Morgan Lewis",
+    "composer": "Morgan Lewis, Nancy Hamilton",
     "year": 1940,
     "bars": 32,
     "time_signature": "4/4",
@@ -805,7 +805,7 @@
   {
     "title": "How Insensitive",
     "slug": "how-insensitive",
-    "composer": "Antonio Carlos Jobim",
+    "composer": "Antonio Carlos Jobim, Vinicius de Moraes, Norman Gimbel",
     "year": 1963,
     "bars": 32,
     "time_signature": "4/4",
@@ -816,7 +816,7 @@
   {
     "title": "I Can't Get Started",
     "slug": "i-cant-get-started",
-    "composer": "Vernon Duke",
+    "composer": "Vernon Duke, Ira Gershwin",
     "year": 1935,
     "bars": 32,
     "time_signature": "4/4",
@@ -827,7 +827,7 @@
   {
     "title": "I Could Write A Book",
     "slug": "i-could-write-a-book",
-    "composer": "Richard Rogers",
+    "composer": "Richard Rodgers, Lorenz Hart",
     "year": 1940,
     "bars": 32,
     "time_signature": "4/4",
@@ -838,7 +838,7 @@
   {
     "title": "I Got Rhythm",
     "slug": "i-got-rhythm",
-    "composer": "George Gershwin",
+    "composer": "George Gershwin, Ira Gershwin",
     "year": 1930,
     "bars": 32,
     "time_signature": "4/4",
@@ -871,7 +871,7 @@
   {
     "title": "I Mean You",
     "slug": "i-mean-you",
-    "composer": "Thelonious Monk",
+    "composer": "Thelonious Monk, Coleman Hawkins",
     "year": 1947,
     "bars": 32,
     "time_signature": "4/4",
@@ -882,7 +882,7 @@
   {
     "title": "I Remember You",
     "slug": "i-remember-you",
-    "composer": "Victor Schertzinger",
+    "composer": "Victor Schertzinger, Johnny Mercer",
     "year": 1942,
     "bars": 32,
     "time_signature": "4/4",
@@ -904,7 +904,7 @@
   {
     "title": "I Thought About You",
     "slug": "i-thought-about-you",
-    "composer": "Jimmy Van-Heusen",
+    "composer": "Jimmy Van Heusen, Johnny Mercer",
     "year": 1939,
     "bars": 32,
     "time_signature": "4/4",
@@ -915,7 +915,7 @@
   {
     "title": "I Wish I Knew How It Would Feel To Be Free",
     "slug": "i-wish-i-knew-how-it-would-feel-to-be-free",
-    "composer": "Billy Taylor",
+    "composer": "Billy Taylor, Dick Dallas",
     "year": 1963,
     "bars": 16,
     "time_signature": "4/4",
@@ -926,11 +926,11 @@
   {
     "title": "I'll Remember April",
     "slug": "ill-remember-april",
-    "composer": "Gene De Paul, Patricia Johnston, Don Raye",
+    "composer": "Gene de Paul, Don Raye, Patricia Johnston",
     "year": 1941,
-    "bars": 32,
+    "bars": 48,
     "time_signature": "4/4",
-    "form": "AB",
+    "form": "ABA",
     "style": "Swing",
     "common_key": "G"
   },
@@ -959,7 +959,7 @@
   {
     "title": "In A Mellow Tone",
     "slug": "in-a-mellow-tone",
-    "composer": "Duke Ellington",
+    "composer": "Duke Ellington, Milt Gabler",
     "year": 1940,
     "bars": 32,
     "time_signature": "4/4",
@@ -970,7 +970,7 @@
   {
     "title": "In A Sentimental Mood",
     "slug": "in-a-sentimental-mood",
-    "composer": "Duke Ellington",
+    "composer": "Duke Ellington, Manny Kurtz, Irving Mills",
     "year": 1935,
     "bars": 32,
     "time_signature": "4/4",
@@ -1003,7 +1003,7 @@
   {
     "title": "Invitation",
     "slug": "invitation",
-    "composer": "Bronislau Kaper",
+    "composer": "Bronislau Kaper, Paul Francis Webster",
     "year": 1952,
     "bars": 48,
     "time_signature": "4/4",
@@ -1014,7 +1014,7 @@
   {
     "title": "It Could Happen To You",
     "slug": "it-could-happen-to-you",
-    "composer": "Jimmy Van-Heusen",
+    "composer": "Jimmy Van Heusen, Johnny Burke",
     "year": 1944,
     "bars": 32,
     "time_signature": "4/4",
@@ -1025,7 +1025,7 @@
   {
     "title": "It Don't Mean A Thing",
     "slug": "it-dont-mean-a-thing",
-    "composer": "Duke Ellington",
+    "composer": "Duke Ellington, Irving Mills",
     "year": 1932,
     "bars": 32,
     "time_signature": "4/4",
@@ -1036,7 +1036,7 @@
   {
     "title": "It Had To Be You",
     "slug": "it-had-to-be-you",
-    "composer": "Isham Jones",
+    "composer": "Isham Jones, Gus Kahn",
     "year": 1924,
     "bars": 32,
     "time_signature": "4/4",
@@ -1047,7 +1047,7 @@
   {
     "title": "It Might As Well Be Spring",
     "slug": "it-might-as-well-be-spring",
-    "composer": "Richard Rogers",
+    "composer": "Richard Rodgers, Oscar Hammerstein II",
     "year": 1945,
     "bars": 80,
     "time_signature": "4/4",
@@ -1058,7 +1058,7 @@
   {
     "title": "It's You Or No One",
     "slug": "its-you-or-no-one",
-    "composer": "Jule Styne",
+    "composer": "Jule Styne, Sammy Cahn",
     "year": 1948,
     "bars": 32,
     "time_signature": "4/4",
@@ -1080,7 +1080,7 @@
   {
     "title": "Just Friends",
     "slug": "just-friends",
-    "composer": "John Klenner",
+    "composer": "John Klenner, Sam M. Lewis",
     "year": 1931,
     "bars": 32,
     "time_signature": "4/4",
@@ -1106,14 +1106,14 @@
     "year": 1947,
     "bars": 16,
     "time_signature": "4/4",
-    "form": null,
+    "form": "AABC",
     "style": "Bebop",
     "common_key": "C"
   },
   {
     "title": "Laura",
     "slug": "laura",
-    "composer": "David Raskin",
+    "composer": "David Raksin, Johnny Mercer",
     "year": 1945,
     "bars": 32,
     "time_signature": "4/4",
@@ -1135,7 +1135,7 @@
   {
     "title": "Like Someone In Love",
     "slug": "like-someone-in-love",
-    "composer": "Jimmy Van-Heusen",
+    "composer": "Jimmy Van Heusen, Johnny Burke",
     "year": 1944,
     "bars": 32,
     "time_signature": "4/4",
@@ -1163,12 +1163,12 @@
     "time_signature": "4/4",
     "form": "AABA",
     "style": "Swing",
-    "common_key": "Eb"
+    "common_key": "Bb"
   },
   {
     "title": "Lover Man",
     "slug": "lover-man",
-    "composer": "Jimmy Davis",
+    "composer": "Jimmy Davis, Roger Ramirez, Jimmy Sherman",
     "year": 1942,
     "bars": 32,
     "time_signature": "4/4",
@@ -1179,22 +1179,22 @@
   {
     "title": "Lullaby Of Birdland",
     "slug": "lullaby-of-birdland",
-    "composer": "George Shearing",
+    "composer": "George Shearing, George David Weiss",
     "year": 1952,
     "bars": 32,
     "time_signature": "4/4",
     "form": "AABA",
     "style": "Swing",
-    "common_key": "Bb"
+    "common_key": "Ab"
   },
   {
     "title": "Mack The Knife",
     "slug": "mack-the-knife",
-    "composer": "Kurt Weill",
+    "composer": "Kurt Weill, Bertolt Brecht, Marc Blitzstein",
     "year": 1928,
     "bars": 16,
     "time_signature": "4/4",
-    "form": null,
+    "form": "AB",
     "style": "Swing",
     "common_key": "Bb"
   },
@@ -1212,7 +1212,7 @@
   {
     "title": "Meditation",
     "slug": "meditation",
-    "composer": "Antonio Carlos Jobim",
+    "composer": "Antonio Carlos Jobim, Newton Mendonca, Norman Gimbel",
     "year": 1962,
     "bars": 56,
     "time_signature": "4/4",
@@ -1236,7 +1236,7 @@
     "slug": "milestones",
     "composer": "Miles Davis",
     "year": 1958,
-    "bars": 32,
+    "bars": 40,
     "time_signature": "4/4",
     "form": "AABA",
     "style": "Swing",
@@ -1245,7 +1245,7 @@
   {
     "title": "Misty",
     "slug": "misty",
-    "composer": "Erroll Garner",
+    "composer": "Erroll Garner, Johnny Burke",
     "year": 1954,
     "bars": 32,
     "time_signature": "4/4",
@@ -1254,11 +1254,11 @@
     "common_key": "Eb"
   },
   {
-    "title": "Moanin",
+    "title": "Moanin'",
     "slug": "moanin",
     "composer": "Bobby Timmons",
     "year": 1959,
-    "bars": null,
+    "bars": 32,
     "time_signature": "4/4",
     "form": "AABA",
     "style": "Swing",
@@ -1278,7 +1278,7 @@
   {
     "title": "Mood Indigo",
     "slug": "mood-indigo",
-    "composer": "Duke Ellington",
+    "composer": "Duke Ellington, Barney Bigard, Irving Mills",
     "year": 1930,
     "bars": 32,
     "time_signature": "4/4",
@@ -1289,7 +1289,7 @@
   {
     "title": "Moonglow",
     "slug": "moonglow",
-    "composer": "Will Hudson, Irving Mills",
+    "composer": "Will Hudson, Irving Mills, Eddie DeLange",
     "year": 1933,
     "bars": 32,
     "time_signature": "4/4",
@@ -1300,7 +1300,7 @@
   {
     "title": "Moonlight In Vermont",
     "slug": "moonlight-in-vermont",
-    "composer": "Karl Suessdorf",
+    "composer": "Karl Suessdorf, John Blackburn",
     "year": 1944,
     "bars": 26,
     "time_signature": "4/4",
@@ -1309,20 +1309,20 @@
     "common_key": "Eb"
   },
   {
-    "title": "Mr P.C.",
+    "title": "Mr. P.C.",
     "slug": "mr-pc",
     "composer": "John Coltrane",
     "year": 1959,
     "bars": 12,
     "time_signature": "4/4",
-    "form": null,
+    "form": "Blues",
     "style": "Blues",
     "common_key": "C-"
   },
   {
-    "title": "My Favourite Things",
+    "title": "My Favorite Things",
     "slug": "my-favourite-things",
-    "composer": "Richard Rogers",
+    "composer": "Richard Rodgers, Oscar Hammerstein II",
     "year": 1959,
     "bars": 72,
     "time_signature": "3/4",
@@ -1333,7 +1333,7 @@
   {
     "title": "My Foolish Heart",
     "slug": "my-foolish-heart",
-    "composer": "Victor Young",
+    "composer": "Victor Young, Ned Washington",
     "year": 1949,
     "bars": 32,
     "time_signature": "4/4",
@@ -1344,13 +1344,13 @@
   {
     "title": "My Funny Valentine",
     "slug": "my-funny-valentine",
-    "composer": "Richard Rogers",
+    "composer": "Richard Rodgers, Lorenz Hart",
     "year": 1937,
     "bars": 36,
     "time_signature": "4/4",
     "form": "AABC",
     "style": "Swing",
-    "common_key": "Eb"
+    "common_key": "C-"
   },
   {
     "title": "My Little Suede Shoes",
@@ -1377,7 +1377,7 @@
   {
     "title": "My Romance",
     "slug": "my-romance",
-    "composer": "Richard Rogers",
+    "composer": "Richard Rodgers, Lorenz Hart",
     "year": 1935,
     "bars": 32,
     "time_signature": "4/4",
@@ -1388,7 +1388,7 @@
   {
     "title": "My Shining Hour",
     "slug": "my-shining-hour",
-    "composer": "Harold Arlen",
+    "composer": "Harold Arlen, Johnny Mercer",
     "year": 1943,
     "bars": 32,
     "time_signature": "4/4",
@@ -1412,9 +1412,9 @@
     "slug": "nicas-dream",
     "composer": "Horace Silver",
     "year": 1954,
-    "bars": 48,
+    "bars": 64,
     "time_signature": "4/4",
-    "form": "AAB",
+    "form": "AABA",
     "style": "Latin",
     "common_key": "Bb-"
   },
@@ -1430,9 +1430,9 @@
     "common_key": "C"
   },
   {
-    "title": "Night In Tunisia",
+    "title": "A Night In Tunisia",
     "slug": "night-in-tunisia",
-    "composer": "Dizzie Gillespie",
+    "composer": "Dizzy Gillespie, Frank Paparelli",
     "year": 1941,
     "bars": 32,
     "time_signature": "4/4",
@@ -1447,7 +1447,7 @@
     "year": 1945,
     "bars": 12,
     "time_signature": "4/4",
-    "form": null,
+    "form": "Blues",
     "style": "Blues",
     "common_key": "F"
   },
@@ -1465,7 +1465,7 @@
   {
     "title": "On Green Dolphin Street",
     "slug": "on-green-dolphin-street",
-    "composer": "Bronislau Kaper",
+    "composer": "Bronislau Kaper, Ned Washington",
     "year": 1947,
     "bars": 32,
     "time_signature": "4/4",
@@ -1476,7 +1476,7 @@
   {
     "title": "On The Sunny Side Of The Street",
     "slug": "on-the-sunny-side-of-the-street",
-    "composer": "Jimmy McHugh",
+    "composer": "Jimmy McHugh, Dorothy Fields",
     "year": 1930,
     "bars": 32,
     "time_signature": "4/4",
@@ -1487,7 +1487,7 @@
   {
     "title": "Once I Loved",
     "slug": "once-i-loved",
-    "composer": "Antonio Carlos Jobim",
+    "composer": "Antonio Carlos Jobim, Vinicius de Moraes, Ray Gilbert",
     "year": 1960,
     "bars": 44,
     "time_signature": "4/4",
@@ -1498,7 +1498,7 @@
   {
     "title": "One Note Samba",
     "slug": "one-note-samba",
-    "composer": "Antonio Carlos Jobim",
+    "composer": "Antonio Carlos Jobim, Newton Mendonca, Jon Hendricks",
     "year": 1961,
     "bars": 40,
     "time_signature": "4/4",
@@ -1509,7 +1509,7 @@
   {
     "title": "Ornithology",
     "slug": "ornithology",
-    "composer": "Charlie Parker",
+    "composer": "Charlie Parker, Benny Harris",
     "year": 1946,
     "bars": 32,
     "time_signature": "4/4",
@@ -1520,7 +1520,7 @@
   {
     "title": "Our Love Is Here To Stay",
     "slug": "our-love-is-here-to-stay",
-    "composer": "George Gershwin",
+    "composer": "George Gershwin, Ira Gershwin",
     "year": 1937,
     "bars": 32,
     "time_signature": "4/4",
@@ -1531,7 +1531,7 @@
   {
     "title": "Out Of Nowhere",
     "slug": "out-of-nowhere",
-    "composer": "Johnny Green",
+    "composer": "Johnny Green, Edward Heyman",
     "year": 1931,
     "bars": 32,
     "time_signature": "4/4",
@@ -1553,7 +1553,7 @@
   {
     "title": "Perdido",
     "slug": "perdido",
-    "composer": "Juan Tizol",
+    "composer": "Juan Tizol, Ervin Drake, Hans Lengsfelder",
     "year": 1942,
     "bars": 32,
     "time_signature": "4/4",
@@ -1564,7 +1564,7 @@
   {
     "title": "Polka Dots And Moonbeams",
     "slug": "polka-dots-and-moonbeams",
-    "composer": "Jimmy Van-Heusen",
+    "composer": "Jimmy Van Heusen, Johnny Burke",
     "year": 1940,
     "bars": 32,
     "time_signature": "4/4",
@@ -1575,7 +1575,7 @@
   {
     "title": "Prelude To A Kiss",
     "slug": "prelude-to-a-kiss",
-    "composer": "Duke Ellington",
+    "composer": "Duke Ellington, Irving Gordon, Irving Mills",
     "year": 1938,
     "bars": 32,
     "time_signature": "4/4",
@@ -1584,7 +1584,7 @@
     "common_key": "C"
   },
   {
-    "title": "Recordame",
+    "title": "Recorda Me",
     "slug": "recordame",
     "composer": "Joe Henderson",
     "year": 1963,
@@ -1595,15 +1595,15 @@
     "common_key": "A-"
   },
   {
-    "title": "Round Midnight",
+    "title": "'Round Midnight",
     "slug": "round-midnight",
-    "composer": "Thelonious Monk",
+    "composer": "Thelonious Monk, Cootie Williams, Bernie Hanighen",
     "year": 1944,
     "bars": 32,
     "time_signature": "4/4",
     "form": "AABA",
     "style": "Ballad",
-    "common_key": "Eb"
+    "common_key": "Eb-"
   },
   {
     "title": "Sandu",
@@ -1612,14 +1612,14 @@
     "year": 1955,
     "bars": 12,
     "time_signature": "4/4",
-    "form": null,
+    "form": "Blues",
     "style": "Blues",
     "common_key": "Eb"
   },
   {
     "title": "Satin Doll",
     "slug": "satin-doll",
-    "composer": "Duke Ellington, Billy Strayhorn",
+    "composer": "Duke Ellington, Billy Strayhorn, Johnny Mercer",
     "year": 1953,
     "bars": 32,
     "time_signature": "4/4",
@@ -1641,7 +1641,7 @@
   {
     "title": "Seven Steps To Heaven",
     "slug": "seven-steps-to-heaven",
-    "composer": "Victor Feldman",
+    "composer": "Victor Feldman, Miles Davis",
     "year": 1963,
     "bars": 32,
     "time_signature": "4/4",
@@ -1652,7 +1652,7 @@
   {
     "title": "Shadow Of Your Smile",
     "slug": "shadow-of-your-smile",
-    "composer": "Johnny Mandel",
+    "composer": "Johnny Mandel, Paul Francis Webster",
     "year": 1965,
     "bars": 32,
     "time_signature": "4/4",
@@ -1663,7 +1663,7 @@
   {
     "title": "Skylark",
     "slug": "skylark",
-    "composer": "Hoagy Carmichael",
+    "composer": "Hoagy Carmichael, Johnny Mercer",
     "year": 1941,
     "bars": 32,
     "time_signature": "4/4",
@@ -1676,7 +1676,7 @@
     "slug": "so-what",
     "composer": "Miles Davis",
     "year": 1959,
-    "bars": 36,
+    "bars": 32,
     "time_signature": "4/4",
     "form": "AABA",
     "style": "Swing",
@@ -1685,7 +1685,7 @@
   {
     "title": "Softly As In A Morning Sunrise",
     "slug": "softly-as-in-a-morning-sunrise",
-    "composer": "Sigmund Romberg",
+    "composer": "Sigmund Romberg, Oscar Hammerstein II",
     "year": 1928,
     "bars": 32,
     "time_signature": "4/4",
@@ -1707,7 +1707,7 @@
   {
     "title": "Someday My Prince Will Come",
     "slug": "someday-my-prince-will-come",
-    "composer": "Frank Churchill",
+    "composer": "Frank Churchill, Larry Morey",
     "year": 1937,
     "bars": 32,
     "time_signature": "3/4",
@@ -1718,7 +1718,7 @@
   {
     "title": "Someone To Watch Over Me",
     "slug": "someone-to-watch-over-me",
-    "composer": "George Gershwin",
+    "composer": "George Gershwin, Ira Gershwin",
     "year": 1926,
     "bars": 32,
     "time_signature": "4/4",
@@ -1740,7 +1740,7 @@
   {
     "title": "Sophisticated Lady",
     "slug": "sophisticated-lady",
-    "composer": "Duke Ellington",
+    "composer": "Duke Ellington, Irving Mills, Mitchell Parish",
     "year": 1932,
     "bars": 32,
     "time_signature": "4/4",
@@ -1751,7 +1751,7 @@
   {
     "title": "Speak Low",
     "slug": "speak-low",
-    "composer": "Kurt Weill",
+    "composer": "Kurt Weill, Ogden Nash",
     "year": 1943,
     "bars": 56,
     "time_signature": "4/4",
@@ -1773,7 +1773,7 @@
   {
     "title": "St. James Infirmary",
     "slug": "st-james-infirmary",
-    "composer": null,
+    "composer": "Traditional, Joe Primrose",
     "year": 1928,
     "bars": 16,
     "time_signature": "4/4",
@@ -1801,12 +1801,12 @@
     "time_signature": "4/4",
     "form": "ABA",
     "style": "Swing",
-    "common_key": null
+    "common_key": "Db"
   },
   {
     "title": "Star Eyes",
     "slug": "star-eyes",
-    "composer": "Gene De Paul, Don Raye",
+    "composer": "Gene de Paul, Don Raye",
     "year": 1943,
     "bars": 36,
     "time_signature": "4/4",
@@ -1817,7 +1817,7 @@
   {
     "title": "Stardust",
     "slug": "stardust",
-    "composer": "Hoagy Carmichael",
+    "composer": "Hoagy Carmichael, Mitchell Parish",
     "year": 1929,
     "bars": 32,
     "time_signature": "4/4",
@@ -1828,9 +1828,9 @@
   {
     "title": "Stella By Starlight",
     "slug": "stella-by-starlight",
-    "composer": "Victor Young",
+    "composer": "Victor Young, Ned Washington",
     "year": 1946,
-    "bars": 36,
+    "bars": 32,
     "time_signature": "4/4",
     "form": "ABCA",
     "style": "Swing,Ballad",
@@ -1841,16 +1841,16 @@
     "slug": "stolen-moments",
     "composer": "Oliver Nelson",
     "year": 1961,
-    "bars": 23,
+    "bars": 16,
     "time_signature": "4/4",
     "form": "AB",
     "style": "Blues",
     "common_key": "C-"
   },
   {
-    "title": "Stompin At The Savoy",
+    "title": "Stompin' At The Savoy",
     "slug": "stompin-at-the-savoy",
-    "composer": "Benny Goodman, Chick Webb, Edgar Sampson",
+    "composer": "Edgar Sampson, Benny Goodman, Chick Webb, Andy Razaf",
     "year": 1936,
     "bars": 32,
     "time_signature": "4/4",
@@ -1865,29 +1865,29 @@
     "year": 1951,
     "bars": 12,
     "time_signature": "4/4",
-    "form": null,
+    "form": "Blues",
     "style": "Blues",
     "common_key": "F"
   },
   {
     "title": "Summertime",
     "slug": "summertime",
-    "composer": "George Gershwin",
+    "composer": "George Gershwin, DuBose Heyward",
     "year": 1934,
     "bars": 16,
     "time_signature": "4/4",
-    "form": null,
+    "form": "ABAC",
     "style": "Swing",
     "common_key": "A-"
   },
   {
     "title": "Sweet Georgia Brown",
     "slug": "sweet-georgia-brown",
-    "composer": "Ben Bernie, Maceo Pinkard",
+    "composer": "Ben Bernie, Maceo Pinkard, Kenneth Casey",
     "year": 1925,
-    "bars": 48,
+    "bars": 32,
     "time_signature": "4/4",
-    "form": "AAB",
+    "form": "ABAC",
     "style": "Swing",
     "common_key": "Ab"
   },
@@ -1916,7 +1916,7 @@
   {
     "title": "Tenderly",
     "slug": "tenderly",
-    "composer": "Walter Gross",
+    "composer": "Walter Gross, Jack Lawrence",
     "year": 1946,
     "bars": 32,
     "time_signature": "4/4",
@@ -1931,14 +1931,14 @@
     "year": 1956,
     "bars": 12,
     "time_signature": "4/4",
-    "form": null,
+    "form": "Blues",
     "style": "Blues",
     "common_key": "Bb"
   },
   {
     "title": "The Girl From Ipanema",
     "slug": "the-girl-from-ipanema",
-    "composer": "Antonio Carlos Jobim",
+    "composer": "Antonio Carlos Jobim, Vinicius de Moraes, Norman Gimbel",
     "year": 1962,
     "bars": 40,
     "time_signature": "4/4",
@@ -1949,18 +1949,18 @@
   {
     "title": "The Nearness Of You",
     "slug": "the-nearness-of-you",
-    "composer": "Hoagy Carmichael",
+    "composer": "Hoagy Carmichael, Ned Washington",
     "year": 1938,
     "bars": 36,
     "time_signature": "4/4",
-    "form": "AABC",
+    "form": "AABA",
     "style": "Ballad",
     "common_key": "F"
   },
   {
     "title": "The Night Has A Thousand Eyes",
     "slug": "the-night-has-a-thousand-eyes",
-    "composer": "Jerry Brainin",
+    "composer": "Jerry Brainin, Buddy Bernier",
     "year": 1948,
     "bars": 48,
     "time_signature": "4/4",
@@ -1971,7 +1971,7 @@
   {
     "title": "The Song Is You",
     "slug": "the-song-is-you",
-    "composer": "Jerome Kern",
+    "composer": "Jerome Kern, Oscar Hammerstein II",
     "year": 1932,
     "bars": 64,
     "time_signature": "4/4",
@@ -1982,7 +1982,7 @@
   {
     "title": "There Is No Greater Love",
     "slug": "there-is-no-greater-love",
-    "composer": "Isham Jones",
+    "composer": "Isham Jones, Marty Symes",
     "year": 1936,
     "bars": 32,
     "time_signature": "4/4",
@@ -1993,7 +1993,7 @@
   {
     "title": "There Will Never Be Another You",
     "slug": "there-will-never-be-another-you",
-    "composer": "Harry Warren",
+    "composer": "Harry Warren, Mack Gordon",
     "year": 1942,
     "bars": 32,
     "time_signature": "4/4",
@@ -2002,13 +2002,13 @@
     "common_key": "Eb"
   },
   {
-    "title": "Things Ain’t What They Used To Be",
+    "title": "Things Ain't What They Used To Be",
     "slug": "things-aint-what-they-used-to-be",
-    "composer": "Mercer Ellington",
+    "composer": "Mercer Ellington, Ted Persons",
     "year": 1942,
     "bars": 12,
     "time_signature": "4/4",
-    "form": null,
+    "form": "Blues",
     "style": "Blues",
     "common_key": null
   },
@@ -2039,20 +2039,20 @@
     "slug": "tune-up",
     "composer": "Miles Davis",
     "year": 1953,
-    "bars": 32,
+    "bars": 16,
     "time_signature": "4/4",
-    "form": "AB",
+    "form": null,
     "style": "Bebop",
-    "common_key": "Bb"
+    "common_key": "D"
   },
   {
     "title": "Walkin'",
     "slug": "walkin",
-    "composer": "Miles Davis",
+    "composer": "Richard Carpenter",
     "year": 1949,
     "bars": 12,
     "time_signature": "4/4",
-    "form": null,
+    "form": "Blues",
     "style": "Blues",
     "common_key": "F"
   },
@@ -2063,7 +2063,7 @@
     "year": 1962,
     "bars": 16,
     "time_signature": "4/4",
-    "form": null,
+    "form": "Blues",
     "style": "Swing",
     "common_key": "F"
   },
@@ -2079,9 +2079,9 @@
     "common_key": "D"
   },
   {
-    "title": "Way You Look Tonight, The",
+    "title": "The Way You Look Tonight",
     "slug": "way-you-look-tonight-the",
-    "composer": "Jerome Kern",
+    "composer": "Jerome Kern, Dorothy Fields",
     "year": 1936,
     "bars": 68,
     "time_signature": "4/4",
@@ -2090,7 +2090,7 @@
     "common_key": "F"
   },
   {
-    "title": "Well You Needen't",
+    "title": "Well, You Needn't",
     "slug": "well-you-needent",
     "composer": "Thelonious Monk",
     "year": 1944,
@@ -2114,7 +2114,7 @@
   {
     "title": "What's New",
     "slug": "whats-new",
-    "composer": "Bob Haggart",
+    "composer": "Bob Haggart, Johnny Burke",
     "year": 1939,
     "bars": 32,
     "time_signature": "4/4",
@@ -2125,7 +2125,7 @@
   {
     "title": "When I Fall In Love",
     "slug": "when-i-fall-in-love",
-    "composer": "Victor Young",
+    "composer": "Victor Young, Edward Heyman",
     "year": 1952,
     "bars": 32,
     "time_signature": "4/4",
@@ -2147,7 +2147,7 @@
   {
     "title": "Willow Weep For Me",
     "slug": "willow-weep-for-me",
-    "composer": "Ann Ronnell",
+    "composer": "Ann Ronell",
     "year": 1932,
     "bars": 32,
     "time_signature": "4/4",
@@ -2162,7 +2162,7 @@
     "year": 1960,
     "bars": 16,
     "time_signature": "4/4",
-    "form": null,
+    "form": "Blues",
     "style": "Swing",
     "common_key": "F-"
   },
@@ -2180,18 +2180,18 @@
   {
     "title": "Yesterdays",
     "slug": "yesterdays",
-    "composer": "Jerome Kern",
+    "composer": "Jerome Kern, Otto Harbach",
     "year": 1933,
     "bars": 16,
     "time_signature": "4/4",
-    "form": null,
+    "form": "ABAB",
     "style": "Swing",
     "common_key": "D-"
   },
   {
     "title": "You Don't Know What Love Is",
     "slug": "you-dont-know-what-love-is",
-    "composer": "Gene De Paul, Don Raye",
+    "composer": "Gene de Paul, Don Raye",
     "year": 1941,
     "bars": 32,
     "time_signature": "4/4",

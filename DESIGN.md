@@ -86,21 +86,37 @@ Android app than the staleness weighting used here.
 
 `data/standards.json` came from scraping [standardrepertoire.com](https://standardrepertoire.com)
 (a reference site by David Miller), taking only factual metadata and deliberately
-not lyrics or chord charts. Credit it if you ship it.
+not lyrics or chord charts. Credit it if you ship it. Its keys, bar counts and
+composer spellings match the iReal Pro jazz playlist, errors included, so that is
+probably the upstream source.
+
+The scraped values were checked tune by tune against jazzstandards.com,
+Wikipedia and allsolos.com, and confirmed errors were corrected: wrong keys (My
+Funny Valentine, Caravan, Love For Sale), chart lengths recorded as chorus
+lengths (Giant Steps, Stolen Moments), misspelled composers, and missing
+co-writers. `common_key` is the key usually called, not the published original,
+and sources still disagree on a handful of tunes.
 
 Field coverage across the 201 tunes, which is the useful part to know before
 designing around it:
 
 | Field | Distinct values | Absent |
 | --- | --- | --- |
-| form | 10 (AABA dominates at 76) | 44 |
+| form | 12 (AABA dominates at 77) | 16 |
 | style | 12 | 1 |
 | time_signature | 3 | 0 |
-| common_key | 20 | 3 |
+| common_key | 19 | 2 |
 
-**Absence is common and meaningful.** 44 tunes have no documented form. Model
+**Absence is common and meaningful.** 16 tunes have no documented form. Model
 these as nullable and keep "unknown" distinguishable from "empty", or you will
 lose the distinction permanently on first import.
+
+`form` holds section letters, or `Blues` for 12- and 16-bar blues. Tunes with no
+letter form (Countdown, Blue In Green, Tune Up) stay null.
+
+`composer` lists every credited writer, music and lyrics, in one string. It
+follows the published credit where authorship is disputed (Blue In Green, Donna
+Lee, Four, Tune Up), and leaves out lyrics added later to an instrumental.
 
 Known quirks left as-is: `Latin/Swing` and `Swing,Ballad` are compound style
 values, minor keys use a trailing hyphen (`F-`), sharps occur (`C#-`), and Take
@@ -110,10 +126,8 @@ Five was listed as 5/5 upstream and hand-corrected to 5/4.
 `families` scopes an exercise to instrument families; **empty means it applies to
 everything**, which is the common case. Only genuinely instrument-specific work
 is scoped: overtones and altissimo to sax, harmonics to flute, register-break
-crossings to clarinet, lip slurs to brass, double tonguing to brass and flute.
-
-That scoping was my guess and is worth a second opinion. Plenty of sax players
-double-tongue, for one.
+crossings to clarinet, lip slurs and doodle tonguing to brass, and finger
+independence to the keyed families.
 
 ## Traps that cost real time
 
