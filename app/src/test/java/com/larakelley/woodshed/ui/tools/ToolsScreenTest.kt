@@ -24,7 +24,7 @@ class ToolsScreenTest {
   @get:Rule val compose = createComposeRule()
 
   @Test
-  fun metronomeNamesTheTempoAndAppliesPresetsAndOptions() {
+  fun metronomeAppliesOptionsAndPresets() {
     val calls = mutableListOf<Any>()
     val actions = MetronomeActions(
       toggle = { calls += "toggle" },
@@ -35,14 +35,15 @@ class ToolsScreenTest {
     )
     compose.setContent { MetronomeScreen(MetronomeState(bpm = 132), actions) }
 
-    compose.onNodeWithText("bpm, medium swing").assertExists()
+    compose.onNodeWithText("bpm").assertExists()
     compose.onNodeWithTag("metronome-toggle").performClick()
-    compose.onNodeWithTag("preset-jazz_waltz").performScrollTo().performClick()
     // The options row scrolls sideways inside the scrolling page; bring the page down to it first.
     compose.onNodeWithTag("accent").performScrollTo()
     compose.onNodeWithTag("feel-2-and-4").performClick()
     compose.onNodeWithTag("accent").performClick()
-    assertEquals(listOf<Any>("toggle", 160, "beats 3", Feel.BACKBEAT, "accent false"), calls)
+    compose.onNodeWithText("COMMON TEMPOS").performScrollTo().assertExists()
+    compose.onNodeWithTag("preset-jazz_waltz").performScrollTo().performClick()
+    assertEquals(listOf<Any>("toggle", Feel.BACKBEAT, "accent false", 160, "beats 3"), calls)
   }
 
   @Test

@@ -79,7 +79,6 @@ class MainActivity : ComponentActivity() {
           BrowseScreen(
             browseState,
             browse::selectTransposition,
-            browse::selectFamily,
             actions = browse.actions,
             onTuneFilter = browse::updateTuneFilter,
             onExerciseFilter = browse::updateExerciseFilter,

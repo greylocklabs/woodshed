@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
@@ -49,7 +50,7 @@ import com.larakelley.woodshed.R
 import com.larakelley.woodshed.data.db.TuneStateEntity
 import com.larakelley.woodshed.data.seed.SeedValidator
 import com.larakelley.woodshed.domain.Comfort
-import com.larakelley.woodshed.domain.Family
+import com.larakelley.woodshed.domain.Instrument
 import com.larakelley.woodshed.domain.Key
 import com.larakelley.woodshed.domain.KeyMask
 import com.larakelley.woodshed.domain.KeyPolicy
@@ -57,16 +58,26 @@ import com.larakelley.woodshed.domain.Lifecycle
 import com.larakelley.woodshed.domain.Tonality
 import com.larakelley.woodshed.domain.Transposition
 import com.larakelley.woodshed.domain.delayLabel
+import com.larakelley.woodshed.domain.titleSortKey
 import com.larakelley.woodshed.theme.BackButton
 import com.larakelley.woodshed.theme.CallieChip
 import com.larakelley.woodshed.theme.StickerButton
+
+/** Shown before each tab name in the main navigation. */
+private val TAB_EMOJI = mapOf(
+  "Practice" to "🎷",
+  "Random" to "🎲",
+  "Metronome" to "⏱️",
+  "Tuner" to "🎯",
+  "Tunes" to "🎵",
+  "Exercises" to "💪",
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BrowseScreen(
   state: BrowseState,
   onSelectTransposition: (Transposition) -> Unit,
-  onSelectFamily: (Family?) -> Unit,
   modifier: Modifier = Modifier,
   actions: TuneActions = TuneActions(),
   onTuneFilter: ((TuneFilter) -> TuneFilter) -> Unit = {},
@@ -121,7 +132,9 @@ fun BrowseScreen(
         Text("Could not load the bundled data: $it", color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(16.dp))
       }
       PrimaryScrollableTabRow(selectedTabIndex = tab, edgePadding = 8.dp) {
-        tabs.forEachIndexed { i, label -> Tab(selected = tab == i, onClick = { tab = i }, text = { Text(label) }) }
+        tabs.forEachIndexed { i, label ->
+          Tab(selected = tab == i, onClick = { tab = i }, text = { Text("${TAB_EMOJI[label].orEmpty()} $label".trim()) }, modifier = Modifier.testTag("tab-$label"))
+        }
       }
       when (tabs[tab]) {
         "Practice" -> practiceTab?.invoke()
@@ -130,10 +143,10 @@ fun BrowseScreen(
         "Tuner" -> tunerTab?.invoke()
         "Tunes" -> {
           TuneFilters(state, onTuneFilter)
-          TuneList(state.tunes, onOpen = { openSlug = it })
+          TuneList(state.tunes, alphabetical = state.tuneFilter.sort == TuneSort.TITLE, onOpen = { openSlug = it })
         }
         else -> {
-          ExerciseFilters(state, onSelectFamily, onExerciseFilter)
+          ExerciseFilters(state, onExerciseFilter)
           ExerciseList(state.exercises, onOpen = { openExercise = it })
         }
       }
@@ -187,6 +200,7 @@ private fun TuneFilters(state: BrowseState, onFilter: ((TuneFilter) -> TuneFilte
     DropdownChip("Comfort", f.minComfort?.let { "${it.label}+" } ?: "Any", Comfort.entries.map { "${it.label} or better" to it }, allowAny = true) { c ->
       onFilter { it.copy(minComfort = c) }
     }
+    DropdownChip("Sort", f.sort.label, TuneSort.entries.map { it.label to it }) { o -> onFilter { it.copy(sort = o ?: TuneSort.TITLE) } }
   }
   Text(
     if (state.tunes.size == state.totalTunes) "${state.totalTunes} tunes" else "${state.tunes.size} of ${state.totalTunes} tunes",
@@ -196,15 +210,13 @@ private fun TuneFilters(state: BrowseState, onFilter: ((TuneFilter) -> TuneFilte
 }
 
 @Composable
-private fun ExerciseFilters(state: BrowseState, onSelectFamily: (Family?) -> Unit, onFilter: ((ExerciseFilter) -> ExerciseFilter) -> Unit) {
+private fun ExerciseFilters(state: BrowseState, onFilter: ((ExerciseFilter) -> ExerciseFilter) -> Unit) {
   val f = state.exerciseFilter
   SearchField(f.query, "Search exercises") { q -> onFilter { it.copy(query = q) } }
   Row(Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    DropdownChip("Instrument", f.instrument?.label ?: "Any", Instrument.entries.map { it.label to it }, allowAny = true) { i -> onFilter { it.copy(instrument = i) } }
     DropdownChip("Category", f.category ?: "Any", state.categories.map { it to it }, allowAny = true) { c -> onFilter { it.copy(category = c) } }
-    CallieChip(selected = state.family == null, onClick = { onSelectFamily(null) }, label = { Text("All horns") })
-    Family.entries.forEach { family ->
-      CallieChip(selected = state.family == family, onClick = { onSelectFamily(family) }, label = { Text(family.displayName) })
-    }
+    DropdownChip("Sort", f.sort.label, ExerciseSort.entries.map { it.label to it }) { o -> onFilter { it.copy(sort = o ?: ExerciseSort.CATEGORY) } }
   }
   Text(
     if (state.exercises.size == state.totalExercises) "${state.totalExercises} exercises" else "${state.exercises.size} of ${state.totalExercises} exercises",
@@ -237,27 +249,33 @@ private fun TranspositionPicker(selected: Transposition, onSelect: (Transpositio
 }
 
 @Composable
-private fun TuneList(tunes: List<TuneRow>, onOpen: (String) -> Unit) {
-  LazyColumn(Modifier.fillMaxSize().testTag("tune-list")) {
-    items(tunes, key = { it.slug }) { tune ->
-      Row(
-        Modifier.fillMaxWidth().clickable { onOpen(tune.slug) }.padding(horizontal = 16.dp, vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically,
-      ) {
-        Column(Modifier.weight(1f)) {
-          Text(tune.title, style = MaterialTheme.typography.titleMedium)
-          if (tune.credit.isNotEmpty()) Text(tune.credit, style = MaterialTheme.typography.bodySmall)
-          if (tune.shape.isNotEmpty()) Text(tune.shape, style = MaterialTheme.typography.bodySmall)
-        }
-        Column(Modifier.padding(start = 12.dp), horizontalAlignment = Alignment.End) {
-          Text(tune.key, style = MaterialTheme.typography.titleMedium)
-          val badges = listOfNotNull(tune.status, tune.knowledge?.comfort?.label)
-          if (badges.isNotEmpty()) {
-            Text(badges.joinToString(", "), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+private fun TuneList(tunes: List<TuneRow>, alphabetical: Boolean, onOpen: (String) -> Unit) {
+  val listState = rememberLazyListState()
+  Box(Modifier.fillMaxSize()) {
+    LazyColumn(Modifier.fillMaxSize().testTag("tune-list"), state = listState) {
+      items(tunes, key = { it.slug }) { tune ->
+        Row(
+          Modifier.fillMaxWidth().clickable { onOpen(tune.slug) }.padding(horizontal = 16.dp, vertical = 10.dp),
+          verticalAlignment = Alignment.CenterVertically,
+        ) {
+          Column(Modifier.weight(1f)) {
+            Text(tune.title, style = MaterialTheme.typography.titleMedium)
+            if (tune.credit.isNotEmpty()) Text(tune.credit, style = MaterialTheme.typography.bodySmall)
+            if (tune.shape.isNotEmpty()) Text(tune.shape, style = MaterialTheme.typography.bodySmall)
+          }
+          Column(Modifier.padding(start = 12.dp, end = if (alphabetical) 20.dp else 0.dp), horizontalAlignment = Alignment.End) {
+            Text(tune.key, style = MaterialTheme.typography.titleMedium)
+            val badges = listOfNotNull(tune.status, tune.knowledge?.comfort?.label)
+            if (badges.isNotEmpty()) {
+              Text(badges.joinToString(", "), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+            }
           }
         }
+        HorizontalDivider()
       }
-      HorizontalDivider()
+    }
+    if (alphabetical && tunes.size > 30) {
+      AlphabetStrip(listState, tunes.map { titleSortKey(it.title) }, Modifier.align(Alignment.CenterEnd))
     }
   }
 }

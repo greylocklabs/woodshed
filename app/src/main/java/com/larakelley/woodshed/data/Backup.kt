@@ -41,7 +41,6 @@ data class BackupSettings(
   val instrument: String? = null,
   @SerialName("my_instruments") val myInstruments: List<String> = emptyList(),
   val transposition: String? = null,
-  val family: String? = null,
   @SerialName("theme_mode") val themeMode: String? = null,
   @SerialName("session_minutes") val sessionMinutes: Int? = null,
   @SerialName("session_focus") val sessionFocus: List<String> = emptyList(),

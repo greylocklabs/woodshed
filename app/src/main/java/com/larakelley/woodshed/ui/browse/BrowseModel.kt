@@ -10,8 +10,8 @@ import com.larakelley.woodshed.data.db.TuneKnowledgeEntity
 import com.larakelley.woodshed.data.db.TuneStateEntity
 import com.larakelley.woodshed.data.db.homeKey
 import com.larakelley.woodshed.domain.Comfort
-import com.larakelley.woodshed.domain.Family
 import com.larakelley.woodshed.domain.Focus
+import com.larakelley.woodshed.domain.Instrument
 import com.larakelley.woodshed.domain.Key
 import com.larakelley.woodshed.domain.KeyPolicy
 import com.larakelley.woodshed.domain.Lifecycle
@@ -32,6 +32,7 @@ data class TuneRow(
   val slug: String,
   val title: String,
   val composer: String?,
+  val year: Int? = null,
   val credit: String,
   val shape: String,
   val style: String?,
@@ -101,13 +102,37 @@ data class TuneFilter(
   val minComfort: Comfort? = null,
   val collection: String? = null,
   val tonality: Tonality? = null,
+  val sort: TuneSort = TuneSort.TITLE,
 )
 
-data class ExerciseFilter(val query: String = "", val category: String? = null)
+/** Tune list orders. Ties fall back to fake-book title order, and unknown values sort last. */
+enum class TuneSort(val label: String) {
+  TITLE("Title"),
+  COMPOSER("Composer"),
+  YEAR("Year"),
+  KEY("Key"),
+  LAST_PRACTICED("Last practiced"),
+  COMFORT("Comfort"),
+}
+
+data class ExerciseFilter(
+  val query: String = "",
+  val category: String? = null,
+  /** Show only exercises that suit this instrument; null shows all. */
+  val instrument: Instrument? = null,
+  val sort: ExerciseSort = ExerciseSort.CATEGORY,
+)
+
+/** Exercise list orders; category follows the session's phase order. */
+enum class ExerciseSort(val label: String) {
+  CATEGORY("Category"),
+  NAME("Name"),
+  MINUTES("Minutes"),
+  DIFFICULTY("Difficulty"),
+}
 
 data class BrowseState(
   val transposition: Transposition = Transposition.C,
-  val family: Family? = null,
   val tunes: List<TuneRow> = emptyList(),
   val totalTunes: Int = 0,
   val exercises: List<ExerciseRow> = emptyList(),
@@ -137,6 +162,7 @@ fun tuneRows(
       slug = s.slug,
       title = s.title,
       composer = s.composer,
+      year = s.year,
       credit = listOfNotNull(s.composer, s.year?.toString()).joinToString(", "),
       shape = listOfNotNull(
         s.form,
@@ -166,7 +192,7 @@ fun matchesQuery(query: String, vararg fields: String?): Boolean {
 }
 
 fun filterTunes(rows: List<TuneRow>, filter: TuneFilter): List<TuneRow> =
-  rows.filter { row ->
+  sortTunes(rows, filter.sort).filter { row ->
     val lifecycle = row.state?.lifecycle
     val statusOk = when (filter.status) {
       StatusFilter.ALL -> true
@@ -185,12 +211,29 @@ fun filterTunes(rows: List<TuneRow>, filter: TuneFilter): List<TuneRow> =
       matchesQuery(filter.query, row.title, row.composer)
   }
 
-fun exerciseRows(exercises: List<ExerciseEntity>, family: Family?, filter: ExerciseFilter = ExerciseFilter()): List<ExerciseRow> =
+/** [rows] arrive in title order, so a stable sort keeps title order within ties. */
+fun sortTunes(rows: List<TuneRow>, sort: TuneSort): List<TuneRow> = when (sort) {
+  TuneSort.TITLE -> rows
+  TuneSort.COMPOSER -> rows.sortedWith(compareBy(nullsLast()) { it.composer?.lowercase() })
+  TuneSort.YEAR -> rows.sortedWith(compareBy(nullsLast()) { it.year })
+  TuneSort.KEY -> rows.sortedWith(compareBy<TuneRow, Int?>(nullsLast()) { it.homeKey?.pitchClass }.thenBy { it.tonality })
+  TuneSort.LAST_PRACTICED -> rows.sortedWith(compareByDescending<TuneRow, Long?>(nullsFirst()) { it.state?.lastReviewedAt })
+  TuneSort.COMFORT -> rows.sortedWith(compareByDescending<TuneRow, Comfort?>(nullsFirst()) { it.knowledge?.comfort })
+}
+
+fun exerciseRows(exercises: List<ExerciseEntity>, filter: ExerciseFilter = ExerciseFilter()): List<ExerciseRow> =
   exercises
-    .filter { family == null || it.families.isEmpty() || family in it.families }
+    .filter { filter.instrument?.suits(it.families, it.category) ?: true }
     .filter { filter.category == null || it.category == filter.category }
     .filter { matchesQuery(filter.query, it.name, it.description) }
-    .sortedWith(compareBy({ Phase.categoryRank(it.category) }, { it.id }))
+    .sortedWith(
+      when (filter.sort) {
+        ExerciseSort.CATEGORY -> compareBy({ Phase.categoryRank(it.category) }, { it.id })
+        ExerciseSort.NAME -> compareBy { it.name.lowercase() }
+        ExerciseSort.MINUTES -> compareBy({ it.minutes }, { it.name.lowercase() })
+        ExerciseSort.DIFFICULTY -> compareBy({ it.difficulty }, { it.name.lowercase() })
+      }
+    )
     .map(::exerciseRow)
 
 /** What the tune detail screen can do to a tune. */
@@ -208,7 +251,7 @@ data class TuneActions(
 
 class BrowseViewModel(private val repository: WoodshedRepository, private val practice: PracticeService) : ViewModel() {
   private val tuneFilter = MutableStateFlow(TuneFilter())
-  private val exerciseFilter = MutableStateFlow(ExerciseFilter())
+  private val exerciseFilter = MutableStateFlow(ExerciseFilter(instrument = repository.instrument.value))
 
   private val library = combine(repository.standards, repository.tuneStates, repository.tuneKnowledge, repository.transposition) {
       standards, states, knowledge, transposition ->
@@ -217,23 +260,20 @@ class BrowseViewModel(private val repository: WoodshedRepository, private val pr
 
   private data class TunePart(val all: List<TuneRow>, val filter: TuneFilter, val rows: List<TuneRow>)
 
-  private data class ExercisePart(val all: List<ExerciseEntity>, val family: Family?, val filter: ExerciseFilter, val rows: List<ExerciseRow>)
+  private data class ExercisePart(val all: List<ExerciseEntity>, val filter: ExerciseFilter, val rows: List<ExerciseRow>)
 
   private val tunePart = combine(library, tuneFilter) { rows, filter -> TunePart(rows, filter, filterTunes(rows, filter)) }
 
-  private val exercisePart = combine(repository.exercises, repository.family, exerciseFilter) { exercises, family, filter ->
-    ExercisePart(exercises, family, filter, exerciseRows(exercises, family, filter))
-  }
+  private val exercisePart = combine(repository.exercises, exerciseFilter) { exercises, filter -> ExercisePart(exercises, filter, exerciseRows(exercises, filter)) }
 
   val state: StateFlow<BrowseState> =
     combine(tunePart, exercisePart, repository.transposition, repository.seedError) { tunes, ex, transposition, error ->
         BrowseState(
           transposition = transposition,
-          family = ex.family,
           tunes = tunes.rows,
           totalTunes = tunes.all.size,
           exercises = ex.rows,
-          totalExercises = exerciseRows(ex.all, ex.family).size,
+          totalExercises = ex.all.size,
           tuneFilter = tunes.filter,
           exerciseFilter = ex.filter,
           styles = tunes.all.mapNotNull { it.style }.distinct().sorted(),
@@ -260,8 +300,6 @@ class BrowseViewModel(private val repository: WoodshedRepository, private val pr
   fun updateExerciseFilter(change: (ExerciseFilter) -> ExerciseFilter) = exerciseFilter.update(change)
 
   fun selectTransposition(transposition: Transposition) = repository.setTransposition(transposition)
-
-  fun selectFamily(family: Family?) = repository.setFamily(family)
 
   private fun launch(block: suspend () -> Unit) {
     viewModelScope.launch { block() }

@@ -400,18 +400,10 @@ version. It uses GitHub's new-issue URL, so the app holds no token and sends
 nothing until the user submits. It adds no personal details to the report.
 Broken links, wrong keys and missing recordings are the expected bulk.
 
-**Polish backlog.** Small, independent, no new data:
-
-- An emoji before each tab name in the main navigation.
-- Metronome: show "bpm" only under the current tempo; rename "Tempos" to
-  "Common tempos", since the list is not complete, and move it to the end so
-  the main controls fit without scrolling.
-- An A-Z fast-scroll strip on the right edge of long lists such as Tunes.
-- Exercises tab: filter by every instrument in the instrument list, not just
-  the four exercise families, using the same rule as session planning.
-  Instruments outside those families see the exercises for everyone.
-- Sorting on the Tunes tab (title, composer, year, key, last practiced,
-  comfort) and the Exercises tab (category, name, minutes, difficulty).
+**Polish, shipped.** Emoji tab names; a quieter metronome readout with common
+tempos last; an A-Z fast-scroll strip on the Tunes list; an exercise filter over
+every instrument, using the session planner's rule; and sorting on the Tunes and
+Exercises tabs.
 
 ---
 

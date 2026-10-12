@@ -53,7 +53,6 @@ class MetronomeToolsTest {
   fun presetsSitInsideTheMetronomeRangeAndTheWaltzIsInThree() {
     assertTrue(TempoPreset.entries.all { it.bpm in ClickTrack.MIN_BPM..ClickTrack.MAX_BPM })
     assertEquals(3, TempoPreset.JAZZ_WALTZ.beatsPerBar)
-    assertEquals(TempoPreset.MEDIUM_SWING, TempoPreset.nearest(135))
   }
 
   private fun tone(hz: Double, rate: Int = 44_100, n: Int = 4_096, noise: Double = 0.0): FloatArray {
