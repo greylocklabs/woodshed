@@ -160,16 +160,14 @@ drawing by staleness hands over a brand-new tune every session and nothing is
 ever learned. The fix used was to draw an in-progress tune about 80% of the
 time — a magic number, acknowledged as a guess.
 
-**Spaced repetition already solves this, rigorously.** The standard mechanism is
-a separate, rate-limited new-card queue: due cards are served first, and at most
-*N* new items get introduced per day. Set N to 1 or 2 for repertoire and you
-have encoded "learn a tune before starting another" as a dial you can tune
-against logged reps, rather than a probability you have to guess.
+**Spaced repetition already solves this, rigorously.** Due cards are served
+first, and new tunes only enter the queue when you choose them, so "learn a tune
+before starting another" is your call rather than a probability to guess.
 
 Give each tune an explicit lifecycle: library (no state at all), then
 `wishlist`, `learning`, `repertoire`, `retired`. The wishlist is the tunes you
-chose to learn next, and it is the new-card pool: the daily cap moves the oldest
-of them into `learning`. Only `learning` and `repertoire` enter the review queue.
+chose to learn next. A tune moves into `learning` when you start it from its
+page or pick it for a session. Only `learning` and `repertoire` enter the review queue.
 A tune moves to `repertoire` once its interval reaches 21 days and back to
 `learning` on a lapse. That maps the old "in progress" idea onto SRS vocabulary
 with no fudge factor left over, and keeps the other 250-odd tunes out of the
@@ -348,14 +346,17 @@ passing.*
 
 **M1 — Repertoire cards.** Composed
 tune × procedure × key cards, card model with `KeyPolicy`, SM-2 behind the
-scheduler interface, the event log, tune lifecycle, daily new-card cap, review
+scheduler interface, the event log, tune lifecycle, review
 screen with grade buttons. *First usable app. Start logging reps — everything
 after this benefits from real data.*
 
 **M2 — Session mode.** Greedy weighted phase planner, foreground-service runner
 with timer and notification, keep-awake, auto-advance, interruption-safe state.
 Emits into the same event log. *Now you can compare planned sessions against
-card sessions on your own logged history.*
+card sessions on your own logged history.* Session setup shipped early: pick a
+length, focus areas and tunes (due ones ticked), review and edit the plan, then
+step through it with a per-block timer. The foreground service, notification and
+interruption-safe state are still to do.
 
 **M3 — Audio.** Drone at arbitrary pitch, tempo control per exercise. The
 sample-accurate metronome on a streaming `AudioTrack` already shipped with the

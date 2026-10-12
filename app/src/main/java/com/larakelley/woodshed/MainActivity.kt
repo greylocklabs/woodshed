@@ -17,7 +17,9 @@ import com.larakelley.woodshed.ui.dice.DiceScreen
 import com.larakelley.woodshed.ui.dice.DiceViewModel
 import com.larakelley.woodshed.ui.practice.PracticeHome
 import com.larakelley.woodshed.ui.practice.PracticeViewModel
-import com.larakelley.woodshed.ui.practice.ReviewScreen
+import com.larakelley.woodshed.ui.practice.SessionScreen
+import com.larakelley.woodshed.ui.practice.SetupActions
+import com.larakelley.woodshed.ui.practice.StepView
 import kotlinx.coroutines.flow.first
 
 class MainActivity : ComponentActivity() {
@@ -42,14 +44,29 @@ class MainActivity : ComponentActivity() {
           val tuneExercises = app.repository.exercises.first().filter { it.appliesToTune }.map { it.name }
           dice.setOptions(browseState.styles, tuneExercises)
         }
-        val beats = if (practiceUi.reviewing) practiceUi.card?.beatsPerBar else diceUi.card?.beatsPerBar
+        val step = practiceUi.step
+        val beats = if (practiceUi.running) (step as? StepView.Tune)?.card?.beatsPerBar ?: 4 else diceUi.card?.beatsPerBar
         LaunchedEffect(beats) { beats?.let(metronome::setBeatsPerBar) }
+        // An exercise with a set tempo starts the metronome there; the player can still change it.
+        val tempo = (step as? StepView.Exercise)?.tempoBpm
+        LaunchedEffect(practiceUi.stepIndex, tempo) { tempo?.let(metronome::setBpm) }
+        val setupActions = SetupActions(
+          setMinutes = practice::setMinutes,
+          toggleFocus = practice::toggleFocus,
+          toggleTune = practice::toggleTune,
+          buildPlan = practice::buildPlan,
+          discardPlan = practice::discardPlan,
+          swap = practice::swap,
+          remove = practice::removeBlock,
+          start = practice::start,
+        )
 
         Surface(color = MaterialTheme.colorScheme.background) {
-          if (practiceUi.reviewing) {
-            ReviewScreen(
+          if (practiceUi.running) {
+            SessionScreen(
               practiceUi,
               practice::grade,
+              practice::next,
               onStop = { metronome.stop(); practice.stop() },
               metronome = click,
               onToggleMetronome = metronome::toggle,
@@ -65,7 +82,7 @@ class MainActivity : ComponentActivity() {
               onExerciseFilter = browse::updateExerciseFilter,
               practiceTab = {
                 LaunchedEffect(Unit) { practice.refresh() }
-                PracticeHome(practiceUi, practice::start, practice::setDailyNewLimit)
+                PracticeHome(practiceUi, setupActions)
               },
               diceTab = {
                 DiceScreen(diceUi, dice::constrain, dice::roll, dice::grade, dice::toggleKeyKnown, click, metronome::toggle, metronome::setBpm)
