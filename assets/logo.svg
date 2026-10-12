@@ -1,10 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img" aria-labelledby="t">
   <title id="t">Woodshed</title>
-  <defs><linearGradient id="body" x1="0" y1="0" x2="0.3" y2="1"><stop offset="0" stop-color="#f7aed0"/><stop offset="1" stop-color="#d8639c"/></linearGradient><linearGradient id="log" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c98a58"/><stop offset="1" stop-color="#9c5f37"/></linearGradient></defs>
-  <!-- a lean-to woodshed with its log pile: the left wall stands taller, so the roof slopes to the right -->
-  <path d="M20 46 Q20 34 32 35 L98 41 Q110 42 110 54 L110 98 Q110 116 92 116 L36 116 Q20 116 20 98 Z" fill="url(#body)"/>
-  <path d="M12 30 Q10 22 20 22 L112 31 Q121 32 120 40 Q119 46 112 45 L18 37 Q12 36 12 30 Z" fill="#a23f72"/>
-  <path d="M34 54 Q34 46 42 47 L88 51 Q96 52 96 60 L96 96 Q96 104 88 104 L42 104 Q34 104 34 96 Z" fill="#7c2d58"/>
-  <!-- stacked log ends; an outline in the doorway color keeps them apart at small sizes -->
-  <g fill="url(#log)" stroke="#7c2d58" stroke-width="2.5"><circle cx="47" cy="92" r="9.5"/><circle cx="65" cy="92" r="9.5"/><circle cx="83" cy="92" r="9.5"/><circle cx="56" cy="75" r="9.5"/><circle cx="74" cy="75" r="9.5"/><circle cx="65" cy="59" r="8"/></g>
+  <defs><linearGradient id="bark" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f7aed0"/><stop offset="1" stop-color="#d8639c"/></linearGradient><linearGradient id="cut" x1="0" y1="0" x2="0.4" y2="1"><stop offset="0" stop-color="#fde6f0"/><stop offset="1" stop-color="#f7c3da"/></linearGradient><linearGradient id="leaf" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#a8dd8f"/><stop offset="1" stop-color="#5faa6a"/></linearGradient></defs>
+  <!-- a pink log on its side, its cut end to the right, with a leaf sprouting from the top -->
+  <path d="M38 52 H96 V112 H38 Q8 112 8 82 Q8 52 38 52 Z" fill="url(#bark)"/>
+  <ellipse cx="96" cy="82" rx="23" ry="30" fill="#c24d86"/>
+  <ellipse cx="96" cy="82" rx="19" ry="26" fill="url(#cut)"/>
+  <ellipse cx="96" cy="82" rx="8" ry="11" fill="none" stroke="#ef9cc1" stroke-width="3"/>
+  <path d="M58 53 Q57 45 62 40" fill="none" stroke="#5faa6a" stroke-width="4" stroke-linecap="round"/>
+  <path d="M61 41 Q66 20 92 22 Q86 46 61 41 Z" fill="url(#leaf)"/>
 </svg>
