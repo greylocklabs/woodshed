@@ -109,6 +109,16 @@ class BrowseModelTest {
   private fun standard(id: Int, title: String) =
     StandardEntity(id.toLong(), "s$id", title, null, null, null, "4/4", null, null, null, null, null)
 
+  @Test
+  fun exerciseRowNamesItsInstrumentsAndFocus() {
+    val all = exerciseRow(exercise(1, "Long tones", emptyList()))
+    assertEquals("All instruments", all.instruments)
+    assertEquals(listOf("Tone"), all.focus)
+    val reeds = exerciseRow(exercise(2, "Mouthpiece pitch bends", listOf(Family.SAXOPHONE, Family.CLARINET)).copy(category = "Technique"))
+    assertEquals("Saxophone, Clarinet", reeds.instruments)
+    assertEquals(listOf("Speed"), reeds.focus)
+  }
+
   private fun exercise(id: Long, name: String, families: List<Family>) =
     ExerciseEntity(id, name, "Tone", "", 5, 1, null, families, false)
 }

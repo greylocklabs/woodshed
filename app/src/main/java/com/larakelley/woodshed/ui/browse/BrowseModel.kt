@@ -11,6 +11,7 @@ import com.larakelley.woodshed.data.db.TuneStateEntity
 import com.larakelley.woodshed.data.db.homeKey
 import com.larakelley.woodshed.domain.Comfort
 import com.larakelley.woodshed.domain.Family
+import com.larakelley.woodshed.domain.Focus
 import com.larakelley.woodshed.domain.Key
 import com.larakelley.woodshed.domain.KeyPolicy
 import com.larakelley.woodshed.domain.Lifecycle
@@ -50,7 +51,36 @@ data class TuneRow(
 val Lifecycle.label: String
   get() = name.lowercase().replaceFirstChar { it.uppercase() }
 
-data class ExerciseRow(val name: String, val category: String, val summary: String, val description: String)
+data class ExerciseRow(
+  val name: String,
+  val category: String,
+  val summary: String,
+  val description: String,
+  /** "All instruments", or the families it is written for. */
+  val instruments: String = "All instruments",
+  val minutes: Int = 0,
+  val difficulty: Int = 0,
+  val tempoBpm: Int? = null,
+  val appliesToTune: Boolean = false,
+  /** Session focus areas that draw on this exercise's category. */
+  val focus: List<String> = emptyList(),
+)
+
+fun exerciseRow(e: ExerciseEntity): ExerciseRow {
+  val tempo = e.tempoBpm?.let { ", $it bpm" } ?: ""
+  return ExerciseRow(
+    name = e.name,
+    category = e.category,
+    summary = "${e.category}, ${e.minutes} min, difficulty ${e.difficulty}$tempo",
+    description = e.description,
+    instruments = if (e.families.isEmpty()) "All instruments" else e.families.joinToString(", ") { it.seedName },
+    minutes = e.minutes,
+    difficulty = e.difficulty,
+    tempoBpm = e.tempoBpm,
+    appliesToTune = e.appliesToTune,
+    focus = Focus.entries.filter { e.category in it.categories }.map { it.label },
+  )
+}
 
 /** Which tunes to list, by where they sit in the user's practice. */
 enum class StatusFilter(val label: String) {
@@ -161,10 +191,7 @@ fun exerciseRows(exercises: List<ExerciseEntity>, family: Family?, filter: Exerc
     .filter { filter.category == null || it.category == filter.category }
     .filter { matchesQuery(filter.query, it.name, it.description) }
     .sortedWith(compareBy({ Phase.categoryRank(it.category) }, { it.id }))
-    .map { e ->
-      val tempo = e.tempoBpm?.let { ", $it bpm" } ?: ""
-      ExerciseRow(e.name, e.category, "${e.category}, ${e.minutes} min, difficulty ${e.difficulty}$tempo", e.description)
-    }
+    .map(::exerciseRow)
 
 /** What the tune detail screen can do to a tune. */
 data class TuneActions(

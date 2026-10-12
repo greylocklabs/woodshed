@@ -12,6 +12,7 @@ import androidx.compose.ui.test.performScrollToNode
 import com.larakelley.woodshed.domain.Focus
 import com.larakelley.woodshed.domain.Grade
 import com.larakelley.woodshed.domain.PlanBlock
+import com.larakelley.woodshed.ui.browse.ExerciseRow
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -96,8 +97,9 @@ class PracticeScreenTest {
 
   @Test
   fun planShowsBlocksAndTotalAndCanBeEdited() {
+    val longTones = ExerciseRow("Long tones", "Tone", "", "Hold each note.", instruments = "All instruments", minutes = 10, difficulty = 2)
     val plan = listOf(
-      PlanItem(PlanBlock.Exercise(1, 5), "Long tones", "Tone"),
+      PlanItem(PlanBlock.Exercise(1, 5), "Long tones", "Tone", longTones),
       PlanItem(PlanBlock.Tune(7, 2, 25), "Solar", "Guide-tone solo"),
     )
     val swapped = mutableListOf<Int>()
@@ -106,6 +108,9 @@ class PracticeScreenTest {
 
     compose.onNodeWithText("30 min planned").assertExists()
     compose.onNodeWithText("Tune: Guide-tone solo").assertExists()
+    compose.onNodeWithTag("plan-0").performClick()
+    compose.onNodeWithText("All instruments").assertExists()
+    compose.onNodeWithText("Close").performClick()
     compose.onNodeWithTag("swap-1").performClick()
     compose.onNodeWithTag("start").performClick()
     assertEquals(listOf(1), swapped)

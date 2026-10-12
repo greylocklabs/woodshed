@@ -70,6 +70,7 @@ fun BrowseScreen(
 ) {
   var tab by rememberSaveable { mutableIntStateOf(0) }
   var openSlug by rememberSaveable { mutableStateOf<String?>(null) }
+  var openExercise by rememberSaveable { mutableStateOf<String?>(null) }
   val tabs = buildList {
     if (practiceTab != null) add("Practice")
     if (diceTab != null) add("Dice")
@@ -85,6 +86,12 @@ fun BrowseScreen(
     if (open != null) {
       BackHandler { openSlug = null }
       TuneDetail(open, actions, now, onBack = { openSlug = null }, modifier = Modifier.padding(padding))
+      return@Scaffold
+    }
+    val exercise = state.exercises.firstOrNull { it.name == openExercise }
+    if (exercise != null) {
+      BackHandler { openExercise = null }
+      ExerciseDetail(exercise, onBack = { openExercise = null }, modifier = Modifier.padding(padding))
       return@Scaffold
     }
     Column(Modifier.padding(padding).fillMaxSize()) {
@@ -103,7 +110,7 @@ fun BrowseScreen(
         }
         else -> {
           ExerciseFilters(state, onSelectFamily, onExerciseFilter)
-          ExerciseList(state.exercises)
+          ExerciseList(state.exercises, onOpen = { openExercise = it })
         }
       }
     }
@@ -341,12 +348,12 @@ private fun statusLine(state: TuneStateEntity?, now: Long): String {
 }
 
 @Composable
-private fun ExerciseList(exercises: List<ExerciseRow>) {
+private fun ExerciseList(exercises: List<ExerciseRow>, onOpen: (String) -> Unit) {
   LazyColumn(Modifier.fillMaxSize().testTag("exercise-list")) {
     items(exercises, key = { it.name }) { exercise ->
-      Column(Modifier.padding(horizontal = 16.dp, vertical = 10.dp)) {
+      Column(Modifier.fillMaxWidth().clickable { onOpen(exercise.name) }.padding(horizontal = 16.dp, vertical = 10.dp)) {
         Text(exercise.name, style = MaterialTheme.typography.titleMedium)
-        Text(exercise.summary, style = MaterialTheme.typography.bodySmall)
+        Text(exercise.summary + if (exercise.instruments != "All instruments") ", ${exercise.instruments}" else "", style = MaterialTheme.typography.bodySmall)
         Text(exercise.description, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 4.dp))
       }
       HorizontalDivider()

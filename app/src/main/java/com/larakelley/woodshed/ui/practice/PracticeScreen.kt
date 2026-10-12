@@ -20,6 +20,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.FilterChip
@@ -33,6 +34,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -44,6 +46,8 @@ import com.larakelley.woodshed.audio.MetronomeState
 import com.larakelley.woodshed.domain.Focus
 import com.larakelley.woodshed.domain.Grade
 import com.larakelley.woodshed.domain.PlanBlock
+import com.larakelley.woodshed.ui.browse.ExerciseFacts
+import com.larakelley.woodshed.ui.browse.ExerciseRow
 import kotlinx.coroutines.delay
 
 /** What the setup and plan screens can do. */
@@ -129,6 +133,15 @@ private fun SessionSetup(ui: PracticeUi, actions: SetupActions) {
 @Composable
 private fun PlanReview(plan: List<PlanItem>, actions: SetupActions) {
   BackHandler(onBack = actions.discardPlan)
+  var shown by remember { mutableStateOf<ExerciseRow?>(null) }
+  shown?.let { exercise ->
+    AlertDialog(
+      onDismissRequest = { shown = null },
+      title = { Text(exercise.name) },
+      text = { Column(Modifier.verticalScroll(rememberScrollState())) { ExerciseFacts(exercise) } },
+      confirmButton = { TextButton(onClick = { shown = null }) { Text("Close") } },
+    )
+  }
   Column(Modifier.fillMaxSize()) {
     Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
       TextButton(onClick = actions.discardPlan) { Text("Back") }
@@ -139,7 +152,10 @@ private fun PlanReview(plan: List<PlanItem>, actions: SetupActions) {
     }
     LazyColumn(Modifier.weight(1f).fillMaxWidth()) {
       itemsIndexed(plan) { i, item ->
-        Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp).testTag("plan-$i"), verticalAlignment = Alignment.CenterVertically) {
+        Row(
+          Modifier.fillMaxWidth().clickable(enabled = item.exercise != null) { shown = item.exercise }.padding(horizontal = 16.dp, vertical = 8.dp).testTag("plan-$i"),
+          verticalAlignment = Alignment.CenterVertically,
+        ) {
           Text("${item.block.minutes} min", style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(72.dp))
           Column(Modifier.weight(1f)) {
             Text(item.title, style = MaterialTheme.typography.titleMedium)
