@@ -3,6 +3,7 @@
 One shape list feeds both outputs, so the SVG and the app icon cannot drift apart.
 Run from the repo root: python3 tools/logo.py
 """
+import math
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -10,16 +11,33 @@ RES = ROOT / "app/src/main/res/drawable"
 
 BARK = ("#f7aed0", "#d8639c")  # matte pink, lighter at the top, as in Callie's logo
 CUT = ("#fde6f0", "#f7c3da")
+KNOB_SHADE = ("#ec92bd", "#cc5590")  # a little deeper than the bark, so the knob stands off the log
 LEAF = ("#a8dd8f", "#5faa6a")
 RIM, RING, STEM = "#c24d86", "#ef9cc1", "#5faa6a"
 BACKGROUND = "#fbf0f5"
 
 # A pink log lying on its side, its cut end to the right, a leaf sprouting from the top and a knob, a
-# sawn-off branch, underneath.
+# sawn-off branch, on its side pointing down toward the cut end.
 LOG = "M38 48 H96 V108 H38 Q8 108 8 78 Q8 48 38 48 Z"
 END = (96, 78)
-KNOB = "M34 98 L64 98 L52 119 L30 119 Z"
-KNOB_END, KNOB_RIM, KNOB_CUT = (41, 119), (11, 6.5), (8.5, 4.6)
+KNOB_END, KNOB_RIM, KNOB_CUT, KNOB_TILT = (62, 103), (10, 6), (7.8, 4.4), 32
+
+
+def _knob():
+    """The knob's body: from a rounded base up on the log to the rim of its cut end, leaning [KNOB_TILT]."""
+    t = math.radians(KNOB_TILT)
+    along, across = (math.sin(t), math.cos(t)), (math.cos(t), -math.sin(t))
+    rx = KNOB_RIM[0]
+
+    def at(point, v, k):
+        return round(point[0] + v[0] * k, 1), round(point[1] + v[1] * k, 1)
+
+    a, b = at(KNOB_END, across, rx), at(KNOB_END, across, -rx)
+    a0, b0 = at(a, along, -16), at(b, along, -16)
+    return f"M{b0[0]} {b0[1]} A{rx} {rx * 0.8} {-KNOB_TILT} 0 1 {a0[0]} {a0[1]} L{a[0]} {a[1]} L{b[0]} {b[1]} Z"
+
+
+KNOB = _knob()
 RIM_RADII, CUT_RADII = (23, 30), (19, 26)
 # Growth rings, kept faint so they read as texture rather than detail at icon size.
 RINGS = [(14, 19.5), (9, 12.5), (4, 5.5)]
@@ -28,21 +46,20 @@ STEM_PATH = "M58 49 Q57 41 62 36"
 LEAF_PATH = "M61 37 Q66 16 92 18 Q86 42 61 37 Z"
 
 
-def ellipse(cx, cy, rx, ry, clockwise=False):
-    """Clockwise and counter-clockwise ellipses cancel under the nonzero fill rule, which cuts holes."""
+def ellipse(cx, cy, rx, ry, clockwise=False, tilt=0):
+    """Clockwise and counter-clockwise ellipses cancel under the nonzero fill rule, which cuts holes.
+    [tilt] rotates the ellipse by that many degrees."""
     sweep = 1 if clockwise else 0
-    return f"M{cx - rx} {cy} A{rx} {ry} 0 1 {sweep} {cx + rx} {cy} A{rx} {ry} 0 1 {sweep} {cx - rx} {cy} Z"
+    r = math.radians(tilt)
+    x1, y1, x2, y2 = cx - rx * math.cos(r), cy - rx * math.sin(r), cx + rx * math.cos(r), cy + rx * math.sin(r)
+    return f"M{x1:.2f} {y1:.2f} A{rx} {ry} {tilt} 1 {sweep} {x2:.2f} {y2:.2f} A{rx} {ry} {tilt} 1 {sweep} {x1:.2f} {y1:.2f} Z"
 
 
-def hole(cx, cy, rx, ry, covered):
-    """A counter-clockwise cut-out of an ellipse. The half under another solid shape ([covered] is "left" or
-    "top") is cut twice, so it cancels both that shape and the rim around it."""
-    if covered == "left":
-        near = f"M{cx} {cy - ry} A{rx} {ry} 0 0 0 {cx} {cy + ry} Z"
-        far = f"M{cx} {cy + ry} A{rx} {ry} 0 0 0 {cx} {cy - ry} Z"
-    else:
-        near = f"M{cx + rx} {cy} A{rx} {ry} 0 0 0 {cx - rx} {cy} Z"
-        far = f"M{cx - rx} {cy} A{rx} {ry} 0 0 0 {cx + rx} {cy} Z"
+def hole(cx, cy, rx, ry):
+    """A counter-clockwise cut-out of an ellipse. Its left half lies over the log's body as well as the rim,
+    so that half is cut twice."""
+    near = f"M{cx} {cy - ry} A{rx} {ry} 0 0 0 {cx} {cy + ry} Z"
+    far = f"M{cx} {cy + ry} A{rx} {ry} 0 0 0 {cx} {cy - ry} Z"
     return " ".join([near, near, far])
 
 
@@ -54,12 +71,12 @@ def svg():
     parts = [
         '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img" aria-labelledby="t">',
         '  <title id="t">Woodshed</title>',
-        f'  <defs>{grad("bark", BARK, "0")}{grad("cut", CUT, "0.4")}{grad("leaf", LEAF, "1")}</defs>',
-        "  <!-- a pink log on its side: cut end to the right, a leaf on top, a sawn-off knob underneath -->",
-        f'  <path d="{KNOB}" fill="{BARK[1]}"/>',
-        f'  <ellipse cx="{KNOB_END[0]}" cy="{KNOB_END[1]}" rx="{KNOB_RIM[0]}" ry="{KNOB_RIM[1]}" fill="{RIM}"/>',
-        f'  <ellipse cx="{KNOB_END[0]}" cy="{KNOB_END[1]}" rx="{KNOB_CUT[0]}" ry="{KNOB_CUT[1]}" fill="url(#cut)"/>',
+        f'  <defs>{grad("bark", BARK, "0")}{grad("knob", KNOB_SHADE, "0")}{grad("cut", CUT, "0.4")}{grad("leaf", LEAF, "1")}</defs>',
+        "  <!-- a pink log on its side: cut end to the right, a leaf on top, a sawn-off knob on its side -->",
         f'  <path d="{LOG}" fill="url(#bark)"/>',
+        f'  <path d="{KNOB}" fill="url(#knob)"/>',
+        f'  <path d="{ellipse(*KNOB_END, *KNOB_RIM, tilt=-KNOB_TILT)}" fill="{RIM}"/>',
+        f'  <path d="{ellipse(*KNOB_END, *KNOB_CUT, tilt=-KNOB_TILT)}" fill="url(#cut)"/>',
         f'  <ellipse cx="{cx}" cy="{cy}" rx="{RIM_RADII[0]}" ry="{RIM_RADII[1]}" fill="{RIM}"/>',
         f'  <ellipse cx="{cx}" cy="{cy}" rx="{CUT_RADII[0]}" ry="{CUT_RADII[1]}" fill="url(#cut)"/>',
         f'  <g fill="none" stroke="{RING}" stroke-width="2" opacity="{RING_ALPHA}">'
@@ -71,8 +88,8 @@ def svg():
     return "\n".join(parts) + "\n"
 
 
-# The drawing spans x 8-119 and y 18-126 of its 128 units, centred on (63.5, 71.7).
-CENTER = (63.5, 71.7)
+# The drawing spans x 8-119 and y 18-111 of its 128 units, centred on (63.5, 64.1).
+CENTER = (63.5, 64.1)
 
 
 def group(scale):
@@ -81,9 +98,9 @@ def group(scale):
     return f'<group android:translateX="{tx:.2f}" android:translateY="{ty:.2f}" android:scaleX="{scale}" android:scaleY="{scale}">'
 
 
-# Color: about 60 of 108 units, inside the visible circle. Themed icons draw the monochrome layer alone, so its
+# Color: 72 of 108 units, inside the visible circle. Themed icons draw the monochrome layer alone, so its
 # glyph is kept to about 48 units, as launchers expect, or it looks oversized beside other themed icons.
-GROUP = group(0.54)
+GROUP = group(0.5625)
 MONO_GROUP = group(0.42)
 HEAD = ('<?xml version="1.0" encoding="utf-8"?>\n<!-- Generated by tools/logo.py; edit that instead. -->\n'
         '<vector xmlns:android="http://schemas.android.com/apk/res/android" xmlns:aapt="http://schemas.android.com/aapt"\n'
@@ -113,10 +130,10 @@ def foreground(head=HEAD, group=GROUP):
     (cx, cy) = END
     out = head + group + "\n"
     kx, ky = KNOB_END
-    out += vd_path(KNOB, fill=BARK[1])
-    out += vd_path(ellipse(kx, ky, *KNOB_RIM), fill=RIM)
-    out += vd_path(ellipse(kx, ky, *KNOB_CUT), gradient=(CUT, (kx, ky - 5, kx, ky + 5)))
     out += vd_path(LOG, gradient=(BARK, (0, 48, 0, 108)))
+    out += vd_path(KNOB, gradient=(KNOB_SHADE, (0, 84, 0, 109)))
+    out += vd_path(ellipse(kx, ky, *KNOB_RIM, tilt=-KNOB_TILT), fill=RIM)
+    out += vd_path(ellipse(kx, ky, *KNOB_CUT, tilt=-KNOB_TILT), gradient=(CUT, (kx - 4, ky - 4, kx + 4, ky + 4)))
     out += vd_path(ellipse(cx, cy, *RIM_RADII), fill=RIM)
     out += vd_path(ellipse(cx, cy, *CUT_RADII), gradient=(CUT, (cx - 19, cy - 26, cx - 4, cy + 26)))
     out += "".join(vd_path(ellipse(cx, cy, rx, ry), stroke=RING, width=2, alpha=RING_ALPHA) for rx, ry in RINGS)
@@ -126,12 +143,11 @@ def foreground(head=HEAD, group=GROUP):
 
 
 def monochrome():
-    """Themed icons tint one silhouette. The cut ends are holes, leaving the bark rim and a heart dot,
-    so the shape still reads as a log rather than a fruit."""
-    (cx, cy), (kx, ky) = END, KNOB_END
+    """Themed icons tint one silhouette. The cut end is a hole, leaving the bark rim and a heart dot, so the
+    shape still reads as a log rather than a fruit. The knob sits inside the outline, so it is left out."""
+    (cx, cy) = END
     solid = " ".join([
-        LOG, KNOB, ellipse(cx, cy, *RIM_RADII, clockwise=True), ellipse(kx, ky, *KNOB_RIM, clockwise=True),
-        hole(cx, cy, *CUT_RADII, "left"), ellipse(cx, cy, 6, 8, clockwise=True), hole(kx, ky, *KNOB_CUT, "top"),
+        LOG, ellipse(cx, cy, *RIM_RADII, clockwise=True), hole(cx, cy, *CUT_RADII), ellipse(cx, cy, 6, 8, clockwise=True),
     ])
     out = HEAD + MONO_GROUP + "\n"
     out += vd_path(solid, fill="#000000")
