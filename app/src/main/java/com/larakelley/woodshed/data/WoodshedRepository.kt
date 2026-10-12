@@ -10,7 +10,6 @@ import com.larakelley.woodshed.data.db.TuneStateEntity
 import com.larakelley.woodshed.data.db.WoodshedDatabase
 import com.larakelley.woodshed.data.seed.Seed
 import com.larakelley.woodshed.data.seed.SeedImporter
-import com.larakelley.woodshed.domain.Family
 import com.larakelley.woodshed.domain.Focus
 import com.larakelley.woodshed.domain.Instrument
 import com.larakelley.woodshed.domain.Transposition
@@ -35,14 +34,10 @@ class WoodshedRepository(
   private val _transposition = MutableStateFlow(enumPref(TRANSPOSITION) ?: Transposition.C)
   val transposition: StateFlow<Transposition> = _transposition.asStateFlow()
 
-  private val _family = MutableStateFlow(enumPref<Family>(FAMILY))
-
-  /** Null shows exercises for every family. */
-  val family: StateFlow<Family?> = _family.asStateFlow()
 
   private val _instrument = MutableStateFlow(enumPref<Instrument>(INSTRUMENT))
 
-  /** What the user plays, or null until they say. Setting it also sets [transposition] and [family]. */
+  /** What the user plays, or null until they say. Setting it also sets [transposition]. */
   val instrument: StateFlow<Instrument?> = _instrument.asStateFlow()
 
   private val _myInstruments = MutableStateFlow(
@@ -80,16 +75,11 @@ class WoodshedRepository(
     _transposition.value = transposition
   }
 
-  fun setFamily(family: Family?) {
-    prefs.edit { putString(FAMILY, family?.name) }
-    _family.value = family
-  }
 
   fun setInstrument(instrument: Instrument) {
     prefs.edit { putString(INSTRUMENT, instrument.name) }
     _instrument.value = instrument
     setTransposition(instrument.transposition)
-    setFamily(instrument.family)
   }
 
   fun setMyInstruments(instruments: Set<Instrument>) {
@@ -111,7 +101,6 @@ class WoodshedRepository(
     instrument = instrument.value?.name,
     myInstruments = myInstruments.value.map { it.name },
     transposition = transposition.value.name,
-    family = family.value?.name,
     themeMode = themeMode.value.name,
     sessionMinutes = sessionMinutes,
     sessionFocus = sessionFocus.map { it.name },
@@ -122,7 +111,6 @@ class WoodshedRepository(
     Instrument.entries.firstOrNull { it.name == s.instrument }?.let(::setInstrument)
     setMyInstruments(s.myInstruments.mapNotNull { n -> Instrument.entries.firstOrNull { it.name == n } }.toSet())
     Transposition.entries.firstOrNull { it.name == s.transposition }?.let(::setTransposition)
-    setFamily(Family.entries.firstOrNull { it.name == s.family })
     ThemeMode.entries.firstOrNull { it.name == s.themeMode }?.let(::setThemeMode)
     rememberSession(s.sessionMinutes ?: sessionMinutes, s.sessionFocus.mapNotNull { n -> Focus.entries.firstOrNull { it.name == n } }.toSet())
   }
@@ -157,7 +145,6 @@ class WoodshedRepository(
 
   private companion object {
     const val TRANSPOSITION = "transposition"
-    const val FAMILY = "family"
     /** A fresh install starts with a jazz combo's front line and rhythm section. */
     val DEFAULT_INSTRUMENTS = setOf(Instrument.TRUMPET, Instrument.TENOR_SAX, Instrument.BASS, Instrument.PIANO, Instrument.DRUMS)
     const val INSTRUMENT = "instrument"

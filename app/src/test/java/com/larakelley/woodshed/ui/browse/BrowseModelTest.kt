@@ -6,6 +6,7 @@ import com.larakelley.woodshed.data.db.TuneKnowledgeEntity
 import com.larakelley.woodshed.data.db.TuneStateEntity
 import com.larakelley.woodshed.domain.Comfort
 import com.larakelley.woodshed.domain.Family
+import com.larakelley.woodshed.domain.Instrument
 import com.larakelley.woodshed.domain.Key
 import com.larakelley.woodshed.domain.Lifecycle
 import com.larakelley.woodshed.domain.Tonality
@@ -35,15 +36,17 @@ class BrowseModelTest {
   }
 
   @Test
-  fun exercisesFilterByFamilyAndKeepUnscopedOnes() {
+  fun exercisesFilterByInstrumentAndKeepUnscopedOnes() {
     val exercises = listOf(
       exercise(1, "Long tones", emptyList()),
       exercise(2, "Overtone series", listOf(Family.SAXOPHONE)),
       exercise(3, "Lip slurs", listOf(Family.BRASS)),
     )
-    assertEquals(listOf("Long tones", "Overtone series"), exerciseRows(exercises, Family.SAXOPHONE).map { it.name })
-    assertEquals(listOf("Long tones", "Lip slurs"), exerciseRows(exercises, Family.BRASS).map { it.name })
-    assertEquals(3, exerciseRows(exercises, null).size)
+    assertEquals(listOf("Long tones", "Overtone series"), exerciseRows(exercises, ExerciseFilter(instrument = Instrument.TENOR_SAX)).map { it.name })
+    assertEquals(listOf("Long tones", "Lip slurs"), exerciseRows(exercises, ExerciseFilter(instrument = Instrument.TROMBONE)).map { it.name })
+    assertEquals(3, exerciseRows(exercises).size)
+    // A piano has no family of its own and does not blow, so tone work drops out too.
+    assertEquals(emptyList<String>(), exerciseRows(exercises, ExerciseFilter(instrument = Instrument.PIANO)).map { it.name })
   }
 
   @Test
@@ -102,8 +105,8 @@ class BrowseModelTest {
   @Test
   fun exerciseSearchAndCategory() {
     val exercises = listOf(exercise(1, "Long tones", emptyList()), exercise(2, "Lip slurs", listOf(Family.BRASS)).copy(category = "Technique"))
-    assertEquals(listOf("Lip slurs"), exerciseRows(exercises, null, ExerciseFilter(category = "Technique")).map { it.name })
-    assertEquals(listOf("Long tones"), exerciseRows(exercises, null, ExerciseFilter(query = "tones")).map { it.name })
+    assertEquals(listOf("Lip slurs"), exerciseRows(exercises, ExerciseFilter(category = "Technique")).map { it.name })
+    assertEquals(listOf("Long tones"), exerciseRows(exercises, ExerciseFilter(query = "tones")).map { it.name })
   }
 
   private fun standard(id: Int, title: String) =
@@ -117,6 +120,39 @@ class BrowseModelTest {
     val reeds = exerciseRow(exercise(2, "Mouthpiece pitch bends", listOf(Family.SAXOPHONE, Family.CLARINET)).copy(category = "Technique"))
     assertEquals("Saxophone, Clarinet", reeds.instruments)
     assertEquals(listOf("Speed"), reeds.focus)
+  }
+
+  @Test
+  fun tunesSortByEachOrderWithUnknownsLast() {
+    val tunes = listOf(
+      standard(1, "Alpha").copy(composer = "Zed", year = 1950, keyPitchClass = 7, tonality = Tonality.MAJOR),
+      standard(2, "Bravo").copy(composer = "Abe", year = null, keyPitchClass = 0, tonality = Tonality.MINOR),
+      standard(3, "Charlie").copy(composer = null, year = 1930, keyPitchClass = null),
+    )
+    val states = mapOf(1L to TuneStateEntity(1, Lifecycle.LEARNING, lastReviewedAt = 5), 3L to TuneStateEntity(3, Lifecycle.LEARNING, lastReviewedAt = 9))
+    val knowledge = mapOf(2L to TuneKnowledgeEntity(2, comfort = Comfort.SOLID), 1L to TuneKnowledgeEntity(1, comfort = Comfort.SHAKY))
+    val rows = tuneRows(tunes, Transposition.C, states, knowledge)
+    fun order(sort: TuneSort) = filterTunes(rows, TuneFilter(sort = sort)).map { it.title }
+    assertEquals(listOf("Alpha", "Bravo", "Charlie"), order(TuneSort.TITLE))
+    assertEquals(listOf("Bravo", "Alpha", "Charlie"), order(TuneSort.COMPOSER))
+    assertEquals(listOf("Charlie", "Alpha", "Bravo"), order(TuneSort.YEAR))
+    assertEquals(listOf("Bravo", "Alpha", "Charlie"), order(TuneSort.KEY))
+    assertEquals(listOf("Charlie", "Alpha", "Bravo"), order(TuneSort.LAST_PRACTICED))
+    assertEquals(listOf("Bravo", "Alpha", "Charlie"), order(TuneSort.COMFORT))
+  }
+
+  @Test
+  fun exercisesSortByNameMinutesAndDifficulty() {
+    val exercises = listOf(
+      exercise(1, "Scales", emptyList()).copy(minutes = 10, difficulty = 3, category = "Scales & Patterns"),
+      exercise(2, "Air", emptyList()).copy(minutes = 5, difficulty = 1, category = "Air & Breathing"),
+      exercise(3, "Bends", emptyList()).copy(minutes = 8, difficulty = 2),
+    )
+    fun order(sort: ExerciseSort) = exerciseRows(exercises, ExerciseFilter(sort = sort)).map { it.name }
+    assertEquals(listOf("Bends", "Air", "Scales"), order(ExerciseSort.CATEGORY))
+    assertEquals(listOf("Air", "Bends", "Scales"), order(ExerciseSort.NAME))
+    assertEquals(listOf("Air", "Bends", "Scales"), order(ExerciseSort.MINUTES))
+    assertEquals(listOf("Air", "Bends", "Scales"), order(ExerciseSort.DIFFICULTY))
   }
 
   private fun exercise(id: Long, name: String, families: List<Family>) =

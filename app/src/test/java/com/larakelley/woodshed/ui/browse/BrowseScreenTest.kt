@@ -48,16 +48,17 @@ class BrowseScreenTest {
   private fun showWithLiveState() {
     compose.setContent {
       var transposition by remember { mutableStateOf(Transposition.C) }
-      var family by remember { mutableStateOf<Family?>(null) }
       var filter by remember { mutableStateOf(TuneFilter()) }
+      var exerciseFilter by remember { mutableStateOf(ExerciseFilter()) }
       val rows = tuneRows(standards, transposition)
       BrowseScreen(
         BrowseState(
-          transposition, family, filterTunes(rows, filter), rows.size, exerciseRows(exercises, family), exercises.size, tuneFilter = filter,
+          transposition, filterTunes(rows, filter), rows.size, exerciseRows(exercises, exerciseFilter), exercises.size, tuneFilter = filter,
+          exerciseFilter = exerciseFilter,
         ),
         onSelectTransposition = { transposition = it },
-        onSelectFamily = { family = it },
         onTuneFilter = { filter = it(filter) },
+        onExerciseFilter = { exerciseFilter = it(exerciseFilter) },
       )
     }
   }
@@ -76,12 +77,13 @@ class BrowseScreenTest {
   }
 
   @Test
-  fun familyFilterHidesOtherFamiliesWork() {
+  fun instrumentFilterHidesOtherInstrumentsWork() {
     showWithLiveState()
-    compose.onNodeWithText("Exercises").performClick()
+    compose.onNodeWithTag("tab-Exercises").performClick()
     compose.onNodeWithText("Lip slurs").assertExists()
 
-    compose.onNodeWithText("Sax").performClick()
+    compose.onNodeWithTag("chip-Instrument").performClick()
+    compose.onNodeWithText("Alto sax").performClick()
 
     compose.onNodeWithText("1 of 2 exercises").assertExists()
     compose.onNodeWithText("Long tones").assertExists()
@@ -91,7 +93,7 @@ class BrowseScreenTest {
   @Test
   fun exerciseOpensToItsDetails() {
     showWithLiveState()
-    compose.onNodeWithText("Exercises").performClick()
+    compose.onNodeWithTag("tab-Exercises").performClick()
     compose.onNodeWithText("Lip slurs").performClick()
 
     compose.onNodeWithTag("exercise-instruments").assertExists()
@@ -118,9 +120,8 @@ class BrowseScreenTest {
     compose.setContent {
       val rows = tuneRows(standards, Transposition.Bb, mapOf(1L to state), mapOf(1L to knowledge))
       BrowseScreen(
-        BrowseState(Transposition.Bb, null, rows, rows.size),
+        BrowseState(Transposition.Bb, rows, rows.size),
         onSelectTransposition = {},
-        onSelectFamily = {},
         actions = TuneActions(
           setComfort = { _, c -> knowledge = knowledge.copy(comfort = c) },
           toggleKnownKey = { _, pc -> knowledge = knowledge.copy(knownKeys = KeyMask.toggle(knowledge.knownKeys, pc)) },
@@ -146,7 +147,7 @@ class BrowseScreenTest {
   @Test
   fun bulkTunesSayTheirDetailsAreUnchecked() {
     val bulk = StandardEntity(9, "the-river-seine", "The River Seine", null, null, null, null, null, null, null, null, null, collection = "Trad", verified = false)
-    compose.setContent { BrowseScreen(BrowseState(tunes = tuneRows(listOf(bulk), Transposition.C), totalTunes = 1), {}, {}) }
+    compose.setContent { BrowseScreen(BrowseState(tunes = tuneRows(listOf(bulk), Transposition.C), totalTunes = 1), {}) }
     compose.onNodeWithText("The River Seine").performClick()
     compose.onNodeWithText("Trad repertoire").assertExists()
     compose.onNodeWithTag("unverified").assertExists()
@@ -155,7 +156,7 @@ class BrowseScreenTest {
 
   @Test
   fun seedErrorIsShownNotSwallowed() {
-    compose.setContent { BrowseScreen(BrowseState(seedError = "duplicate slug: x"), onSelectTransposition = {}, onSelectFamily = {}) }
+    compose.setContent { BrowseScreen(BrowseState(seedError = "duplicate slug: x"), onSelectTransposition = {}) }
     compose.onNodeWithText("Could not load the bundled data: duplicate slug: x").assertExists()
   }
 }

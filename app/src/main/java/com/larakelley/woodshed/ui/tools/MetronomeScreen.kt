@@ -69,7 +69,7 @@ fun MetronomeScreen(state: MetronomeState, actions: MetronomeActions) {
       RoundSticker("-") { actions.setBpm(state.bpm - 1) }
       Column(Modifier.width(170.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         Text("${state.bpm}", style = MaterialTheme.typography.displayLarge, textAlign = TextAlign.Center, modifier = Modifier.testTag("bpm"))
-        Text("bpm, ${TempoPreset.nearest(state.bpm).label.lowercase()}", style = MaterialTheme.typography.bodyMedium, color = callie.textMuted)
+        Text("bpm", style = MaterialTheme.typography.bodyMedium, color = callie.textMuted)
       }
       RoundSticker("+") { actions.setBpm(state.bpm + 1) }
     }
@@ -93,7 +93,12 @@ fun MetronomeScreen(state: MetronomeState, actions: MetronomeActions) {
       Text("👆\nTap tempo", style = MaterialTheme.typography.titleMedium, textAlign = TextAlign.Center)
     }
 
-    SectionLabel("Tempos")
+    SectionLabel("Beats per bar")
+    PillChoice(METERS.map { "$it/4" to it }, state.beatsPerBar, actions.setBeatsPerBar, tagPrefix = "meter")
+    SectionLabel("Click on")
+    PillChoice(Feel.entries.map { it.label to it }, state.feel, actions.setFeel, tagPrefix = "feel")
+    SwitchRow("Accent beat 1", state.accentFirst, actions.setAccentFirst, helper = "A higher click on the downbeat", modifier = Modifier.testTag("accent"))
+    SectionLabel("Common tempos")
     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
       TempoPreset.entries.forEach { p ->
         CallieChip(
@@ -107,11 +112,6 @@ fun MetronomeScreen(state: MetronomeState, actions: MetronomeActions) {
         )
       }
     }
-    SectionLabel("Beats per bar")
-    PillChoice(METERS.map { "$it/4" to it }, state.beatsPerBar, actions.setBeatsPerBar, tagPrefix = "meter")
-    SectionLabel("Click on")
-    PillChoice(Feel.entries.map { it.label to it }, state.feel, actions.setFeel, tagPrefix = "feel")
-    SwitchRow("Accent beat 1", state.accentFirst, actions.setAccentFirst, helper = "A higher click on the downbeat", modifier = Modifier.testTag("accent"))
   }
 }
 

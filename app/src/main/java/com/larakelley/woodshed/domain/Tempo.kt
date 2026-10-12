@@ -14,12 +14,7 @@ enum class TempoPreset(val label: String, val bpm: Int, val beatsPerBar: Int? = 
   MEDIUM_UP("Medium up", 176),
   BEBOP("Bebop", 220),
   UP_TEMPO("Up tempo", 260),
-  BURNER("Burner", 300);
-
-  companion object {
-    /** The preset whose tempo is nearest [bpm], for naming the current tempo. */
-    fun nearest(bpm: Int): TempoPreset = entries.minBy { kotlin.math.abs(it.bpm - bpm) }
-  }
+  BURNER("Burner", 300),
 }
 
 /**
