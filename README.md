@@ -1,3 +1,5 @@
+<img src="assets/logo.svg" alt="" width="96">
+
 # woodshed
 
 Notes, data, and a build plan for **Woodshed**, an Android practice app for
@@ -20,6 +22,7 @@ and a checklist of keys you know it in. Every graded rep is logged.
 | `data/exercises.json` | 61 instrument-scoped practice exercises |
 | `app/` | The Android app (Kotlin, Compose, Room); `data/` ships as its assets |
 | `tools/cards.py` | Prints random tune x exercise x written-key cards for an instrument |
+| `tools/logo.py` | Generates `assets/logo.svg` and the app's launcher icon from one shape list |
 
 ## Credit
 
@@ -36,6 +39,10 @@ iReal Pro main playlists and composer, meter and bars from the
 contents come from Hal Leonard's published song lists.
 
 `data/exercises.json` is original, written for this project.
+
+The look follows the Callie theme from the Callie calendar app: its plum and pink
+palette, raised "sticker" buttons, and the Nunito and Fraunces typefaces, which
+ship under the SIL Open Font License (`licenses/`).
 
 ## Building
 

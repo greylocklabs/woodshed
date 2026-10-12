@@ -46,6 +46,7 @@ import com.larakelley.woodshed.audio.MetronomeState
 import com.larakelley.woodshed.domain.Focus
 import com.larakelley.woodshed.domain.Grade
 import com.larakelley.woodshed.domain.PlanBlock
+import com.larakelley.woodshed.theme.StickerButton
 import com.larakelley.woodshed.ui.browse.ExerciseFacts
 import com.larakelley.woodshed.ui.browse.ExerciseRow
 import kotlinx.coroutines.delay
@@ -95,13 +96,13 @@ private fun SessionSetup(ui: PracticeUi, actions: SetupActions) {
         Text("Leave all off for a mix", style = MaterialTheme.typography.bodySmall)
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
           Focus.entries.forEach { f ->
-            FilterChip(selected = f in setup.focus, onClick = { actions.toggleFocus(f) }, label = { Text(f.label) }, modifier = Modifier.testTag("focus-${f.name.lowercase()}"))
+            FilterChip(selected = f in setup.focus, onClick = { actions.toggleFocus(f) }, label = { Text("${f.emoji} ${f.label}") }, modifier = Modifier.testTag("focus-${f.name.lowercase()}"))
           }
         }
         Spacer(Modifier.height(16.dp))
         Text("Tunes (${setup.selected.size} picked)", style = MaterialTheme.typography.titleMedium)
         if (setup.tunes.isEmpty()) {
-          Text("No tunes yet. Add some to your wishlist or start learning them in the Tunes tab.", modifier = Modifier.padding(vertical = 8.dp))
+          Text("🪵 No tunes yet. Add some to your wishlist or start learning them in the Tunes tab.", modifier = Modifier.padding(vertical = 8.dp))
         }
       }
       var lastGroup: TuneGroup? = null
@@ -109,7 +110,7 @@ private fun SessionSetup(ui: PracticeUi, actions: SetupActions) {
         if (tune.group != lastGroup) {
           val group = tune.group
           item(key = "group-$group") {
-            Text(group.label, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = 12.dp))
+            Text("${group.emoji} ${group.label}", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = 12.dp))
           }
           lastGroup = group
         }
@@ -124,8 +125,8 @@ private fun SessionSetup(ui: PracticeUi, actions: SetupActions) {
         }
       }
     }
-    Button(onClick = actions.buildPlan, modifier = Modifier.fillMaxWidth().padding(16.dp).height(64.dp).testTag("build-plan")) {
-      Text("Plan session", style = MaterialTheme.typography.titleLarge)
+    StickerButton(onClick = actions.buildPlan, modifier = Modifier.fillMaxWidth().padding(16.dp).height(64.dp).testTag("build-plan")) {
+      Text("✨ Plan session", style = MaterialTheme.typography.titleLarge)
     }
   }
 }
@@ -148,7 +149,7 @@ private fun PlanReview(plan: List<PlanItem>, actions: SetupActions) {
       Text("${plan.sumOf { it.block.minutes }} min planned", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f).testTag("plan-total"))
     }
     if (plan.isEmpty()) {
-      Text("Nothing fits. Go back and pick tunes, a focus or a longer session.", modifier = Modifier.padding(16.dp))
+      Text("🤷 Nothing fits. Go back and pick tunes, a focus or a longer session.", modifier = Modifier.padding(16.dp))
     }
     LazyColumn(Modifier.weight(1f).fillMaxWidth()) {
       itemsIndexed(plan) { i, item ->
@@ -168,8 +169,8 @@ private fun PlanReview(plan: List<PlanItem>, actions: SetupActions) {
       }
     }
     if (plan.isNotEmpty()) {
-      Button(onClick = actions.start, modifier = Modifier.fillMaxWidth().padding(16.dp).height(72.dp).testTag("start")) {
-        Text("Start", style = MaterialTheme.typography.titleLarge)
+      StickerButton(onClick = actions.start, modifier = Modifier.fillMaxWidth().padding(16.dp).height(72.dp).testTag("start")) {
+        Text("🎶 Start", style = MaterialTheme.typography.titleLarge)
       }
     }
   }
@@ -202,9 +203,9 @@ fun SessionScreen(
     }
     if (step == null) {
       Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        Text("Session done", style = MaterialTheme.typography.headlineMedium)
+        Text("🎉 Session done", style = MaterialTheme.typography.headlineMedium)
         Text("${ui.stepCount} blocks, ${ui.reviewedThisSession} tunes reviewed.", modifier = Modifier.testTag("session-summary"))
-        Button(onClick = onStop, modifier = Modifier.fillMaxWidth().height(72.dp)) { Text("Finish") }
+        StickerButton(onClick = onStop, modifier = Modifier.fillMaxWidth().height(72.dp)) { Text("Finish", style = MaterialTheme.typography.titleLarge) }
       }
       return@Column
     }
@@ -233,8 +234,8 @@ fun SessionScreen(
     MetronomeBar(metronome, onToggleMetronome, onSetBpm)
     when (step) {
       is StepView.Exercise ->
-        Button(onClick = onNext, modifier = Modifier.fillMaxWidth().fillMaxHeight(0.2f).padding(8.dp).testTag("step-done")) {
-          Text("Done", style = MaterialTheme.typography.headlineSmall)
+        StickerButton(onClick = onNext, modifier = Modifier.fillMaxWidth().fillMaxHeight(0.2f).padding(8.dp).testTag("step-done"), radius = 16.dp) {
+          Text("✅ Done", style = MaterialTheme.typography.headlineSmall)
         }
       is StepView.Tune -> {
         TextButton(onClick = onNext, modifier = Modifier.align(Alignment.End).testTag("step-skip")) { Text("Skip without grading") }

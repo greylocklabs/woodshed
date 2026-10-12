@@ -88,8 +88,8 @@ class PracticeScreenTest {
     compose.onNodeWithText("Tunes (1 picked)").assertExists()
     // The tune list sits below the fold on a test-sized screen.
     val list = compose.onNode(hasScrollAction())
-    list.performScrollToNode(hasText("Due for review"))
-    list.performScrollToNode(hasText("Wishlist"))
+    list.performScrollToNode(hasText("Due for review", substring = true))
+    list.performScrollToNode(hasText("Wishlist", substring = true))
     list.performScrollToNode(hasTestTag("pick-3"))
     compose.onNodeWithTag("pick-3").performClick()
     assertEquals(listOf<Any>(Focus.SPEED, 45, 3L), toggled)

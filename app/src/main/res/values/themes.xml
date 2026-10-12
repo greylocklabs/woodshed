@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
-    <style name="Theme.Woodshed" parent="android:Theme.Material.Light.NoActionBar" />
+    <!-- The window shows Callie's background before Compose draws, so launch has no white flash. -->
+    <style name="Theme.Woodshed" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">#FBF5F8</item>
+    </style>
 </resources>
