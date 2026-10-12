@@ -11,6 +11,7 @@ import com.larakelley.woodshed.data.db.WoodshedDatabase
 import com.larakelley.woodshed.data.seed.Seed
 import com.larakelley.woodshed.data.seed.SeedImporter
 import com.larakelley.woodshed.domain.Family
+import com.larakelley.woodshed.domain.Focus
 import com.larakelley.woodshed.domain.Transposition
 import java.security.MessageDigest
 import kotlinx.coroutines.flow.Flow
@@ -31,10 +32,11 @@ class WoodshedRepository(
   /** Null shows exercises for every family. */
   val family: StateFlow<Family?> = _family.asStateFlow()
 
-  private val _dailyNewLimit = MutableStateFlow(prefs.getInt(DAILY_NEW_LIMIT, 1))
-
-  /** How many wishlist tunes move into learning each day. */
-  val dailyNewLimit: StateFlow<Int> = _dailyNewLimit.asStateFlow()
+  /** The last session length and focus, offered again next time. */
+  val sessionMinutes: Int
+    get() = prefs.getInt(SESSION_MINUTES, 30)
+  val sessionFocus: Set<Focus>
+    get() = prefs.getStringSet(SESSION_FOCUS, emptySet())!!.mapNotNull { name -> Focus.entries.firstOrNull { it.name == name } }.toSet()
 
   private val _seedError = MutableStateFlow<String?>(null)
   val seedError: StateFlow<String?> = _seedError.asStateFlow()
@@ -54,10 +56,11 @@ class WoodshedRepository(
     _family.value = family
   }
 
-  fun setDailyNewLimit(limit: Int) {
-    val clamped = limit.coerceIn(0, 10)
-    prefs.edit { putInt(DAILY_NEW_LIMIT, clamped) }
-    _dailyNewLimit.value = clamped
+  fun rememberSession(minutes: Int, focus: Set<Focus>) {
+    prefs.edit {
+      putInt(SESSION_MINUTES, minutes)
+      putStringSet(SESSION_FOCUS, focus.map { it.name }.toSet())
+    }
   }
 
   /** Imports the bundled seed when it differs from the last one imported. */
@@ -84,7 +87,8 @@ class WoodshedRepository(
   private companion object {
     const val TRANSPOSITION = "transposition"
     const val FAMILY = "family"
-    const val DAILY_NEW_LIMIT = "daily_new_limit"
+    const val SESSION_MINUTES = "session_minutes"
+    const val SESSION_FOCUS = "session_focus"
     const val SEED_HASH = "seed_hash"
   }
 }

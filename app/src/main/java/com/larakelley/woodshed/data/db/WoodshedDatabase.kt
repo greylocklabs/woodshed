@@ -65,8 +65,6 @@ interface TuneStateDao {
 
   @Query("SELECT * FROM tune_state WHERE lifecycle = 'WISHLIST' ORDER BY wishlistedAt, standardId")
   suspend fun wishlist(): List<TuneStateEntity>
-
-  @Query("SELECT COUNT(*) FROM tune_state WHERE introducedAt >= :since") suspend fun introducedSince(since: Long): Int
 }
 
 @Dao

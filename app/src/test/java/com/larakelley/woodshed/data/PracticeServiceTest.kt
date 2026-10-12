@@ -9,9 +9,12 @@ import com.larakelley.woodshed.data.seed.Seed
 import com.larakelley.woodshed.data.seed.SeedImporter
 import com.larakelley.woodshed.domain.CardState
 import com.larakelley.woodshed.domain.Comfort
+import com.larakelley.woodshed.domain.Family
+import com.larakelley.woodshed.domain.Focus
 import com.larakelley.woodshed.domain.Grade
 import com.larakelley.woodshed.domain.KeyPolicy
 import com.larakelley.woodshed.domain.Lifecycle
+import com.larakelley.woodshed.domain.PlanBlock
 import com.larakelley.woodshed.domain.Sm2Scheduler
 import com.larakelley.woodshed.domain.Transposition
 import java.time.ZoneOffset
@@ -62,26 +65,28 @@ class PracticeServiceTest {
   private suspend fun state(slug: String) = db.tuneStates().get(id(slug))
 
   @Test
-  fun dailyLimitIntroducesWishlistTunesOldestFirst() = runTest {
-    for (slug in listOf("autumn-leaves", "blue-bossa", "solar")) {
-      practice.addToWishlist(id(slug))
-      clock += 1
-    }
-    assertEquals(1, practice.introduceNew(dailyLimit = 1))
-    assertEquals(Lifecycle.LEARNING, state("autumn-leaves")!!.lifecycle)
-    assertEquals(0, practice.introduceNew(dailyLimit = 1))
-
-    clock += day
-    assertEquals(1, practice.introduceNew(dailyLimit = 1))
-    assertEquals(Lifecycle.LEARNING, state("blue-bossa")!!.lifecycle)
-    assertEquals(Lifecycle.WISHLIST, state("solar")!!.lifecycle)
+  fun planPairsEachChosenTuneWithATuneExercise() = runTest {
+    val tunes = listOf(id("autumn-leaves"), id("solar"))
+    val plan = practice.plan(45, setOf(Focus.ARTICULATION), tunes, Family.SAXOPHONE)
+    assertEquals(45, plan.sumOf { it.minutes })
+    val tuneBlocks = plan.filterIsInstance<PlanBlock.Tune>()
+    assertEquals(tunes, tuneBlocks.map { it.tuneId })
+    val byId = db.exercises().all().associateBy { it.id }
+    assertTrue(tuneBlocks.all { byId.getValue(it.exerciseId).appliesToTune })
+    val drills = plan.filterIsInstance<PlanBlock.Exercise>().map { byId.getValue(it.exerciseId) }
+    assertTrue(drills.all { it.families.isEmpty() || Family.SAXOPHONE in it.families })
+    assertTrue(drills.drop(1).all { it.category == "Articulation" })
   }
 
   @Test
-  fun startingByHandCountsTowardTheDailyLimit() = runTest {
+  fun aWishlistTuneInAPlanStartsLearningWhenItComesUp() = runTest {
     practice.addToWishlist(id("solar"))
-    practice.startLearning(id("autumn-leaves"))
-    assertEquals(0, practice.introduceNew(dailyLimit = 1))
+    val block = practice.plan(30, emptySet(), listOf(id("solar")), null).filterIsInstance<PlanBlock.Tune>().single()
+    val card = practice.cardForBlock(block, Transposition.Eb)!!
+    assertEquals(Lifecycle.LEARNING, state("solar")!!.lifecycle)
+    assertEquals(block.exerciseId, card.exercise.id)
+    practice.grade(card, Grade.GOOD)
+    assertEquals(1, db.reviewEvents().forItem(ReviewEventEntity.TUNE, id("solar")).size)
   }
 
   @Test

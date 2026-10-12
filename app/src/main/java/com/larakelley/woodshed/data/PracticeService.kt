@@ -10,16 +10,21 @@ import com.larakelley.woodshed.data.db.WoodshedDatabase
 import com.larakelley.woodshed.data.db.homeKey
 import com.larakelley.woodshed.domain.CardState
 import com.larakelley.woodshed.domain.Comfort
+import com.larakelley.woodshed.domain.Family
+import com.larakelley.woodshed.domain.Focus
 import com.larakelley.woodshed.domain.Grade
 import com.larakelley.woodshed.domain.Key
 import com.larakelley.woodshed.domain.KeyMask
 import com.larakelley.woodshed.domain.KeyPolicy
 import com.larakelley.woodshed.domain.Lifecycle
+import com.larakelley.woodshed.domain.PlanBlock
+import com.larakelley.woodshed.domain.PlanExercise
 import com.larakelley.woodshed.domain.Scheduler
 import com.larakelley.woodshed.domain.Sm2Scheduler
 import com.larakelley.woodshed.domain.Transposition
 import com.larakelley.woodshed.domain.concertKeyFor
 import com.larakelley.woodshed.domain.pickExercise
+import com.larakelley.woodshed.domain.planSession
 import java.time.Instant
 import java.time.ZoneId
 import kotlin.random.Random
@@ -38,7 +43,7 @@ data class Card(
     get() = concertKey?.writtenFor(transposition)
 }
 
-data class PracticeSummary(val due: Int, val newToday: Int, val wishlist: Int, val reviewedToday: Int)
+data class PracticeSummary(val due: Int, val wishlist: Int, val reviewedToday: Int)
 
 class PracticeService(
   private val db: WoodshedDatabase,
@@ -69,7 +74,7 @@ class PracticeService(
     db.tuneKnowledge().upsert(change(current).copy(updatedAt = now()))
   }
 
-  /** Starts learning now, outside the daily limit. */
+  /** Moves a tune into learning, due now. */
   suspend fun startLearning(standardId: Long) {
     val existing = states.get(standardId)
     val t = now()
@@ -102,22 +107,11 @@ class PracticeService(
     states.get(standardId)?.let { states.upsert(it.copy(keyPolicy = policy)) }
   }
 
-  /** Moves the oldest wishlist tunes into learning until today's introductions reach [dailyLimit]. */
-  suspend fun introduceNew(dailyLimit: Int): Int = db.withTransaction {
-    val t = now()
-    val room = dailyLimit - states.introducedSince(startOfDay(t))
-    if (room <= 0) return@withTransaction 0
-    val chosen = states.wishlist().take(room)
-    chosen.forEach { states.upsert(it.copy(lifecycle = Lifecycle.LEARNING, introducedAt = t, dueAt = t)) }
-    chosen.size
-  }
-
   suspend fun summary(): PracticeSummary {
     val t = now()
     val day = startOfDay(t)
     return PracticeSummary(
       due = states.due(t).size,
-      newToday = states.introducedSince(day),
       wishlist = states.wishlist().size,
       reviewedToday = db.reviewEvents().countSince(day),
     )
@@ -135,6 +129,31 @@ class PracticeService(
       return Card(tune, state, exercise, concertKeyFor(tune.homeKey, state.keyPolicy, state.cyclePosition), transposition, t)
     }
     return null
+  }
+
+  /** A session plan; see [planSession]. Exercises outside [family] are left out. */
+  suspend fun plan(minutes: Int, focus: Set<Focus>, tuneIds: List<Long>, family: Family?): List<PlanBlock> {
+    val exercises = db.exercises().all().filter { it.archivedAt == null && (family == null || it.families.isEmpty() || family in it.families) }
+    val tuneExercises = exercises.filter { it.appliesToTune }
+    val history = tuneIds.associateWith { id -> db.reviewEvents().forItem(ReviewEventEntity.TUNE, id).mapNotNull { it.exerciseId }.reversed().distinct() }
+    return planSession(
+      totalMinutes = minutes,
+      focus = focus,
+      tuneIds = tuneIds,
+      exercises = exercises.map { PlanExercise(it.id, it.category, it.minutes, it.appliesToTune) },
+      tuneExercise = { id -> tuneExercises.takeIf { it.isNotEmpty() }?.let { pickExercise(it, { e -> e.id }, history.getValue(id), random).id } },
+      random = random,
+    )
+  }
+
+  /** The card for a tune block, moving the tune into learning first if it is not already being practiced. */
+  suspend fun cardForBlock(block: PlanBlock.Tune, transposition: Transposition): Card? {
+    val tune = db.standards().byId(block.tuneId) ?: return null
+    val exercise = db.exercises().all().firstOrNull { it.id == block.exerciseId } ?: return null
+    val lifecycle = states.get(tune.id)?.lifecycle
+    if (lifecycle != Lifecycle.LEARNING && lifecycle != Lifecycle.REPERTOIRE) startLearning(tune.id)
+    val state = states.get(tune.id) ?: return null
+    return Card(tune, state, exercise, concertKeyFor(tune.homeKey, state.keyPolicy, state.cyclePosition), transposition, now())
   }
 
   /** A random card within [constraints]; see [roll]. */
