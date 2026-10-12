@@ -22,7 +22,8 @@ class SeedImporter(private val db: WoodshedDatabase, private val now: () -> Long
 
   private suspend fun importStandards(seeds: List<StandardSeed>, timestamp: Long): Result {
     val dao = db.standards()
-    val existing = dao.all().associateBy { it.slug }
+    // The user's own tunes are theirs to change; the seed never updates or archives them.
+    val existing = dao.all().filterNot { it.userCreated }.associateBy { it.slug }
     val updates = mutableListOf<StandardEntity>()
     var inserted = 0
     for (s in seeds) {

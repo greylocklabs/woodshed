@@ -28,6 +28,8 @@ interface StandardDao {
 
   @Query("SELECT * FROM standards WHERE id = :id") suspend fun byId(id: Long): StandardEntity?
 
+  @Query("SELECT * FROM standards WHERE userCreated = 1") suspend fun userCreated(): List<StandardEntity>
+
   @Insert suspend fun insert(standard: StandardEntity): Long
 
   @Update suspend fun update(standards: List<StandardEntity>)
@@ -83,6 +85,21 @@ interface TuneKnowledgeDao {
 }
 
 @Dao
+interface TuneOverrideDao {
+  @Query("SELECT * FROM tune_overrides") fun observeAll(): Flow<List<TuneOverrideEntity>>
+
+  @Query("SELECT * FROM tune_overrides") suspend fun all(): List<TuneOverrideEntity>
+
+  @Query("SELECT * FROM tune_overrides WHERE standardId = :standardId") suspend fun get(standardId: Long): TuneOverrideEntity?
+
+  @Upsert suspend fun upsert(override: TuneOverrideEntity)
+
+  @Query("DELETE FROM tune_overrides WHERE standardId = :standardId") suspend fun delete(standardId: Long)
+
+  @Query("DELETE FROM tune_overrides") suspend fun deleteAll()
+}
+
+@Dao
 interface ReviewEventDao {
   @Insert suspend fun insert(event: ReviewEventEntity): Long
 
@@ -105,14 +122,15 @@ class Converters {
 }
 
 @Database(
-  entities = [StandardEntity::class, ExerciseEntity::class, TuneStateEntity::class, ReviewEventEntity::class, TuneKnowledgeEntity::class],
-  version = 6,
+  entities = [StandardEntity::class, ExerciseEntity::class, TuneStateEntity::class, ReviewEventEntity::class, TuneKnowledgeEntity::class, TuneOverrideEntity::class],
+  version = 7,
   autoMigrations = [
     AutoMigration(from = 1, to = 2),
     AutoMigration(from = 2, to = 3),
     AutoMigration(from = 3, to = 4),
     AutoMigration(from = 4, to = 5, spec = WoodshedDatabase.DropBooks::class),
     AutoMigration(from = 5, to = 6, spec = WoodshedDatabase.SplitKey::class),
+    AutoMigration(from = 6, to = 7),
   ],
 )
 @TypeConverters(Converters::class)
@@ -126,6 +144,8 @@ abstract class WoodshedDatabase : RoomDatabase() {
   abstract fun reviewEvents(): ReviewEventDao
 
   abstract fun tuneKnowledge(): TuneKnowledgeDao
+
+  abstract fun tuneOverrides(): TuneOverrideDao
 
   /** Version 4 listed every fake book a tune is printed in; version 5 keeps only its collection. */
   @DeleteColumn(tableName = "standards", columnName = "books")

@@ -53,7 +53,7 @@ class MainActivity : ComponentActivity() {
         CompositionLocalProvider(LocalAppVersion provides version) {
           val settings: SettingsViewModel = viewModel { SettingsViewModel(app.repository, app.backups, version) }
           val settingsUi by settings.ui.collectAsStateWithLifecycle()
-          val browse: BrowseViewModel = viewModel { BrowseViewModel(app.repository, app.practice) }
+          val browse: BrowseViewModel = viewModel { BrowseViewModel(app.repository, app.practice, app.tunes) }
           val practice: PracticeViewModel = viewModel { PracticeViewModel(app.repository, app.practice) }
           val dice: DiceViewModel = viewModel { DiceViewModel(app.repository, app.practice) }
           val browseState by browse.state.collectAsStateWithLifecycle()

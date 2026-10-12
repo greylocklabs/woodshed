@@ -6,8 +6,10 @@ import androidx.core.content.edit
 import com.larakelley.woodshed.data.db.ExerciseEntity
 import com.larakelley.woodshed.data.db.StandardEntity
 import com.larakelley.woodshed.data.db.TuneKnowledgeEntity
+import com.larakelley.woodshed.data.db.TuneOverrideEntity
 import com.larakelley.woodshed.data.db.TuneStateEntity
 import com.larakelley.woodshed.data.db.WoodshedDatabase
+import com.larakelley.woodshed.data.db.withOverride
 import com.larakelley.woodshed.data.seed.Seed
 import com.larakelley.woodshed.data.seed.SeedImporter
 import com.larakelley.woodshed.domain.Focus
@@ -18,6 +20,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 
 /** Light or dark: follow the system, or pick one. */
 enum class ThemeMode(val label: String) {
@@ -65,7 +68,14 @@ class WoodshedRepository(
   private val _seedError = MutableStateFlow<String?>(null)
   val seedError: StateFlow<String?> = _seedError.asStateFlow()
 
-  val standards: Flow<List<StandardEntity>> = db.standards().observeActive()
+  /** The user's edits to seeded tunes. */
+  val overrides: Flow<List<TuneOverrideEntity>> = db.tuneOverrides().observeAll()
+
+  /** Active tunes as the user sees them, with their edits applied. */
+  val standards: Flow<List<StandardEntity>> = combine(db.standards().observeActive(), overrides) { standards, overrides ->
+    val byId = overrides.associateBy { it.standardId }
+    standards.map { it.withOverride(byId[it.id]) }
+  }
   val exercises: Flow<List<ExerciseEntity>> = db.exercises().observeActive()
   val tuneStates: Flow<List<TuneStateEntity>> = db.tuneStates().observeAll()
   val tuneKnowledge: Flow<List<TuneKnowledgeEntity>> = db.tuneKnowledge().observeAll()

@@ -73,6 +73,9 @@ object SeedValidator {
   private val TIME_SIGNATURE = Regex("^\\d+/\\d+$")
   val COLLECTIONS = listOf("Standards", "Trad")
 
+  /** The user's own tunes have slugs with this prefix, so a seed tune can never claim one. */
+  const val USER_SLUG_PREFIX = "user-"
+
   fun validate(seed: Seed): List<String> = buildList {
     if (seed.standards.isEmpty()) add("standards.json is empty")
     if (seed.exercises.isEmpty()) add("exercises.json is empty")
@@ -81,6 +84,7 @@ object SeedValidator {
     for (s in seed.standards) {
       val at = "standard ${s.slug}"
       if (!SLUG.matches(s.slug)) add("$at: malformed slug")
+      if (s.slug.startsWith(USER_SLUG_PREFIX)) add("$at: slugs starting $USER_SLUG_PREFIX are kept for the user's own tunes")
       if (s.title.isBlank()) add("$at: blank title")
       if (s.timeSignature != null && !TIME_SIGNATURE.matches(s.timeSignature)) add("$at: bad time signature ${s.timeSignature}")
       if (s.collection !in COLLECTIONS) add("$at: unknown collection ${s.collection}")

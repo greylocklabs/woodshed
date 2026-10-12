@@ -37,7 +37,50 @@ data class StandardEntity(
   val archivedAt: Long? = null,
   @ColumnInfo(defaultValue = "Standards") val collection: String = "Standards",
   @ColumnInfo(defaultValue = "1") val verified: Boolean = true,
+  /** Added by the user rather than the seed; re-seeding never updates or archives these. */
+  @ColumnInfo(defaultValue = "0") val userCreated: Boolean = false,
 )
+
+/**
+ * The user's edits to a seeded tune, kept apart so re-seeding never overwrites them. A null field is not
+ * overridden; deleting the row restores the seed's values.
+ */
+@Entity(
+  tableName = "tune_overrides",
+  foreignKeys = [ForeignKey(entity = StandardEntity::class, parentColumns = ["id"], childColumns = ["standardId"])],
+)
+data class TuneOverrideEntity(
+  @PrimaryKey val standardId: Long,
+  val title: String? = null,
+  val composer: String? = null,
+  val year: Int? = null,
+  val bars: Int? = null,
+  val timeSignature: String? = null,
+  val form: String? = null,
+  val style: String? = null,
+  val keyName: String? = null,
+  val keyPitchClass: Int? = null,
+  val tonality: Tonality? = null,
+  val collection: String? = null,
+  val updatedAt: Long = 0,
+)
+
+/** This tune as the user sees it, with their edits laid over the seed's values. */
+fun StandardEntity.withOverride(o: TuneOverrideEntity?): StandardEntity =
+  if (o == null) this
+  else copy(
+    title = o.title ?: title,
+    composer = o.composer ?: composer,
+    year = o.year ?: year,
+    bars = o.bars ?: bars,
+    timeSignature = o.timeSignature ?: timeSignature,
+    form = o.form ?: form,
+    style = o.style ?: style,
+    keyName = o.keyName ?: keyName,
+    keyPitchClass = o.keyPitchClass ?: keyPitchClass,
+    tonality = o.tonality ?: tonality,
+    collection = o.collection ?: collection,
+  )
 
 /** The tune's usual key in concert pitch, or null when unknown. */
 val StandardEntity.homeKey: Key?

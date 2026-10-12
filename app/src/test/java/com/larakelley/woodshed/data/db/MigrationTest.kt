@@ -130,4 +130,24 @@ class MigrationTest {
       db.query("SELECT knownKeys FROM tune_knowledge WHERE standardId = 7").use { it.moveToFirst(); assertEquals(5, it.getInt(0)) }
     }
   }
+
+  @Test
+  fun version6To7AddsYourTunesAndEditsWithoutTouchingPractice() {
+    helper.createDatabase("migration-test-6", 6).use { db ->
+      db.execSQL(
+        "INSERT INTO standards (id, slug, title, composer, year, bars, timeSignature, form, style, keyName, keyPitchClass, tonality, archivedAt, collection, verified) " +
+          "VALUES (7, 'solar', 'Solar', 'Miles Davis', 1954, 12, '4/4', NULL, 'Swing', 'C', 0, 'MINOR', NULL, 'Standards', 1)"
+      )
+      db.execSQL("INSERT INTO tune_state (standardId, lifecycle, keyPolicy, cyclePosition, reps, lapses, intervalDays, ease) VALUES (7, 'LEARNING', 'CYCLE', 3, 2, 0, 3.0, 2.5)")
+    }
+    helper.runMigrationsAndValidate("migration-test-6", 7, true).use { db ->
+      db.query("SELECT userCreated FROM standards WHERE id = 7").use { it.moveToFirst(); assertEquals(0, it.getInt(0)) }
+      db.query("SELECT keyPolicy, cyclePosition FROM tune_state WHERE standardId = 7").use {
+        it.moveToFirst()
+        assertEquals("CYCLE", it.getString(0))
+        assertEquals(3, it.getInt(1))
+      }
+      db.execSQL("INSERT INTO tune_overrides (standardId, keyName, keyPitchClass, updatedAt) VALUES (7, 'D', 2, 1)")
+    }
+  }
 }

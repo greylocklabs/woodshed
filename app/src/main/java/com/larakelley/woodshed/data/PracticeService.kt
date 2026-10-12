@@ -8,6 +8,7 @@ import com.larakelley.woodshed.data.db.TuneKnowledgeEntity
 import com.larakelley.woodshed.data.db.TuneStateEntity
 import com.larakelley.woodshed.data.db.WoodshedDatabase
 import com.larakelley.woodshed.data.db.homeKey
+import com.larakelley.woodshed.data.db.withOverride
 import com.larakelley.woodshed.domain.CardState
 import com.larakelley.woodshed.domain.Comfort
 import com.larakelley.woodshed.domain.Focus
@@ -122,7 +123,7 @@ class PracticeService(
     val t = now()
     val exercises = db.exercises().all().filter { it.appliesToTune && it.archivedAt == null }
     for (state in states.due(t)) {
-      val tune = db.standards().byId(state.standardId) ?: continue
+      val tune = tune(state.standardId) ?: continue
       if (tune.archivedAt != null) continue
       val recent = db.reviewEvents().forItem(ReviewEventEntity.TUNE, tune.id).mapNotNull { it.exerciseId }.reversed()
       val exercise = pickExercise(exercises, { it.id }, recent.distinct(), random)
@@ -148,7 +149,7 @@ class PracticeService(
 
   /** The card for a tune block, moving the tune into learning first if it is not already being practiced. */
   suspend fun cardForBlock(block: PlanBlock.Tune, transposition: Transposition): Card? {
-    val tune = db.standards().byId(block.tuneId) ?: return null
+    val tune = tune(block.tuneId) ?: return null
     val exercise = db.exercises().all().firstOrNull { it.id == block.exerciseId } ?: return null
     val lifecycle = states.get(tune.id)?.lifecycle
     if (lifecycle != Lifecycle.LEARNING && lifecycle != Lifecycle.REPERTOIRE) startLearning(tune.id)
@@ -159,7 +160,7 @@ class PracticeService(
   /** A random card within [constraints]; see [roll]. */
   suspend fun roll(constraints: DiceConstraints): Roll? =
     roll(
-      tunes = db.standards().all(),
+      tunes = allTunes(),
       states = states.all().associateBy { it.standardId },
       knowledge = db.tuneKnowledge().all().associateBy { it.standardId },
       exercises = db.exercises().all(),
@@ -208,6 +209,14 @@ class PracticeService(
     val cycle = if (before.keyPolicy == KeyPolicy.CYCLE) before.cyclePosition + 1 else before.cyclePosition
     states.upsert(before.withCardState(after).copy(lifecycle = lifecycle, cyclePosition = cycle, lastReviewedAt = t))
   }
+
+  private suspend fun allTunes(): List<StandardEntity> {
+    val overrides = db.tuneOverrides().all().associateBy { it.standardId }
+    return db.standards().all().map { it.withOverride(overrides[it.id]) }
+  }
+
+  /** A tune as the user sees it, with their edits applied. */
+  private suspend fun tune(id: Long): StandardEntity? = db.standards().byId(id)?.withOverride(db.tuneOverrides().get(id))
 
   private fun startOfDay(t: Long): Long = Instant.ofEpochMilli(t).atZone(zone).toLocalDate().atStartOfDay(zone).toInstant().toEpochMilli()
 }

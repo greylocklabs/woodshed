@@ -3,6 +3,8 @@ package com.larakelley.woodshed.ui.browse
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.larakelley.woodshed.data.PracticeService
+import com.larakelley.woodshed.data.TuneDraft
+import com.larakelley.woodshed.data.TuneLibrary
 import com.larakelley.woodshed.data.WoodshedRepository
 import com.larakelley.woodshed.data.db.ExerciseEntity
 import com.larakelley.woodshed.data.db.StandardEntity
@@ -44,6 +46,12 @@ data class TuneRow(
   val transposition: Transposition = Transposition.C,
   val collection: String = "Standards",
   val verified: Boolean = true,
+  /** Added by the user. */
+  val userCreated: Boolean = false,
+  /** A seeded tune the user has edited. */
+  val edited: Boolean = false,
+  /** The tune's details as the editor starts from them. */
+  val draft: TuneDraft = TuneDraft(),
 ) {
   val status: String?
     get() = state?.lifecycle?.label
@@ -92,6 +100,7 @@ enum class StatusFilter(val label: String) {
   REPERTOIRE("Repertoire"),
   RETIRED("Retired"),
   LIBRARY("Not started"),
+  ADDED("Added by me"),
 }
 
 data class TuneFilter(
@@ -157,6 +166,7 @@ fun tuneRows(
   transposition: Transposition,
   states: Map<Long, TuneStateEntity> = emptyMap(),
   knowledge: Map<Long, TuneKnowledgeEntity> = emptyMap(),
+  edited: Set<Long> = emptySet(),
 ): List<TuneRow> =
   standards.sortedBy { titleSortKey(it.title) }.map { s ->
     TuneRow(
@@ -181,6 +191,9 @@ fun tuneRows(
       transposition = transposition,
       collection = s.collection,
       verified = s.verified,
+      userCreated = s.userCreated,
+      edited = s.id in edited,
+      draft = TuneDraft.of(s),
     )
   }
 
@@ -204,6 +217,7 @@ fun filterTunes(rows: List<TuneRow>, filter: TuneFilter): List<TuneRow> =
       StatusFilter.REPERTOIRE -> lifecycle == Lifecycle.REPERTOIRE
       StatusFilter.RETIRED -> lifecycle == Lifecycle.RETIRED
       StatusFilter.LIBRARY -> lifecycle == null
+      StatusFilter.ADDED -> row.userCreated
     }
     val comfortOk = filter.minComfort == null || (row.knowledge?.comfort?.let { it >= filter.minComfort } ?: false)
     statusOk && comfortOk &&
@@ -255,15 +269,23 @@ data class TuneActions(
   val setKeyPolicy: (Long, KeyPolicy) -> Unit = { _, _ -> },
   val setComfort: (Long, Comfort?) -> Unit = { _, _ -> },
   val toggleKnownKey: (Long, Int) -> Unit = { _, _ -> },
+  /** Saves a tune: a new one when the id is null. Reports the saved tune's slug. */
+  val saveTune: (Long?, TuneDraft, (String) -> Unit) -> Unit = { _, _, _ -> },
+  val deleteTune: (Long) -> Unit = {},
+  val resetTune: (Long) -> Unit = {},
 )
 
-class BrowseViewModel(private val repository: WoodshedRepository, private val practice: PracticeService) : ViewModel() {
+class BrowseViewModel(
+  private val repository: WoodshedRepository,
+  private val practice: PracticeService,
+  private val tunes: TuneLibrary,
+) : ViewModel() {
   private val tuneFilter = MutableStateFlow(TuneFilter())
   private val exerciseFilter = MutableStateFlow(ExerciseFilter(instrument = repository.instrument.value))
 
-  private val library = combine(repository.standards, repository.tuneStates, repository.tuneKnowledge, repository.transposition) {
-      standards, states, knowledge, transposition ->
-    tuneRows(standards, transposition, states.associateBy { it.standardId }, knowledge.associateBy { it.standardId })
+  private val library = combine(repository.standards, repository.tuneStates, repository.tuneKnowledge, repository.transposition, repository.overrides) {
+      standards, states, knowledge, transposition, overrides ->
+    tuneRows(standards, transposition, states.associateBy { it.standardId }, knowledge.associateBy { it.standardId }, overrides.map { it.standardId }.toSet())
   }
 
   private data class TunePart(val all: List<TuneRow>, val filter: TuneFilter, val rows: List<TuneRow>)
@@ -306,6 +328,16 @@ class BrowseViewModel(private val repository: WoodshedRepository, private val pr
     setKeyPolicy = { id, policy -> launch { practice.setKeyPolicy(id, policy) } },
     setComfort = { id, comfort -> launch { practice.setComfort(id, comfort) } },
     toggleKnownKey = { id, pc -> launch { practice.toggleKnownKey(id, pc) } },
+    saveTune = { id, draft, saved ->
+      viewModelScope.launch {
+        if (id == null) saved(tunes.add(draft)) else {
+          tunes.edit(id, draft)
+          saved(state.value.tunes.firstOrNull { it.id == id }?.slug ?: "")
+        }
+      }
+    },
+    deleteTune = { launch { tunes.delete(it) } },
+    resetTune = { launch { tunes.resetToOriginal(it) } },
   )
 
   fun updateTuneFilter(change: (TuneFilter) -> TuneFilter) = tuneFilter.update(change)
