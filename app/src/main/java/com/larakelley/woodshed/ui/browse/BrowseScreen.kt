@@ -57,6 +57,7 @@ import com.larakelley.woodshed.domain.Lifecycle
 import com.larakelley.woodshed.domain.Tonality
 import com.larakelley.woodshed.domain.Transposition
 import com.larakelley.woodshed.domain.delayLabel
+import com.larakelley.woodshed.theme.BackButton
 import com.larakelley.woodshed.theme.StickerButton
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -72,21 +73,32 @@ fun BrowseScreen(
   now: () -> Long = System::currentTimeMillis,
   practiceTab: (@Composable () -> Unit)? = null,
   diceTab: (@Composable () -> Unit)? = null,
+  settings: (@Composable (onBack: () -> Unit, modifier: Modifier) -> Unit)? = null,
 ) {
+  var settingsOpen by rememberSaveable { mutableStateOf(false) }
   var tab by rememberSaveable { mutableIntStateOf(0) }
   var openSlug by rememberSaveable { mutableStateOf<String?>(null) }
   var openExercise by rememberSaveable { mutableStateOf<String?>(null) }
   val tabs = buildList {
     if (practiceTab != null) add("Practice")
-    if (diceTab != null) add("Dice")
+    if (diceTab != null) add("Random")
     add("Tunes")
     add("Exercises")
   }
 
   Scaffold(
     modifier = modifier,
-    topBar = { TopAppBar(title = { AppTitle() }, actions = { TranspositionPicker(state.transposition, onSelectTransposition) }) },
+    topBar = { TopAppBar(title = { AppTitle() }, actions = {
+        TranspositionPicker(state.transposition, onSelectTransposition)
+        if (settings != null) {
+          TextButton(onClick = { settingsOpen = true }, modifier = Modifier.testTag("open-settings")) { Text("⚙️", style = MaterialTheme.typography.titleLarge) }
+        }
+      }) },
   ) { padding ->
+    if (settingsOpen && settings != null) {
+      settings({ settingsOpen = false }, Modifier.padding(padding))
+      return@Scaffold
+    }
     val open = state.tunes.firstOrNull { it.slug == openSlug }
     if (open != null) {
       BackHandler { openSlug = null }
@@ -108,7 +120,7 @@ fun BrowseScreen(
       }
       when (tabs[tab]) {
         "Practice" -> practiceTab?.invoke()
-        "Dice" -> diceTab?.invoke()
+        "Random" -> diceTab?.invoke()
         "Tunes" -> {
           TuneFilters(state, onTuneFilter)
           TuneList(state.tunes, onOpen = { openSlug = it })
@@ -199,7 +211,7 @@ private fun TranspositionPicker(selected: Transposition, onSelect: (Transpositio
   var open by rememberSaveable { mutableStateOf(false) }
   Box {
     TextButton(onClick = { open = true }, modifier = Modifier.testTag("transposition-picker")) {
-      Text(if (selected == Transposition.C) "Concert" else "${selected.name} horn")
+      Text(selected.name, style = MaterialTheme.typography.titleMedium)
     }
     DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
       Transposition.entries.forEach { transposition ->
@@ -249,7 +261,7 @@ private fun TuneDetail(tune: TuneRow, actions: TuneActions, now: () -> Long, onB
   val id = tune.id
   var confirmRemove by rememberSaveable { mutableStateOf(false) }
   Column(modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-    TextButton(onClick = onBack) { Text("Back to tunes") }
+    BackButton("Back to tunes", onBack)
     Text(tune.title, style = MaterialTheme.typography.headlineMedium)
     if (tune.credit.isNotEmpty()) Text(tune.credit)
     if (tune.shape.isNotEmpty()) Text(tune.shape)

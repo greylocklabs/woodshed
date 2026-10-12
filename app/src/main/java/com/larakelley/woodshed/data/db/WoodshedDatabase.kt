@@ -58,6 +58,8 @@ interface TuneStateDao {
 
   @Query("DELETE FROM tune_state WHERE standardId = :standardId") suspend fun delete(standardId: Long)
 
+  @Query("DELETE FROM tune_state") suspend fun deleteAll()
+
   @Query(
     "SELECT * FROM tune_state WHERE lifecycle IN ('LEARNING', 'REPERTOIRE') AND dueAt IS NOT NULL AND dueAt <= :now ORDER BY dueAt"
   )
@@ -76,11 +78,17 @@ interface TuneKnowledgeDao {
   @Query("SELECT * FROM tune_knowledge WHERE standardId = :standardId") suspend fun get(standardId: Long): TuneKnowledgeEntity?
 
   @Upsert suspend fun upsert(knowledge: TuneKnowledgeEntity)
+
+  @Query("DELETE FROM tune_knowledge") suspend fun deleteAll()
 }
 
 @Dao
 interface ReviewEventDao {
   @Insert suspend fun insert(event: ReviewEventEntity): Long
+
+  @Query("SELECT * FROM review_events ORDER BY reviewedAt, id") suspend fun all(): List<ReviewEventEntity>
+
+  @Query("DELETE FROM review_events") suspend fun deleteAll()
 
   @Query("SELECT * FROM review_events WHERE itemKind = :kind AND itemId = :itemId ORDER BY reviewedAt, id")
   suspend fun forItem(kind: String, itemId: Long): List<ReviewEventEntity>

@@ -11,17 +11,17 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import com.larakelley.woodshed.theme.BackButton
 
 /** Full page for one exercise, opened from the Exercises tab. */
 @Composable
 fun ExerciseDetail(exercise: ExerciseRow, onBack: () -> Unit, modifier: Modifier = Modifier) {
   Column(modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-    TextButton(onClick = onBack) { Text("Back to exercises") }
+    BackButton("Back to exercises", onBack)
     Text(exercise.name, style = MaterialTheme.typography.headlineMedium)
     ExerciseFacts(exercise)
   }

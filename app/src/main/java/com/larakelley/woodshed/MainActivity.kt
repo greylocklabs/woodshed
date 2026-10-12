@@ -4,12 +4,14 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.larakelley.woodshed.data.ThemeMode
 import com.larakelley.woodshed.theme.WoodshedTheme
 import com.larakelley.woodshed.ui.browse.BrowseScreen
 import com.larakelley.woodshed.ui.browse.BrowseViewModel
@@ -20,6 +22,9 @@ import com.larakelley.woodshed.ui.practice.PracticeViewModel
 import com.larakelley.woodshed.ui.practice.SessionScreen
 import com.larakelley.woodshed.ui.practice.SetupActions
 import com.larakelley.woodshed.ui.practice.StepView
+import com.larakelley.woodshed.ui.settings.SettingsActions
+import com.larakelley.woodshed.ui.settings.SettingsScreen
+import com.larakelley.woodshed.ui.settings.SettingsViewModel
 import kotlinx.coroutines.flow.first
 
 class MainActivity : ComponentActivity() {
@@ -30,8 +35,17 @@ class MainActivity : ComponentActivity() {
     val metronome = app.metronome
 
     enableEdgeToEdge()
+    val version = packageManager.getPackageInfo(packageName, 0).versionName ?: ""
     setContent {
-      WoodshedTheme {
+      val themeMode by app.repository.themeMode.collectAsStateWithLifecycle()
+      val dark = when (themeMode) {
+        ThemeMode.SYSTEM -> isSystemInDarkTheme()
+        ThemeMode.LIGHT -> false
+        ThemeMode.DARK -> true
+      }
+      WoodshedTheme(darkTheme = dark) {
+        val settings: SettingsViewModel = viewModel { SettingsViewModel(app.repository, app.backups, version) }
+        val settingsUi by settings.ui.collectAsStateWithLifecycle()
         val browse: BrowseViewModel = viewModel { BrowseViewModel(app.repository, app.practice) }
         val practice: PracticeViewModel = viewModel { PracticeViewModel(app.repository, app.practice) }
         val dice: DiceViewModel = viewModel { DiceViewModel(app.repository, app.practice) }
@@ -83,6 +97,14 @@ class MainActivity : ComponentActivity() {
               practiceTab = {
                 LaunchedEffect(Unit) { practice.refresh() }
                 PracticeHome(practiceUi, setupActions)
+              },
+              settings = { onBack, modifier ->
+                SettingsScreen(
+                  settingsUi,
+                  SettingsActions(settings::setTransposition, settings::setFamily, settings::setThemeMode, settings::export, settings::restore),
+                  onBack = { settings.clearMessage(); onBack() },
+                  modifier = modifier,
+                )
               },
               diceTab = {
                 DiceScreen(diceUi, dice::constrain, dice::roll, dice::grade, dice::toggleKeyKnown, click, metronome::toggle, metronome::setBpm)
