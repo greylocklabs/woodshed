@@ -38,6 +38,7 @@ data class Backup(
 
 @Serializable
 data class BackupSettings(
+  val instrument: String? = null,
   val transposition: String? = null,
   val family: String? = null,
   @SerialName("theme_mode") val themeMode: String? = null,

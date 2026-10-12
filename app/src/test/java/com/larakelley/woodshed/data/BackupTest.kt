@@ -10,6 +10,7 @@ import com.larakelley.woodshed.data.seed.SeedImporter
 import com.larakelley.woodshed.domain.Comfort
 import com.larakelley.woodshed.domain.Focus
 import com.larakelley.woodshed.domain.Grade
+import com.larakelley.woodshed.domain.Instrument
 import com.larakelley.woodshed.domain.KeyPolicy
 import com.larakelley.woodshed.domain.Lifecycle
 import com.larakelley.woodshed.domain.Transposition
@@ -57,7 +58,7 @@ class BackupTest {
     practice.addToWishlist(id("nardis"))
     practice.setComfort(id("solar"), Comfort.SHAKY)
     practice.toggleKnownKey(id("solar"), 0)
-    repository.setTransposition(Transposition.Eb)
+    repository.setInstrument(Instrument.ALTO_SAX)
     repository.setThemeMode(ThemeMode.DARK)
     repository.rememberSession(45, setOf(Focus.SPEED))
     val states = db.tuneStates().all().sortedBy { it.standardId }
@@ -77,6 +78,7 @@ class BackupTest {
     assertEquals(states, db.tuneStates().all().sortedBy { it.standardId })
     assertEquals(knowledge, db.tuneKnowledge().all())
     assertEquals(events, db.reviewEvents().all().map { it.copy(id = 0) })
+    assertEquals(Instrument.ALTO_SAX, repository.instrument.value)
     assertEquals(Transposition.Eb, repository.transposition.value)
     assertEquals(ThemeMode.DARK, repository.themeMode.value)
     assertEquals(setOf(Focus.SPEED), repository.sessionFocus)

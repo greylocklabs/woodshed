@@ -65,6 +65,7 @@ class MainActivity : ComponentActivity() {
         val tempo = (step as? StepView.Exercise)?.tempoBpm
         LaunchedEffect(practiceUi.stepIndex, tempo) { tempo?.let(metronome::setBpm) }
         val setupActions = SetupActions(
+          setInstrument = practice::setInstrument,
           setMinutes = practice::setMinutes,
           toggleFocus = practice::toggleFocus,
           toggleTune = practice::toggleTune,
@@ -101,7 +102,7 @@ class MainActivity : ComponentActivity() {
               settings = { onBack, modifier ->
                 SettingsScreen(
                   settingsUi,
-                  SettingsActions(settings::setTransposition, settings::setFamily, settings::setThemeMode, settings::export, settings::restore),
+                  SettingsActions(settings::setInstrument, settings::setThemeMode, settings::export, settings::restore),
                   onBack = { settings.clearMessage(); onBack() },
                   modifier = modifier,
                 )

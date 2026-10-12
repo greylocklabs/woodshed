@@ -12,6 +12,7 @@ import com.larakelley.woodshed.data.seed.Seed
 import com.larakelley.woodshed.data.seed.SeedImporter
 import com.larakelley.woodshed.domain.Family
 import com.larakelley.woodshed.domain.Focus
+import com.larakelley.woodshed.domain.Instrument
 import com.larakelley.woodshed.domain.Transposition
 import java.security.MessageDigest
 import kotlinx.coroutines.flow.Flow
@@ -38,6 +39,11 @@ class WoodshedRepository(
 
   /** Null shows exercises for every family. */
   val family: StateFlow<Family?> = _family.asStateFlow()
+
+  private val _instrument = MutableStateFlow(enumPref<Instrument>(INSTRUMENT))
+
+  /** What the user plays, or null until they say. Setting it also sets [transposition] and [family]. */
+  val instrument: StateFlow<Instrument?> = _instrument.asStateFlow()
 
   private val _themeMode = MutableStateFlow(enumPref(THEME_MODE) ?: ThemeMode.SYSTEM)
   val themeMode: StateFlow<ThemeMode> = _themeMode.asStateFlow()
@@ -71,6 +77,13 @@ class WoodshedRepository(
     _family.value = family
   }
 
+  fun setInstrument(instrument: Instrument) {
+    prefs.edit { putString(INSTRUMENT, instrument.name) }
+    _instrument.value = instrument
+    setTransposition(instrument.transposition)
+    setFamily(instrument.family)
+  }
+
   fun setThemeMode(mode: ThemeMode) {
     prefs.edit { putString(THEME_MODE, mode.name) }
     _themeMode.value = mode
@@ -82,6 +95,7 @@ class WoodshedRepository(
   }
 
   fun backupSettings() = BackupSettings(
+    instrument = instrument.value?.name,
     transposition = transposition.value.name,
     family = family.value?.name,
     themeMode = themeMode.value.name,
@@ -91,6 +105,7 @@ class WoodshedRepository(
 
   /** Applies a restored backup's settings, ignoring any value this version does not know. */
   fun applyBackupSettings(s: BackupSettings) {
+    Instrument.entries.firstOrNull { it.name == s.instrument }?.let(::setInstrument)
     Transposition.entries.firstOrNull { it.name == s.transposition }?.let(::setTransposition)
     setFamily(Family.entries.firstOrNull { it.name == s.family })
     ThemeMode.entries.firstOrNull { it.name == s.themeMode }?.let(::setThemeMode)
@@ -128,6 +143,7 @@ class WoodshedRepository(
   private companion object {
     const val TRANSPOSITION = "transposition"
     const val FAMILY = "family"
+    const val INSTRUMENT = "instrument"
     const val THEME_MODE = "theme_mode"
     const val LAST_BACKUP_AT = "last_backup_at"
     const val SESSION_MINUTES = "session_minutes"

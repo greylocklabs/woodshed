@@ -23,3 +23,19 @@ enum class Transposition(val offset: Int, val examples: String) {
   F(7, "French horn"),
   G(5, "Alto flute"),
 }
+
+/** A horn someone plays. Choosing one sets the key the music is written in and which exercises make sense for it. */
+enum class Instrument(val label: String, val transposition: Transposition, val family: Family) {
+  FLUTE("Flute", Transposition.C, Family.FLUTE),
+  ALTO_FLUTE("Alto flute", Transposition.G, Family.FLUTE),
+  CLARINET("Clarinet", Transposition.Bb, Family.CLARINET),
+  SOPRANO_SAX("Soprano sax", Transposition.Bb, Family.SAXOPHONE),
+  ALTO_SAX("Alto sax", Transposition.Eb, Family.SAXOPHONE),
+  TENOR_SAX("Tenor sax", Transposition.Bb, Family.SAXOPHONE),
+  BARI_SAX("Bari sax", Transposition.Eb, Family.SAXOPHONE),
+  TRUMPET("Trumpet", Transposition.Bb, Family.BRASS),
+  FLUGELHORN("Flugelhorn", Transposition.Bb, Family.BRASS),
+  TROMBONE("Trombone", Transposition.C, Family.BRASS),
+  FRENCH_HORN("French horn", Transposition.F, Family.BRASS),
+  TUBA("Tuba", Transposition.C, Family.BRASS),
+}

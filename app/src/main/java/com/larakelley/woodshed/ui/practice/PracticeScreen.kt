@@ -45,8 +45,10 @@ import androidx.compose.ui.unit.dp
 import com.larakelley.woodshed.audio.MetronomeState
 import com.larakelley.woodshed.domain.Focus
 import com.larakelley.woodshed.domain.Grade
+import com.larakelley.woodshed.domain.Instrument
 import com.larakelley.woodshed.domain.PlanBlock
 import com.larakelley.woodshed.theme.BackButton
+import com.larakelley.woodshed.theme.LocalCallie
 import com.larakelley.woodshed.theme.StickerButton
 import com.larakelley.woodshed.ui.browse.ExerciseFacts
 import com.larakelley.woodshed.ui.browse.ExerciseRow
@@ -54,6 +56,7 @@ import kotlinx.coroutines.delay
 
 /** What the setup and plan screens can do. */
 data class SetupActions(
+  val setInstrument: (Instrument) -> Unit = {},
   val setMinutes: (Int) -> Unit = {},
   val toggleFocus: (Focus) -> Unit = {},
   val toggleTune: (Long) -> Unit = {},
@@ -81,6 +84,19 @@ private fun SessionSetup(ui: PracticeUi, actions: SetupActions) {
     LazyColumn(Modifier.weight(1f).fillMaxWidth(), contentPadding = PaddingValues(16.dp)) {
       item {
         ui.summary?.takeIf { it.reviewedToday > 0 }?.let { Text("Reviewed today: ${it.reviewedToday}", modifier = Modifier.padding(bottom = 8.dp)) }
+        Text("What are you playing?", style = MaterialTheme.typography.titleMedium)
+        Text("Sets the key music is written in and keeps exercises to ones for your horn", style = MaterialTheme.typography.bodySmall)
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+          Instrument.entries.forEach { i ->
+            FilterChip(
+              selected = setup.instrument == i,
+              onClick = { actions.setInstrument(i) },
+              label = { Text(i.label) },
+              modifier = Modifier.testTag("instrument-${i.name.lowercase()}"),
+            )
+          }
+        }
+        Spacer(Modifier.height(16.dp))
         Text("How long", style = MaterialTheme.typography.titleMedium)
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
           LENGTHS.forEach { m ->
@@ -126,8 +142,12 @@ private fun SessionSetup(ui: PracticeUi, actions: SetupActions) {
         }
       }
     }
-    StickerButton(onClick = actions.buildPlan, modifier = Modifier.fillMaxWidth().padding(16.dp).height(64.dp).testTag("build-plan")) {
-      Text("🎵 Start shedding", style = MaterialTheme.typography.titleLarge)
+    if (setup.instrument == null) {
+      Text("Pick what you're playing to start", color = LocalCallie.current.textMuted, modifier = Modifier.padding(horizontal = 16.dp, vertical = 24.dp).testTag("needs-instrument"))
+    } else {
+      StickerButton(onClick = actions.buildPlan, modifier = Modifier.fillMaxWidth().padding(16.dp).height(64.dp).testTag("build-plan")) {
+        Text("🎵 Start shedding", style = MaterialTheme.typography.titleLarge)
+      }
     }
   }
 }
