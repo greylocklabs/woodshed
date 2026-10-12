@@ -2,6 +2,8 @@ package com.larakelley.woodshed.ui.browse
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.larakelley.woodshed.data.Playlist
+import com.larakelley.woodshed.data.PlaylistService
 import com.larakelley.woodshed.data.PracticeService
 import com.larakelley.woodshed.data.TuneDraft
 import com.larakelley.woodshed.data.TuneLibrary
@@ -112,6 +114,8 @@ data class TuneFilter(
   val collection: String? = null,
   val tonality: Tonality? = null,
   val sort: TuneSort = TuneSort.TITLE,
+  /** Only this playlist's tunes, in its order rather than [sort]. */
+  val playlistId: Long? = null,
 )
 
 /** Tune list orders. Ties fall back to fake-book title order, and unknown values sort last. */
@@ -153,6 +157,9 @@ data class BrowseState(
   val styles: List<String> = emptyList(),
   val categories: List<String> = emptyList(),
   val seedError: String? = null,
+  val playlists: List<Playlist> = emptyList(),
+  /** Every tune, unfiltered, for looking one up by id or slug. */
+  val allTunes: List<TuneRow> = emptyList(),
 )
 
 /** The key to show for a tune, written for the transposition. */
@@ -206,8 +213,9 @@ fun matchesQuery(query: String, vararg fields: String?): Boolean {
   return normalize(query).split(' ').filter { it.isNotEmpty() }.all { it in haystack }
 }
 
-fun filterTunes(rows: List<TuneRow>, filter: TuneFilter): List<TuneRow> =
-  sortTunes(rows, filter.sort).filter { row ->
+/** [playlist] is the chosen playlist's tune ids in order; when given, only those tunes show, in that order. */
+fun filterTunes(rows: List<TuneRow>, filter: TuneFilter, playlist: List<Long>? = null): List<TuneRow> =
+  (if (playlist != null) rows.associateBy { it.id }.let { byId -> playlist.mapNotNull { byId[it] } } else sortTunes(rows, filter.sort)).filter { row ->
     val lifecycle = row.state?.lifecycle
     val statusOk = when (filter.status) {
       StatusFilter.ALL -> true
@@ -275,10 +283,22 @@ data class TuneActions(
   val resetTune: (Long) -> Unit = {},
 )
 
+/** What the playlist screens and the tune page's playlist picker can do. */
+data class PlaylistActions(
+  /** Creates a playlist, adding the tune if one is given, and reports the new playlist's id. */
+  val create: (String, Long?, (Long) -> Unit) -> Unit = { _, _, _ -> },
+  val rename: (Long, String) -> Unit = { _, _ -> },
+  val delete: (Long) -> Unit = {},
+  val add: (Long, Long) -> Unit = { _, _ -> },
+  val remove: (Long, Long) -> Unit = { _, _ -> },
+  val move: (Long, Int, Int) -> Unit = { _, _, _ -> },
+)
+
 class BrowseViewModel(
   private val repository: WoodshedRepository,
   private val practice: PracticeService,
   private val tunes: TuneLibrary,
+  private val lists: PlaylistService,
 ) : ViewModel() {
   private val tuneFilter = MutableStateFlow(TuneFilter())
   private val exerciseFilter = MutableStateFlow(ExerciseFilter(instrument = repository.instrument.value))
@@ -288,11 +308,16 @@ class BrowseViewModel(
     tuneRows(standards, transposition, states.associateBy { it.standardId }, knowledge.associateBy { it.standardId }, overrides.map { it.standardId }.toSet())
   }
 
-  private data class TunePart(val all: List<TuneRow>, val filter: TuneFilter, val rows: List<TuneRow>)
+  private data class TunePart(val all: List<TuneRow>, val filter: TuneFilter, val rows: List<TuneRow>, val playlists: List<Playlist>)
 
   private data class ExercisePart(val all: List<ExerciseEntity>, val filter: ExerciseFilter, val mine: List<Instrument>, val rows: List<ExerciseRow>)
 
-  private val tunePart = combine(library, tuneFilter) { rows, filter -> TunePart(rows, filter, filterTunes(rows, filter)) }
+  private val tunePart = combine(library, tuneFilter, repository.playlists) { rows, filter, playlists ->
+    // A deleted playlist drops out of the filter rather than leaving an empty list.
+    val chosen = playlists.firstOrNull { it.id == filter.playlistId }
+    val shown = if (chosen == null) filter.copy(playlistId = null) else filter
+    TunePart(rows, shown, filterTunes(rows, shown, chosen?.tuneIds), playlists)
+  }
 
   private val exercisePart = combine(repository.exercises, exerciseFilter, repository.myInstruments) { exercises, filter, mine ->
     val offered = Instrument.entries.filter { mine.isEmpty() || it in mine }
@@ -314,6 +339,8 @@ class BrowseViewModel(
           styles = tunes.all.mapNotNull { it.style }.distinct().sorted(),
           categories = ex.all.map { it.category }.distinct().sortedBy { Phase.categoryRank(it) },
           seedError = error,
+          playlists = tunes.playlists,
+          allTunes = tunes.all,
         )
       }
       .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), BrowseState())
@@ -338,6 +365,21 @@ class BrowseViewModel(
     },
     deleteTune = { launch { tunes.delete(it) } },
     resetTune = { launch { tunes.resetToOriginal(it) } },
+  )
+
+  val playlistActions = PlaylistActions(
+    create = { name, tune, created ->
+      viewModelScope.launch {
+        val id = lists.create(name)
+        tune?.let { lists.add(id, it) }
+        created(id)
+      }
+    },
+    rename = { id, name -> launch { lists.rename(id, name) } },
+    delete = { launch { lists.delete(it) } },
+    add = { id, tune -> launch { lists.add(id, tune) } },
+    remove = { id, tune -> launch { lists.remove(id, tune) } },
+    move = { id, from, to -> launch { lists.move(id, from, to) } },
   )
 
   fun updateTuneFilter(change: (TuneFilter) -> TuneFilter) = tuneFilter.update(change)

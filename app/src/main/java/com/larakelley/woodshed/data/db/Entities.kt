@@ -168,3 +168,23 @@ data class TuneKnowledgeEntity(
   val knownKeys: Int = 0,
   val updatedAt: Long = 0,
 )
+
+/** A named, ordered list of tunes the user made, such as a gig set. */
+@Entity(tableName = "playlists")
+data class PlaylistEntity(
+  @PrimaryKey(autoGenerate = true) val id: Long = 0,
+  val name: String,
+  val createdAt: Long,
+)
+
+/** One tune's place in a playlist. */
+@Entity(
+  tableName = "playlist_tunes",
+  primaryKeys = ["playlistId", "standardId"],
+  foreignKeys = [
+    ForeignKey(entity = PlaylistEntity::class, parentColumns = ["id"], childColumns = ["playlistId"], onDelete = ForeignKey.CASCADE),
+    ForeignKey(entity = StandardEntity::class, parentColumns = ["id"], childColumns = ["standardId"]),
+  ],
+  indices = [Index(value = ["standardId"])],
+)
+data class PlaylistTuneEntity(val playlistId: Long, val standardId: Long, val position: Int)

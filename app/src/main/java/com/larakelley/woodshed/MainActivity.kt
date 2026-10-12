@@ -53,7 +53,7 @@ class MainActivity : ComponentActivity() {
         CompositionLocalProvider(LocalAppVersion provides version) {
           val settings: SettingsViewModel = viewModel { SettingsViewModel(app.repository, app.backups, version) }
           val settingsUi by settings.ui.collectAsStateWithLifecycle()
-          val browse: BrowseViewModel = viewModel { BrowseViewModel(app.repository, app.practice, app.tunes) }
+          val browse: BrowseViewModel = viewModel { BrowseViewModel(app.repository, app.practice, app.tunes, app.playlists) }
           val practice: PracticeViewModel = viewModel { PracticeViewModel(app.repository, app.practice) }
           val dice: DiceViewModel = viewModel { DiceViewModel(app.repository, app.practice) }
           val browseState by browse.state.collectAsStateWithLifecycle()
@@ -71,6 +71,7 @@ class MainActivity : ComponentActivity() {
             setMinutes = practice::setMinutes,
             toggleFocus = practice::toggleFocus,
             toggleTune = practice::toggleTune,
+          usePlaylist = practice::usePlaylist,
             buildPlan = practice::buildPlan,
             discardPlan = practice::discardPlan,
             swap = practice::swap,
@@ -83,6 +84,7 @@ class MainActivity : ComponentActivity() {
               browseState,
               browse::selectTransposition,
               actions = browse.actions,
+            playlistActions = browse.playlistActions,
               onTuneFilter = browse::updateTuneFilter,
               onExerciseFilter = browse::updateExerciseFilter,
               practiceTab = {

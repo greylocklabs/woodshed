@@ -62,6 +62,8 @@ enum class TuneGroup(val label: String, val emoji: String) {
   LEARNING("Learning", "🌱"),
   REPERTOIRE("Repertoire", "⭐"),
   WISHLIST("Wishlist", "💭"),
+  /** Tunes from the chosen playlist that are not in the user's practice yet. */
+  PLAYLIST("From the playlist", "📋"),
 }
 
 data class SessionTune(val id: Long, val title: String, val group: TuneGroup)
@@ -98,6 +100,10 @@ data class SetupUi(
   val focus: Set<Focus> = emptySet(),
   val tunes: List<SessionTune> = emptyList(),
   val selected: Set<Long> = emptySet(),
+  /** Playlists to pick tunes from, by id and name. */
+  val playlists: List<Pair<Long, String>> = emptyList(),
+  /** The playlist whose tunes were picked, until the selection is changed by hand. */
+  val playlistId: Long? = null,
   /** Null until a plan is built; changing the setup clears it. */
   val plan: List<PlanItem>? = null,
 )
@@ -150,17 +156,35 @@ class PracticeViewModel(
       val standards = repository.standards.first()
       titles = standards.associate { it.id to it.title }
       exercises = repository.exercises.first().associateBy { it.id }
-      val tunes = sessionTunes(standards, repository.tuneStates.first(), now())
+      val lists = repository.playlists.first()
+      val chosen = lists.firstOrNull { it.id == _ui.value.setup.playlistId }
+      val own = sessionTunes(standards, repository.tuneStates.first(), now())
+      // Playlist tunes not yet in practice join the list so they can be ticked; practising them starts them learning.
+      val byId = standards.associateBy { it.id }
+      val extra = chosen?.tuneIds.orEmpty().filter { id -> own.none { it.id == id } }.mapNotNull { byId[it] }.map { SessionTune(it.id, it.title, TuneGroup.PLAYLIST) }
+      val tunes = own + extra
       val summary = practice.summary()
       _ui.update { ui ->
         val ids = tunes.map { it.id }.toSet()
-        val selected = if (selectionTouched) ui.setup.selected intersect ids else tunes.filter { it.group == TuneGroup.DUE }.map { it.id }.toSet()
+        val selected = when {
+          chosen != null && !selectionTouched -> chosen.tuneIds.toSet() intersect ids
+          selectionTouched -> ui.setup.selected intersect ids
+          else -> tunes.filter { it.group == TuneGroup.DUE }.map { it.id }.toSet()
+        }
         val mine = repository.myInstruments.value
         val instrument = repository.instrument.value
         val offered = Instrument.entries.filter { mine.isEmpty() || it in mine || it == instrument }
         ui.copy(
           summary = summary,
-          setup = ui.setup.copy(instrument = instrument, instruments = offered, instrumentsChosen = mine.isNotEmpty(), tunes = tunes, selected = selected),
+          setup = ui.setup.copy(
+            instrument = instrument,
+            instruments = offered,
+            instrumentsChosen = mine.isNotEmpty(),
+            tunes = tunes,
+            selected = selected,
+            playlists = lists.map { it.id to it.name },
+            playlistId = chosen?.id,
+          ),
         )
       }
     }
@@ -175,6 +199,13 @@ class PracticeViewModel(
   fun setMinutes(minutes: Int) = editSetup { it.copy(minutes = minutes.coerceIn(SESSION_MINUTES_MIN, SESSION_MINUTES_MAX)) }
 
   fun toggleFocus(focus: Focus) = editSetup { it.copy(focus = if (focus in it.focus) it.focus - focus else it.focus + focus) }
+
+  /** Ticks exactly the playlist's tunes, or goes back to the due tunes when null. */
+  fun usePlaylist(id: Long?) {
+    selectionTouched = false
+    _ui.update { it.copy(setup = it.setup.copy(playlistId = id, plan = null)) }
+    refresh()
+  }
 
   fun toggleTune(id: Long) {
     selectionTouched = true

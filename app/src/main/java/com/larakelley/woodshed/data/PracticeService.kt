@@ -166,6 +166,7 @@ class PracticeService(
       exercises = db.exercises().all(),
       c = constraints,
       random = random,
+      playlist = constraints.playlistId?.let { id -> db.playlists().entries(id).map { it.standardId }.toSet() },
     )
 
   /** A rolled tune that is in the practice queue can be graded like any other card. */

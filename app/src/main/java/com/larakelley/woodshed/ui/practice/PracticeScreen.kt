@@ -51,6 +51,7 @@ import com.larakelley.woodshed.theme.EmptyState
 import com.larakelley.woodshed.theme.LocalCallie
 import com.larakelley.woodshed.theme.StickerButton
 import com.larakelley.woodshed.theme.neutralSticker
+import com.larakelley.woodshed.ui.browse.DropdownChip
 import com.larakelley.woodshed.ui.browse.ExerciseFacts
 import com.larakelley.woodshed.ui.browse.ExerciseRow
 import kotlinx.coroutines.delay
@@ -61,6 +62,7 @@ data class SetupActions(
   val setMinutes: (Int) -> Unit = {},
   val toggleFocus: (Focus) -> Unit = {},
   val toggleTune: (Long) -> Unit = {},
+  val usePlaylist: (Long?) -> Unit = {},
   val buildPlan: () -> Unit = {},
   val discardPlan: () -> Unit = {},
   val swap: (Int) -> Unit = {},
@@ -123,6 +125,16 @@ private fun SessionSetup(ui: PracticeUi, actions: SetupActions) {
         }
         Spacer(Modifier.height(16.dp))
         Text("Tunes (${setup.selected.size} picked)", style = MaterialTheme.typography.titleMedium)
+        if (setup.playlists.isNotEmpty()) {
+          DropdownChip(
+            "From playlist",
+            setup.playlists.firstOrNull { it.first == setup.playlistId }?.second ?: "None",
+            setup.playlists.map { it.second to it.first },
+            allowAny = true,
+            anyLabel = "None",
+            onSelect = actions.usePlaylist,
+          )
+        }
         if (setup.tunes.isEmpty()) {
           EmptyState("🪵", "No tunes yet", "Add tunes to your wishlist or start learning them in the Tunes tab. You can still shed exercises without them.")
         }

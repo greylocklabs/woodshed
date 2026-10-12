@@ -5,6 +5,7 @@ import android.content.Context
 import com.larakelley.woodshed.audio.Metronome
 import com.larakelley.woodshed.audio.Tuner
 import com.larakelley.woodshed.data.BackupService
+import com.larakelley.woodshed.data.PlaylistService
 import com.larakelley.woodshed.data.PracticeService
 import com.larakelley.woodshed.data.TuneLibrary
 import com.larakelley.woodshed.data.WoodshedRepository
@@ -29,6 +30,8 @@ class WoodshedApplication : Application() {
   val backups: BackupService by lazy { BackupService(database, repository) }
 
   val tunes: TuneLibrary by lazy { TuneLibrary(database) }
+
+  val playlists: PlaylistService by lazy { PlaylistService(database) }
 
   private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 

@@ -384,8 +384,10 @@ re-seeding, and included in the backup file:
   "Reset to the original" drops the edits. Deleting archives the tune.
 - **Your exercises:** the same care tunes get: add, edit and delete exercises,
   with edits to seeded ones kept as overrides. Next after playlists.
-- **Playlists:** named, ordered lists of tunes, such as a gig set or the tunes
-  for a jam. A playlist can be the tune pool for a session or a roll.
+- **Playlists (shipped):** named, ordered lists of tunes, such as a gig set or
+  the tunes for a jam. Tunes are added from their pages; a playlist can be
+  reordered, renamed and deleted, filters the Tunes tab in its own order, ticks
+  its tunes for a session and limits what the Random tab rolls.
 - **Transcribe tab:** solos to learn by ear. Each one names the tune, soloist,
   recording and a link, with optional start and end times, and a status of
   wishlist, active or done. The tab is seeded with a few solos Lara picks, and

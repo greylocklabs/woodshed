@@ -50,6 +50,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.larakelley.woodshed.R
+import com.larakelley.woodshed.data.Playlist
 import com.larakelley.woodshed.data.db.TuneStateEntity
 import com.larakelley.woodshed.data.seed.SeedValidator
 import com.larakelley.woodshed.domain.Comfort
@@ -69,6 +70,17 @@ import com.larakelley.woodshed.theme.EmptyState
 import com.larakelley.woodshed.theme.StickerButton
 import com.larakelley.woodshed.theme.neutralSticker
 import com.larakelley.woodshed.ui.report.ReportButton
+
+/** "Add to playlist", or which playlists the tune is in, opening the picker. */
+@Composable
+private fun PlaylistButton(tune: TuneRow, playlists: List<Playlist>, actions: PlaylistActions) {
+  var picking by rememberSaveable { mutableStateOf(false) }
+  val inLists = playlists.filter { tune.id in it.tuneIds }.map { it.name }
+  StickerButton(onClick = { picking = true }, sticker = neutralSticker, modifier = Modifier.height(40.dp).testTag("add-to-playlist")) {
+    Text(if (inLists.isEmpty()) "📋 Add to playlist" else "📋 In ${inLists.joinToString(", ")}", style = MaterialTheme.typography.labelLarge, maxLines = 1)
+  }
+  if (picking) PlaylistPicker(tune, playlists, actions, onDismiss = { picking = false })
+}
 
 /** The editor's target while adding a tune rather than editing one. */
 private const val NEW_TUNE = "+new"
@@ -90,6 +102,7 @@ fun BrowseScreen(
   onSelectTransposition: (Transposition) -> Unit,
   modifier: Modifier = Modifier,
   actions: TuneActions = TuneActions(),
+  playlistActions: PlaylistActions = PlaylistActions(),
   onTuneFilter: ((TuneFilter) -> TuneFilter) -> Unit = {},
   onExerciseFilter: ((ExerciseFilter) -> ExerciseFilter) -> Unit = {},
   now: () -> Long = System::currentTimeMillis,
@@ -104,6 +117,8 @@ fun BrowseScreen(
   var openSlug by rememberSaveable { mutableStateOf<String?>(null) }
   /** A tune's slug while editing it, [NEW_TUNE] while adding one, or null. */
   var editing by rememberSaveable { mutableStateOf<String?>(null) }
+  var playlistsOpen by rememberSaveable { mutableStateOf(false) }
+  var openPlaylist by rememberSaveable { mutableStateOf<Long?>(null) }
   var openExercise by rememberSaveable { mutableStateOf<String?>(null) }
   val tabs = buildList {
     if (practiceTab != null) add("Practice")
@@ -139,10 +154,29 @@ fun BrowseScreen(
       )
       return@Scaffold
     }
-    val open = state.tunes.firstOrNull { it.slug == openSlug }
+    // A tune opened from a playlist is looked up among all tunes, since the list may be filtered.
+    val open = (state.allTunes.ifEmpty { state.tunes }).firstOrNull { it.slug == openSlug }
     if (open != null) {
       BackHandler { openSlug = null }
-      TuneDetail(open, actions, now, onBack = { openSlug = null }, onEdit = { editing = open.slug }, modifier = Modifier.padding(padding))
+      TuneDetail(open, actions, now, onBack = { openSlug = null }, onEdit = { editing = open.slug }, modifier = Modifier.padding(padding)) {
+        PlaylistButton(open, state.playlists, playlistActions)
+      }
+      return@Scaffold
+    }
+    val playlist = state.playlists.firstOrNull { it.id == openPlaylist }
+    if (playlist != null) {
+      PlaylistScreen(
+        playlist,
+        state.allTunes.associateBy { it.id },
+        playlistActions,
+        onOpenTune = { openSlug = it },
+        onBack = { openPlaylist = null },
+        modifier = Modifier.padding(padding),
+      )
+      return@Scaffold
+    }
+    if (playlistsOpen) {
+      PlaylistsScreen(state.playlists, playlistActions, onOpen = { openPlaylist = it }, onBack = { playlistsOpen = false }, modifier = Modifier.padding(padding))
       return@Scaffold
     }
     val exercise = state.exercises.firstOrNull { it.name == openExercise }
@@ -166,7 +200,7 @@ fun BrowseScreen(
         "Metronome" -> metronomeTab?.invoke()
         "Tuner" -> tunerTab?.invoke()
         "Tunes" -> {
-          TuneFilters(state, onTuneFilter, onAdd = { editing = NEW_TUNE })
+          TuneFilters(state, onTuneFilter, onAdd = { editing = NEW_TUNE }, onPlaylists = { playlistsOpen = true })
           if (state.tunes.isEmpty()) {
             EmptyState(
               "🔍",
@@ -177,7 +211,7 @@ fun BrowseScreen(
               scrolls = true,
             )
           } else {
-            TuneList(state.tunes, alphabetical = state.tuneFilter.sort == TuneSort.TITLE, onOpen = { openSlug = it })
+            TuneList(state.tunes, alphabetical = state.tuneFilter.sort == TuneSort.TITLE && state.tuneFilter.playlistId == null, onOpen = { openSlug = it })
           }
         }
         else -> {
@@ -242,7 +276,7 @@ private fun SearchField(query: String, placeholder: String, onChange: (String) -
 }
 
 @Composable
-private fun TuneFilters(state: BrowseState, onFilter: ((TuneFilter) -> TuneFilter) -> Unit, onAdd: () -> Unit) {
+private fun TuneFilters(state: BrowseState, onFilter: ((TuneFilter) -> TuneFilter) -> Unit, onAdd: () -> Unit, onPlaylists: () -> Unit) {
   val f = state.tuneFilter
   SearchField(f.query, "Search title or composer") { q -> onFilter { it.copy(query = q) } }
   Row(Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -253,7 +287,14 @@ private fun TuneFilters(state: BrowseState, onFilter: ((TuneFilter) -> TuneFilte
     DropdownChip("Comfort", f.minComfort?.let { "${it.label}+" } ?: "Any", Comfort.entries.map { "${it.label} or better" to it }, allowAny = true) { c ->
       onFilter { it.copy(minComfort = c) }
     }
-    DropdownChip("Sort", f.sort.label, TuneSort.entries.map { it.label to it }) { o -> onFilter { it.copy(sort = o ?: TuneSort.TITLE) } }
+    if (state.playlists.isNotEmpty()) {
+      DropdownChip("Playlist", state.playlists.firstOrNull { it.id == f.playlistId }?.name ?: "Any", state.playlists.map { it.name to it.id }, allowAny = true) { id ->
+        onFilter { it.copy(playlistId = id) }
+      }
+    }
+    if (f.playlistId == null) {
+      DropdownChip("Sort", f.sort.label, TuneSort.entries.map { it.label to it }) { o -> onFilter { it.copy(sort = o ?: TuneSort.TITLE) } }
+    }
   }
   Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
     Text(
@@ -261,6 +302,9 @@ private fun TuneFilters(state: BrowseState, onFilter: ((TuneFilter) -> TuneFilte
       style = MaterialTheme.typography.labelLarge,
       modifier = Modifier.weight(1f).testTag("tune-count"),
     )
+    StickerButton(onClick = onPlaylists, sticker = neutralSticker, modifier = Modifier.height(40.dp).padding(end = 8.dp).testTag("open-playlists"), contentPadding = PaddingValues(horizontal = 12.dp)) {
+      Text("📋 Playlists", style = MaterialTheme.typography.labelLarge)
+    }
     StickerButton(onClick = onAdd, modifier = Modifier.height(40.dp).testTag("add-tune"), contentPadding = PaddingValues(horizontal = 14.dp)) {
       Text("+ Add tune", style = MaterialTheme.typography.labelLarge)
     }
@@ -341,7 +385,15 @@ private fun TuneList(tunes: List<TuneRow>, alphabetical: Boolean, onOpen: (Strin
 }
 
 @Composable
-private fun TuneDetail(tune: TuneRow, actions: TuneActions, now: () -> Long, onBack: () -> Unit, onEdit: () -> Unit, modifier: Modifier = Modifier) {
+private fun TuneDetail(
+  tune: TuneRow,
+  actions: TuneActions,
+  now: () -> Long,
+  onBack: () -> Unit,
+  onEdit: () -> Unit,
+  modifier: Modifier = Modifier,
+  extra: @Composable () -> Unit = {},
+) {
   val state = tune.state
   val id = tune.id
   var confirmRemove by rememberSaveable { mutableStateOf(false) }
@@ -369,6 +421,7 @@ private fun TuneDetail(tune: TuneRow, actions: TuneActions, now: () -> Long, onB
       )
     }
 
+    extra()
     HorizontalDivider()
     Text(statusLine(state, now()), style = MaterialTheme.typography.titleMedium, modifier = Modifier.testTag("tune-status"))
     when (state?.lifecycle) {

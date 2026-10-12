@@ -33,6 +33,8 @@ data class DiceConstraints(
   /** A specific tune exercise, or null for any of them. */
   val exerciseName: String? = null,
   val keyChoice: KeyChoice = KeyChoice.USUAL,
+  /** Roll only from this playlist's tunes, whatever [pool] says. */
+  val playlistId: Long? = null,
 )
 
 data class Roll(
@@ -51,10 +53,12 @@ fun roll(
   exercises: List<ExerciseEntity>,
   c: DiceConstraints,
   random: Random,
+  /** The chosen playlist's tunes, when [DiceConstraints.playlistId] is set. */
+  playlist: Set<Long>? = null,
 ): Roll? {
   val pool = tunes.filter { t ->
     val lifecycle = states[t.id]?.lifecycle
-    val inPool = when (c.pool) {
+    val inPool = if (playlist != null) t.id in playlist else when (c.pool) {
       TunePool.MY_TUNES -> lifecycle != null && lifecycle != Lifecycle.RETIRED
       TunePool.IN_PRACTICE -> lifecycle == Lifecycle.LEARNING || lifecycle == Lifecycle.REPERTOIRE
       TunePool.WISHLIST -> lifecycle == Lifecycle.WISHLIST
