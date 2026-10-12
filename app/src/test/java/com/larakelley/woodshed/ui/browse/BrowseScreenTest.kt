@@ -8,11 +8,22 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performTextInput
 import com.larakelley.woodshed.data.db.ExerciseEntity
 import com.larakelley.woodshed.data.db.StandardEntity
+import com.larakelley.woodshed.data.db.TuneKnowledgeEntity
+import com.larakelley.woodshed.data.db.TuneStateEntity
+import com.larakelley.woodshed.domain.Comfort
 import com.larakelley.woodshed.domain.Family
+import com.larakelley.woodshed.domain.KeyMask
+import com.larakelley.woodshed.domain.Lifecycle
 import com.larakelley.woodshed.domain.Transposition
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -37,10 +48,15 @@ class BrowseScreenTest {
     compose.setContent {
       var transposition by remember { mutableStateOf(Transposition.C) }
       var family by remember { mutableStateOf<Family?>(null) }
+      var filter by remember { mutableStateOf(TuneFilter()) }
+      val rows = tuneRows(standards, transposition)
       BrowseScreen(
-        BrowseState(transposition, family, tuneRows(standards, transposition), exerciseRows(exercises, family)),
+        BrowseState(
+          transposition, family, filterTunes(rows, filter), rows.size, exerciseRows(exercises, family), exercises.size, tuneFilter = filter,
+        ),
         onSelectTransposition = { transposition = it },
         onSelectFamily = { family = it },
+        onTuneFilter = { filter = it(filter) },
       )
     }
   }
@@ -62,14 +78,56 @@ class BrowseScreenTest {
   @Test
   fun familyFilterHidesOtherFamiliesWork() {
     showWithLiveState()
-    compose.onNodeWithText("Exercises (2)").performClick()
+    compose.onNodeWithText("Exercises").performClick()
     compose.onNodeWithText("Lip slurs").assertExists()
 
     compose.onNodeWithText("Sax").performClick()
 
-    compose.onNodeWithText("Exercises (1)").assertExists()
+    compose.onNodeWithText("1 of 2 exercises").assertExists()
     compose.onNodeWithText("Long tones").assertExists()
     compose.onNodeWithText("Lip slurs").assertDoesNotExist()
+  }
+
+  @Test
+  fun searchNarrowsTheTuneList() {
+    showWithLiveState()
+    compose.onNodeWithTag("search").performTextInput("dolphin")
+    compose.onNodeWithText("On Green Dolphin Street").assertExists()
+    compose.onNodeWithText("Body And Soul").assertDoesNotExist()
+    compose.onNodeWithText("1 of 2 tunes").assertExists()
+  }
+
+  @Test
+  fun tuneDetailSetsComfortAndKeysAndConfirmsRemoval() {
+    var state by mutableStateOf(TuneStateEntity(1, Lifecycle.LEARNING))
+    var knowledge by mutableStateOf(TuneKnowledgeEntity(1))
+    var removed = false
+    compose.setContent {
+      val rows = tuneRows(standards, Transposition.Bb, mapOf(1L to state), mapOf(1L to knowledge))
+      BrowseScreen(
+        BrowseState(Transposition.Bb, null, rows, rows.size),
+        onSelectTransposition = {},
+        onSelectFamily = {},
+        actions = TuneActions(
+          setComfort = { _, c -> knowledge = knowledge.copy(comfort = c) },
+          toggleKnownKey = { _, pc -> knowledge = knowledge.copy(knownKeys = KeyMask.toggle(knowledge.knownKeys, pc)) },
+          removeFromMyTunes = { removed = true },
+        ),
+      )
+    }
+    compose.onNodeWithText("Body And Soul").performClick()
+    compose.onNodeWithTag("comfort-shaky").performScrollTo().performClick()
+    assertEquals(Comfort.SHAKY, knowledge.comfort)
+
+    // Body And Soul is in Db concert; on a Bb horn that key reads as Eb.
+    compose.onNodeWithTag("key-1").performScrollTo().assertTextEquals("Eb").performClick()
+    assertEquals(1 shl 1, knowledge.knownKeys)
+    compose.onNodeWithText("Keys I know it in (1 of 12)").assertExists()
+
+    compose.onNodeWithTag("remove").performScrollTo().performClick()
+    assertFalse(removed)
+    compose.onNodeWithTag("confirm-remove").performClick()
+    assertTrue(removed)
   }
 
   @Test

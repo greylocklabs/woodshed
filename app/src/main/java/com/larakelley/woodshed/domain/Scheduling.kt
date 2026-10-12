@@ -85,3 +85,21 @@ fun delayLabel(from: Long, dueAt: Long): String {
     else -> "${Math.round(minutes / (24 * 60.0))}d"
   }
 }
+
+/** How comfortable the player is with a tune, set by hand and independent of scheduling. */
+enum class Comfort(val label: String) {
+  NEW("New to me"),
+  SHAKY("Shaky"),
+  GETTING_THERE("Getting there"),
+  COMFORTABLE("Comfortable"),
+  SOLID("Solid"),
+}
+
+/** Concert pitch classes stored as a 12-bit mask, so known keys survive a change of transposition. */
+object KeyMask {
+  fun contains(mask: Int, pitchClass: Int): Boolean = mask and (1 shl pitchClass) != 0
+
+  fun toggle(mask: Int, pitchClass: Int): Int = mask xor (1 shl pitchClass)
+
+  fun count(mask: Int): Int = Integer.bitCount(mask and 0xFFF)
+}

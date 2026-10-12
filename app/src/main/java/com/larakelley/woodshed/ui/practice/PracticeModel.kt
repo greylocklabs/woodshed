@@ -6,6 +6,7 @@ import com.larakelley.woodshed.data.Card
 import com.larakelley.woodshed.data.PracticeService
 import com.larakelley.woodshed.data.PracticeSummary
 import com.larakelley.woodshed.data.WoodshedRepository
+import com.larakelley.woodshed.domain.ClickTrack
 import com.larakelley.woodshed.domain.Grade
 import com.larakelley.woodshed.domain.Transposition
 import com.larakelley.woodshed.domain.delayLabel
@@ -23,6 +24,7 @@ data class CardView(
   val instructions: String,
   val shape: String,
   val buttons: List<Pair<Grade, String>>,
+  val beatsPerBar: Int = 4,
 )
 
 data class PracticeUi(
@@ -47,6 +49,7 @@ fun cardView(card: Card, preview: Map<Grade, Long>, now: Long): CardView {
     instructions = card.exercise.description,
     shape = shape,
     buttons = Grade.entries.map { it to delayLabel(now, preview.getValue(it)) },
+    beatsPerBar = ClickTrack.beatsPerBar(card.tune.timeSignature),
   )
 }
 

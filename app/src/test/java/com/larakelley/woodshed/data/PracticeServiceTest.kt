@@ -8,6 +8,7 @@ import com.larakelley.woodshed.data.db.WoodshedDatabase
 import com.larakelley.woodshed.data.seed.Seed
 import com.larakelley.woodshed.data.seed.SeedImporter
 import com.larakelley.woodshed.domain.CardState
+import com.larakelley.woodshed.domain.Comfort
 import com.larakelley.woodshed.domain.Grade
 import com.larakelley.woodshed.domain.KeyPolicy
 import com.larakelley.woodshed.domain.Lifecycle
@@ -208,6 +209,49 @@ class PracticeServiceTest {
     practice.markKnown(id("blue-bossa"))
     assertEquals(Lifecycle.REPERTOIRE, state("blue-bossa")!!.lifecycle)
     assertNotNull(practice.nextCard(Transposition.C))
+  }
+
+  @Test
+  fun removingATuneKeepsHistoryAndKnowledge() = runTest {
+    val solar = id("solar")
+    practice.startLearning(solar)
+    practice.grade(practice.nextCard(Transposition.C)!!, Grade.GOOD)
+    practice.setComfort(solar, Comfort.SHAKY)
+    practice.toggleKnownKey(solar, 0)
+
+    practice.removeFromMyTunes(solar)
+
+    assertNull(state("solar"))
+    assertEquals(1, db.reviewEvents().forItem(ReviewEventEntity.TUNE, solar).size)
+    assertEquals(Comfort.SHAKY, db.tuneKnowledge().get(solar)!!.comfort)
+    assertEquals(1, practice.knownKeys(solar))
+  }
+
+  @Test
+  fun knownKeysToggleInConcertPitch() = runTest {
+    val solar = id("solar")
+    practice.toggleKnownKey(solar, 0)
+    practice.toggleKnownKey(solar, 5)
+    practice.toggleKnownKey(solar, 0)
+    assertEquals(1 shl 5, practice.knownKeys(solar))
+    assertNull(state("solar"))
+  }
+
+  @Test
+  fun rolledTuneInTheQueueCanBeGraded() = runTest {
+    practice.startLearning(id("solar"))
+    val roll = practice.roll(DiceConstraints(pool = TunePool.IN_PRACTICE, keyChoice = KeyChoice.ANY))!!
+    val card = practice.cardFor(roll, Transposition.Bb)!!
+    practice.grade(card, Grade.GOOD)
+    val event = db.reviewEvents().forItem(ReviewEventEntity.TUNE, id("solar")).single()
+    assertEquals(roll.concertKey!!.writtenFor(Transposition.Bb).pitchClass, event.keyWrittenPitchClass)
+  }
+
+  @Test
+  fun rolledTuneOutsideTheQueueCannotBeGraded() = runTest {
+    practice.addToWishlist(id("solar"))
+    val roll = practice.roll(DiceConstraints(pool = TunePool.WISHLIST))!!
+    assertNull(practice.cardFor(roll, Transposition.C))
   }
 
   @Test

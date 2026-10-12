@@ -5,6 +5,7 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.larakelley.woodshed.domain.CardState
+import com.larakelley.woodshed.domain.Comfort
 import com.larakelley.woodshed.domain.Family
 import com.larakelley.woodshed.domain.Grade
 import com.larakelley.woodshed.domain.KeyPolicy
@@ -102,3 +103,16 @@ data class ReviewEventEntity(
     const val TUNE = "TUNE"
   }
 }
+
+/** User-owned notes on how well a tune is known; kept apart from scheduling so clearing one leaves the other. */
+@Entity(
+  tableName = "tune_knowledge",
+  foreignKeys = [ForeignKey(entity = StandardEntity::class, parentColumns = ["id"], childColumns = ["standardId"])],
+)
+data class TuneKnowledgeEntity(
+  @PrimaryKey val standardId: Long,
+  val comfort: Comfort? = null,
+  /** See [com.larakelley.woodshed.domain.KeyMask]. */
+  val knownKeys: Int = 0,
+  val updatedAt: Long = 0,
+)

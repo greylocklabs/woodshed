@@ -67,6 +67,17 @@ interface TuneStateDao {
 }
 
 @Dao
+interface TuneKnowledgeDao {
+  @Query("SELECT * FROM tune_knowledge") fun observeAll(): Flow<List<TuneKnowledgeEntity>>
+
+  @Query("SELECT * FROM tune_knowledge") suspend fun all(): List<TuneKnowledgeEntity>
+
+  @Query("SELECT * FROM tune_knowledge WHERE standardId = :standardId") suspend fun get(standardId: Long): TuneKnowledgeEntity?
+
+  @Upsert suspend fun upsert(knowledge: TuneKnowledgeEntity)
+}
+
+@Dao
 interface ReviewEventDao {
   @Insert suspend fun insert(event: ReviewEventEntity): Long
 
@@ -85,9 +96,9 @@ class Converters {
 }
 
 @Database(
-  entities = [StandardEntity::class, ExerciseEntity::class, TuneStateEntity::class, ReviewEventEntity::class],
-  version = 2,
-  autoMigrations = [AutoMigration(from = 1, to = 2)],
+  entities = [StandardEntity::class, ExerciseEntity::class, TuneStateEntity::class, ReviewEventEntity::class, TuneKnowledgeEntity::class],
+  version = 3,
+  autoMigrations = [AutoMigration(from = 1, to = 2), AutoMigration(from = 2, to = 3)],
 )
 @TypeConverters(Converters::class)
 abstract class WoodshedDatabase : RoomDatabase() {
@@ -98,6 +109,8 @@ abstract class WoodshedDatabase : RoomDatabase() {
   abstract fun tuneStates(): TuneStateDao
 
   abstract fun reviewEvents(): ReviewEventDao
+
+  abstract fun tuneKnowledge(): TuneKnowledgeDao
 
   companion object {
     fun create(context: Context): WoodshedDatabase =

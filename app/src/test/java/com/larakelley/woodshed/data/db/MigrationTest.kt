@@ -34,4 +34,24 @@ class MigrationTest {
       db.query("SELECT COUNT(*) FROM review_events").use { it.moveToFirst(); assertEquals(0, it.getInt(0)) }
     }
   }
+
+  @Test
+  fun version2To3KeepsPracticeStateAndAddsKnowledge() {
+    helper.createDatabase("migration-test-2", 2).use { db ->
+      db.execSQL(
+        "INSERT INTO standards (id, slug, title, composer, year, bars, timeSignature, form, style, commonKeyRaw, commonKeyPitchClass, commonKeyMinor, archivedAt) " +
+          "VALUES (7, 'solar', 'Solar', 'Miles Davis', 1954, 12, '4/4', NULL, 'Swing', 'C-', 0, 1, NULL)"
+      )
+      db.execSQL("INSERT INTO tune_state (standardId, lifecycle, keyPolicy, cyclePosition, reps, lapses, intervalDays, ease, dueAt) VALUES (7, 'LEARNING', 'FIXED', 0, 2, 0, 3.0, 2.5, 123)")
+    }
+    helper.runMigrationsAndValidate("migration-test-2", 3, true).use { db ->
+      db.query("SELECT reps, intervalDays, dueAt FROM tune_state WHERE standardId = 7").use {
+        it.moveToFirst()
+        assertEquals(2, it.getInt(0))
+        assertEquals(3.0, it.getDouble(1), 0.0)
+        assertEquals(123L, it.getLong(2))
+      }
+      db.execSQL("INSERT INTO tune_knowledge (standardId, comfort, knownKeys, updatedAt) VALUES (7, 'SHAKY', 1, 0)")
+    }
+  }
 }

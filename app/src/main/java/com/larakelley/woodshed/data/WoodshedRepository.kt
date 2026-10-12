@@ -5,6 +5,7 @@ import android.content.res.AssetManager
 import androidx.core.content.edit
 import com.larakelley.woodshed.data.db.ExerciseEntity
 import com.larakelley.woodshed.data.db.StandardEntity
+import com.larakelley.woodshed.data.db.TuneKnowledgeEntity
 import com.larakelley.woodshed.data.db.TuneStateEntity
 import com.larakelley.woodshed.data.db.WoodshedDatabase
 import com.larakelley.woodshed.data.seed.Seed
@@ -41,6 +42,7 @@ class WoodshedRepository(
   val standards: Flow<List<StandardEntity>> = db.standards().observeActive()
   val exercises: Flow<List<ExerciseEntity>> = db.exercises().observeActive()
   val tuneStates: Flow<List<TuneStateEntity>> = db.tuneStates().observeAll()
+  val tuneKnowledge: Flow<List<TuneKnowledgeEntity>> = db.tuneKnowledge().observeAll()
 
   fun setTransposition(transposition: Transposition) {
     prefs.edit { putString(TRANSPOSITION, transposition.name) }
