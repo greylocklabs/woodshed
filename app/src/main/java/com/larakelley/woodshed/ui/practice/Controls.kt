@@ -29,25 +29,29 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.larakelley.woodshed.audio.MetronomeState
 import com.larakelley.woodshed.domain.Grade
+import com.larakelley.woodshed.theme.LocalCallie
+import com.larakelley.woodshed.theme.Sticker
+import com.larakelley.woodshed.theme.StickerButton
 
 /** Four full-height grade columns: one imprecise thumb tap from a music stand should land. */
 @Composable
 fun GradeButtons(buttons: List<Pair<Grade, String>>, onGrade: (Grade) -> Unit, modifier: Modifier = Modifier) {
-  val scheme = MaterialTheme.colorScheme
+  val callie = LocalCallie.current
   Row(modifier.fillMaxWidth().padding(8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
     buttons.forEach { (grade, delay) ->
-      val (container, content) = when (grade) {
-        Grade.AGAIN -> scheme.errorContainer to scheme.onErrorContainer
-        Grade.HARD -> scheme.tertiaryContainer to scheme.onTertiaryContainer
-        Grade.GOOD -> scheme.primary to scheme.onPrimary
-        Grade.EASY -> scheme.secondaryContainer to scheme.onSecondaryContainer
+      val sticker = when (grade) {
+        Grade.AGAIN -> callie.again
+        Grade.HARD -> callie.hard
+        Grade.GOOD -> Sticker(callie.accent, callie.accentText, callie.accentEdge)
+        Grade.EASY -> callie.easy
       }
-      Button(
+      val content = sticker.ink
+      StickerButton(
         onClick = { onGrade(grade) },
         modifier = Modifier.weight(1f).fillMaxHeight().testTag("grade-${grade.name.lowercase()}"),
-        shape = RoundedCornerShape(20.dp),
+        sticker = sticker,
+        radius = 16.dp,
         contentPadding = PaddingValues(horizontal = 4.dp, vertical = 12.dp),
-        colors = ButtonDefaults.buttonColors(containerColor = container, contentColor = content),
       ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp)) {
           BasicText(

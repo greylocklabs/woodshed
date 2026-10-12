@@ -6,8 +6,8 @@ import com.larakelley.woodshed.data.db.TuneKnowledgeEntity
 import com.larakelley.woodshed.data.db.TuneStateEntity
 import com.larakelley.woodshed.domain.Comfort
 import com.larakelley.woodshed.domain.Family
-import com.larakelley.woodshed.domain.Lifecycle
 import com.larakelley.woodshed.domain.Key
+import com.larakelley.woodshed.domain.Lifecycle
 import com.larakelley.woodshed.domain.Tonality
 import com.larakelley.woodshed.domain.Transposition
 import org.junit.Assert.assertEquals

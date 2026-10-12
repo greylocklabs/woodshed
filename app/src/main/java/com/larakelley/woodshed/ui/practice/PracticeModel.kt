@@ -10,8 +10,6 @@ import com.larakelley.woodshed.data.db.ExerciseEntity
 import com.larakelley.woodshed.data.db.StandardEntity
 import com.larakelley.woodshed.data.db.TuneStateEntity
 import com.larakelley.woodshed.domain.ClickTrack
-import com.larakelley.woodshed.ui.browse.ExerciseRow
-import com.larakelley.woodshed.ui.browse.exerciseRow
 import com.larakelley.woodshed.domain.Focus
 import com.larakelley.woodshed.domain.Grade
 import com.larakelley.woodshed.domain.Lifecycle
@@ -19,6 +17,8 @@ import com.larakelley.woodshed.domain.PlanBlock
 import com.larakelley.woodshed.domain.Transposition
 import com.larakelley.woodshed.domain.delayLabel
 import com.larakelley.woodshed.domain.titleSortKey
+import com.larakelley.woodshed.ui.browse.ExerciseRow
+import com.larakelley.woodshed.ui.browse.exerciseRow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -56,11 +56,11 @@ fun cardView(card: Card, preview: Map<Grade, Long>, now: Long): CardView {
 }
 
 /** Where a tune sits in the setup list. */
-enum class TuneGroup(val label: String) {
-  DUE("Due for review"),
-  LEARNING("Learning"),
-  REPERTOIRE("Repertoire"),
-  WISHLIST("Wishlist"),
+enum class TuneGroup(val label: String, val emoji: String) {
+  DUE("Due for review", "🔔"),
+  LEARNING("Learning", "🌱"),
+  REPERTOIRE("Repertoire", "⭐"),
+  WISHLIST("Wishlist", "💭"),
 }
 
 data class SessionTune(val id: Long, val title: String, val group: TuneGroup)

@@ -1,6 +1,7 @@
 package com.larakelley.woodshed.ui.browse
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -41,18 +43,21 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import com.larakelley.woodshed.R
 import com.larakelley.woodshed.data.db.TuneStateEntity
 import com.larakelley.woodshed.data.seed.SeedValidator
 import com.larakelley.woodshed.domain.Comfort
 import com.larakelley.woodshed.domain.Family
 import com.larakelley.woodshed.domain.Key
-import com.larakelley.woodshed.domain.Tonality
 import com.larakelley.woodshed.domain.KeyMask
 import com.larakelley.woodshed.domain.KeyPolicy
 import com.larakelley.woodshed.domain.Lifecycle
+import com.larakelley.woodshed.domain.Tonality
 import com.larakelley.woodshed.domain.Transposition
 import com.larakelley.woodshed.domain.delayLabel
+import com.larakelley.woodshed.theme.StickerButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -80,7 +85,7 @@ fun BrowseScreen(
 
   Scaffold(
     modifier = modifier,
-    topBar = { TopAppBar(title = { Text("Woodshed") }, actions = { TranspositionPicker(state.transposition, onSelectTransposition) }) },
+    topBar = { TopAppBar(title = { AppTitle() }, actions = { TranspositionPicker(state.transposition, onSelectTransposition) }) },
   ) { padding ->
     val open = state.tunes.firstOrNull { it.slug == openSlug }
     if (open != null) {
@@ -118,6 +123,15 @@ fun BrowseScreen(
 }
 
 /** A filter chip that opens a menu of options; "Any" clears it when [allowAny]. */
+/** The logo and name, in the display face. */
+@Composable
+private fun AppTitle() {
+  Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+    Image(painterResource(R.drawable.logo), contentDescription = null, modifier = Modifier.size(36.dp))
+    Text("Woodshed", style = MaterialTheme.typography.headlineSmall)
+  }
+}
+
 @Composable
 fun <T> DropdownChip(name: String, current: String, options: List<Pair<String, T>>, allowAny: Boolean = false, onSelect: (T?) -> Unit) {
   var open by rememberSaveable { mutableStateOf(false) }
@@ -254,12 +268,12 @@ private fun TuneDetail(tune: TuneRow, actions: TuneActions, now: () -> Long, onB
     Text(statusLine(state, now()), style = MaterialTheme.typography.titleMedium, modifier = Modifier.testTag("tune-status"))
     when (state?.lifecycle) {
       null -> {
-        Button(onClick = { actions.addToWishlist(id) }, Modifier.fillMaxWidth()) { Text("Add to wishlist") }
-        OutlinedButton(onClick = { actions.startLearning(id) }, Modifier.fillMaxWidth()) { Text("Start learning now") }
+        StickerButton(onClick = { actions.addToWishlist(id) }, Modifier.fillMaxWidth()) { Text("💭 Add to wishlist") }
+        OutlinedButton(onClick = { actions.startLearning(id) }, Modifier.fillMaxWidth()) { Text("🌱 Start learning now") }
         OutlinedButton(onClick = { actions.markKnown(id) }, Modifier.fillMaxWidth()) { Text("I already know it") }
       }
       Lifecycle.WISHLIST -> {
-        Button(onClick = { actions.startLearning(id) }, Modifier.fillMaxWidth()) { Text("Start learning now") }
+        StickerButton(onClick = { actions.startLearning(id) }, Modifier.fillMaxWidth()) { Text("🌱 Start learning now") }
         OutlinedButton(onClick = { actions.markKnown(id) }, Modifier.fillMaxWidth()) { Text("I already know it") }
       }
       Lifecycle.LEARNING, Lifecycle.REPERTOIRE -> {
@@ -278,7 +292,7 @@ private fun TuneDetail(tune: TuneRow, actions: TuneActions, now: () -> Long, onB
         }
         OutlinedButton(onClick = { actions.retire(id) }, Modifier.fillMaxWidth()) { Text("Retire") }
       }
-      Lifecycle.RETIRED -> Button(onClick = { actions.restore(id) }, Modifier.fillMaxWidth()) { Text("Bring back") }
+      Lifecycle.RETIRED -> StickerButton(onClick = { actions.restore(id) }, Modifier.fillMaxWidth()) { Text("Bring back") }
     }
     if (state != null) {
       OutlinedButton(

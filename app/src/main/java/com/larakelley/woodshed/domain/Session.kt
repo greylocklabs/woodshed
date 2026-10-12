@@ -4,15 +4,15 @@ import kotlin.math.roundToInt
 import kotlin.random.Random
 
 /** What a session concentrates on, as the exercise categories that train it. */
-enum class Focus(val label: String, val categories: List<String>) {
-  TONE("Tone", listOf("Tone", "Air & Breathing")),
-  ARTICULATION("Articulation", listOf("Articulation")),
-  SPEED("Speed", listOf("Technique", "Scales & Patterns", "Licks")),
-  TIME("Time", listOf("Rhythm & Time")),
-  HARMONY("Harmony", listOf("ii-V-I & Progressions")),
-  EAR("Ear", listOf("Ear Training", "Transcription")),
-  IMPROV("Improv", listOf("Improvisation", "Etudes")),
-  READING("Reading", listOf("Reading")),
+enum class Focus(val label: String, val emoji: String, val categories: List<String>) {
+  TONE("Tone", "🌬️", listOf("Tone", "Air & Breathing")),
+  ARTICULATION("Articulation", "👅", listOf("Articulation")),
+  SPEED("Speed", "⚡", listOf("Technique", "Scales & Patterns", "Licks")),
+  TIME("Time", "⏱️", listOf("Rhythm & Time")),
+  HARMONY("Harmony", "🎹", listOf("ii-V-I & Progressions")),
+  EAR("Ear", "👂", listOf("Ear Training", "Transcription")),
+  IMPROV("Improv", "💡", listOf("Improvisation", "Etudes")),
+  READING("Reading", "📖", listOf("Reading")),
 }
 
 /** The planner's view of an exercise, so planning stays free of the database. */

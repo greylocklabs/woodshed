@@ -33,6 +33,7 @@ import com.larakelley.woodshed.domain.Grade
 import com.larakelley.woodshed.domain.KeyMask
 import com.larakelley.woodshed.domain.Transposition
 import com.larakelley.woodshed.domain.delayLabel
+import com.larakelley.woodshed.theme.StickerButton
 import com.larakelley.woodshed.ui.browse.DropdownChip
 import com.larakelley.woodshed.ui.practice.GradeButtons
 import com.larakelley.woodshed.ui.practice.MetronomeBar
@@ -152,11 +153,11 @@ fun DiceScreen(
         DropdownChip("Exercise", c.exerciseName ?: "Any", ui.exercises.map { it to it }, allowAny = true) { e -> onConstrain { it.copy(exerciseName = e) } }
         DropdownChip("Key", c.keyChoice.label, KeyChoice.entries.map { it.label to it }) { k -> onConstrain { it.copy(keyChoice = k ?: KeyChoice.USUAL) } }
       }
-      Button(onClick = onRoll, modifier = Modifier.fillMaxWidth().height(64.dp).testTag("roll")) {
-        Text(if (ui.card == null) "Roll" else "Roll again", style = MaterialTheme.typography.titleLarge)
+      StickerButton(onClick = onRoll, modifier = Modifier.fillMaxWidth().height(64.dp).testTag("roll")) {
+        Text(if (ui.card == null) "🎲 Roll" else "🎲 Roll again", style = MaterialTheme.typography.titleLarge)
       }
       if (ui.nothingMatches) {
-        Text("No tunes match. Loosen the constraints, or add tunes to your list from the Tunes tab.")
+        Text("🤷 No tunes match. Loosen the constraints, or add tunes to your list from the Tunes tab.")
       }
       ui.card?.let { card ->
         Text(card.title, style = MaterialTheme.typography.displaySmall, modifier = Modifier.testTag("dice-title"))
