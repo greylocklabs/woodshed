@@ -39,6 +39,8 @@ class SeedImporter(private val db: WoodshedDatabase, private val now: () -> Long
         commonKeyRaw = s.commonKey,
         commonKeyPitchClass = key?.pitchClass,
         commonKeyMinor = key?.minor,
+        collection = s.collection,
+        verified = s.verified,
       )
       if (row.id == 0L) {
         dao.insert(row)

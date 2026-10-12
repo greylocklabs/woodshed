@@ -27,6 +27,7 @@ enum class KeyChoice(val label: String) {
 data class DiceConstraints(
   val pool: TunePool = TunePool.MY_TUNES,
   val style: String? = null,
+  val collection: String? = null,
   /** A specific tune exercise, or null for any of them. */
   val exerciseName: String? = null,
   val keyChoice: KeyChoice = KeyChoice.USUAL,
@@ -57,7 +58,7 @@ fun roll(
       TunePool.WISHLIST -> lifecycle == Lifecycle.WISHLIST
       TunePool.ANY -> true
     }
-    inPool && t.archivedAt == null && (c.style == null || t.style == c.style)
+    inPool && t.archivedAt == null && (c.style == null || t.style == c.style) && (c.collection == null || t.collection == c.collection)
   }
   val choices = exercises.filter { it.appliesToTune && it.archivedAt == null && (c.exerciseName == null || it.name == c.exerciseName) }
   if (pool.isEmpty() || choices.isEmpty()) return null

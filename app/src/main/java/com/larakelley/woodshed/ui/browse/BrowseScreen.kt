@@ -43,6 +43,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.larakelley.woodshed.data.db.TuneStateEntity
+import com.larakelley.woodshed.data.seed.SeedValidator
 import com.larakelley.woodshed.domain.Comfort
 import com.larakelley.woodshed.domain.Family
 import com.larakelley.woodshed.domain.Key
@@ -140,6 +141,7 @@ private fun TuneFilters(state: BrowseState, onFilter: ((TuneFilter) -> TuneFilte
   Row(Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
     DropdownChip("Show", f.status.label, StatusFilter.entries.map { it.label to it }) { s -> onFilter { it.copy(status = s ?: StatusFilter.ALL) } }
     DropdownChip("Style", f.style ?: "Any", state.styles.map { it to it }, allowAny = true) { s -> onFilter { it.copy(style = s) } }
+    DropdownChip("Collection", f.collection ?: "Any", SeedValidator.COLLECTIONS.map { it to it }, allowAny = true) { c -> onFilter { it.copy(collection = c) } }
     DropdownChip("Comfort", f.minComfort?.let { "${it.label}+" } ?: "Any", Comfort.entries.map { "${it.label} or better" to it }, allowAny = true) { c ->
       onFilter { it.copy(minComfort = c) }
     }
@@ -229,6 +231,15 @@ private fun TuneDetail(tune: TuneRow, actions: TuneActions, now: () -> Long, onB
     if (tune.credit.isNotEmpty()) Text(tune.credit)
     if (tune.shape.isNotEmpty()) Text(tune.shape)
     Text(tune.key, style = MaterialTheme.typography.titleLarge)
+    if (tune.collection == "Trad") Text("Trad repertoire", style = MaterialTheme.typography.bodyMedium)
+    if (!tune.verified) {
+      Text(
+        "Details for this tune were imported in bulk and not yet checked; blanks mean unknown.",
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.testTag("unverified"),
+      )
+    }
 
     HorizontalDivider()
     Text(statusLine(state, now()), style = MaterialTheme.typography.titleMedium, modifier = Modifier.testTag("tune-status"))

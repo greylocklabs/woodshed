@@ -95,33 +95,49 @@ Wikipedia and allsolos.com, and confirmed errors were corrected: wrong keys (My
 Funny Valentine, Caravan, Love For Sale), chart lengths recorded as chorus
 lengths (Giant Steps, Stolen Moments), misspelled composers, and missing
 co-writers. `common_key` is the key usually called, not the published original,
-and sources still disagree on a handful of tunes. The 57 tunes added after the
-scrape (songbook ballads, jam-session staples, post-1967 tunes) were sourced the
-same way.
+and sources still disagree on a handful of tunes. Tunes added later were sourced
+the same way.
 
-Field coverage across the 258 tunes, which is the useful part to know before
-designing around it:
+The list covers every title in Hal Leonard's Real Book volumes 1 to 6 and The
+Real Dixieland Book. `collection` is `Trad` for the Dixieland book's tunes and
+`Standards` for everything else; which volume a tune is printed in is not kept.
+Two tiers share the file, marked by `verified`:
 
-| Field | Distinct values | Absent |
+- **Verified (617):** the scraped set, later staples, and the Real Book volume 1
+  titles plus anything printed in two books, each field sourced tune by tune.
+- **Bulk (1,905):** the rest of the books, filled automatically. Key and style
+  come from the iReal Pro main playlists; composer, meter and bar count from the
+  [Jazz Chord Progressions Corpus](https://github.com/carey-bunks/Jazz-Chord-Progressions-Corpus),
+  itself derived from Impro-Visor's Imaginary Book. Year and form are left
+  empty, and 829 titles found in neither source carry only a title.
+
+Field coverage, which is the useful part to know before designing around it:
+
+| Field | Verified: distinct / absent | Bulk: absent |
 | --- | --- | --- |
-| form | 13 (AABA dominates at 112) | 25 |
-| style | 12 | 1 |
-| time_signature | 3 | 0 |
-| common_key | 19 | 9 |
+| form | 15 (AABA at 203) / 195 | all |
+| style | 13 / 73 | 1,193 |
+| time_signature | 5 / 88 | 780 |
+| common_key | 23 / 119 | 1,193 |
+| composer | / 5 | 779 |
 
-**Absence is common and meaningful.** 25 tunes have no documented form. Model
-these as nullable and keep "unknown" distinguishable from "empty", or you will
+**Absence is common and meaningful.** Model every field but title, slug and
+collection as nullable and keep "unknown" distinguishable from "empty", or you will
 lose the distinction permanently on first import.
 
-`form` holds section letters, or `Blues` for 12- and 16-bar blues. Tunes with no
+Titles were matched across the books by normalised title. Where two different
+songs share a title (Humpty Dumpty, Shall We Dance?), they share one entry and
+the credit is left empty rather than guessed.
+
+`form` holds section letters, or `Blues` for blues forms. Tunes with no
 letter form (Countdown, Blue In Green, Tune Up) stay null.
 
 `composer` lists every credited writer, music and lyrics, in one string. It
 follows the published credit where authorship is disputed (Blue In Green, Donna
 Lee, Four, Tune Up), and leaves out lyrics added later to an instrumental.
 
-Known quirks left as-is: `Latin/Swing` and `Swing,Ballad` are compound style
-values, minor keys use a trailing hyphen (`F-`), sharps occur (`C#-`), and Take
+`style` adds `Trad` for New Orleans two-beat repertoire. Known quirks left
+as-is: `Latin/Swing` and `Swing,Ballad` are compound style values, minor keys use a trailing hyphen (`F-`), sharps occur (`C#-`), and Take
 Five was listed as 5/5 upstream and hand-corrected to 5/4.
 
 `data/exercises.json` is 61 self-contained exercises, no method books needed.

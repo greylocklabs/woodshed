@@ -14,7 +14,8 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(application = Application::class)
 class MigrationTest {
-  @get:Rule val helper = MigrationTestHelper(InstrumentationRegistry.getInstrumentation(), WoodshedDatabase::class.java)
+  @get:Rule
+  val helper = MigrationTestHelper(InstrumentationRegistry.getInstrumentation(), WoodshedDatabase::class.java, listOf(WoodshedDatabase.DropBooks()))
 
   @Test
   fun version1To2KeepsSeededRowsAndAddsPracticeTables() {
@@ -52,6 +53,54 @@ class MigrationTest {
         assertEquals(123L, it.getLong(2))
       }
       db.execSQL("INSERT INTO tune_knowledge (standardId, comfort, knownKeys, updatedAt) VALUES (7, 'SHAKY', 1, 0)")
+    }
+  }
+
+  @Test
+  fun version3To4AddsBooksAndAllowsUnknownMeter() {
+    helper.createDatabase("migration-test-3", 3).use { db ->
+      db.execSQL(
+        "INSERT INTO standards (id, slug, title, composer, year, bars, timeSignature, form, style, commonKeyRaw, commonKeyPitchClass, commonKeyMinor, archivedAt) " +
+          "VALUES (7, 'solar', 'Solar', 'Miles Davis', 1954, 12, '4/4', NULL, 'Swing', 'C-', 0, 1, NULL)"
+      )
+      db.execSQL("INSERT INTO tune_state (standardId, lifecycle, keyPolicy, cyclePosition, reps, lapses, intervalDays, ease) VALUES (7, 'LEARNING', 'FIXED', 0, 2, 0, 3.0, 2.5)")
+    }
+    helper.runMigrationsAndValidate("migration-test-3", 4, true).use { db ->
+      db.query("SELECT title, timeSignature, books, verified FROM standards WHERE id = 7").use {
+        it.moveToFirst()
+        assertEquals("Solar", it.getString(0))
+        assertEquals("4/4", it.getString(1))
+        assertEquals("", it.getString(2))
+        assertEquals(1, it.getInt(3))
+      }
+      db.query("SELECT reps FROM tune_state WHERE standardId = 7").use { it.moveToFirst(); assertEquals(2, it.getInt(0)) }
+      db.execSQL("INSERT INTO standards (slug, title, timeSignature, books, verified) VALUES ('x', 'X', NULL, 'Real Book 4', 0)")
+    }
+  }
+
+  @Test
+  fun version4To5ReplacesBooksWithCollection() {
+    helper.createDatabase("migration-test-4", 4).use { db ->
+      db.execSQL(
+        "INSERT INTO standards (id, slug, title, composer, year, bars, timeSignature, form, style, commonKeyRaw, commonKeyPitchClass, commonKeyMinor, archivedAt, books, verified) " +
+          "VALUES (7, 'solar', 'Solar', 'Miles Davis', 1954, 12, '4/4', NULL, 'Swing', 'C-', 0, 1, NULL, 'Real Book 1', 1)"
+      )
+      db.execSQL("INSERT INTO tune_state (standardId, lifecycle, keyPolicy, cyclePosition, reps, lapses, intervalDays, ease) VALUES (7, 'LEARNING', 'CYCLE', 3, 2, 0, 3.0, 2.5)")
+      db.execSQL("INSERT INTO tune_knowledge (standardId, comfort, knownKeys, updatedAt) VALUES (7, 'SHAKY', 5, 0)")
+    }
+    helper.runMigrationsAndValidate("migration-test-4", 5, true).use { db ->
+      db.query("SELECT title, collection, verified FROM standards WHERE id = 7").use {
+        it.moveToFirst()
+        assertEquals("Solar", it.getString(0))
+        assertEquals("Standards", it.getString(1))
+        assertEquals(1, it.getInt(2))
+      }
+      db.query("SELECT keyPolicy, cyclePosition FROM tune_state WHERE standardId = 7").use {
+        it.moveToFirst()
+        assertEquals("CYCLE", it.getString(0))
+        assertEquals(3, it.getInt(1))
+      }
+      db.query("SELECT knownKeys FROM tune_knowledge WHERE standardId = 7").use { it.moveToFirst(); assertEquals(5, it.getInt(0)) }
     }
   }
 }

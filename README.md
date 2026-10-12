@@ -4,7 +4,7 @@ Notes, data, and a build plan for **Woodshed**, an Android practice app for
 horn players. Carried out of an abandoned attempt to build jazz practice tools
 into [larakelley.com](https://github.com/lararosekelley/larakelley.com).
 
-The app is at milestone M1 of `ANDROID_PLAN.md`: search and filter 258 tunes
+The app is at milestone M1 of `ANDROID_PLAN.md`: search and filter 2,522 tunes
 with keys written for your transposition, pick tunes to learn, and practice them
 as cards scheduled by spaced repetition, with a metronome on the stand. A dice
 tab rolls a random card within constraints. Each tune can carry a comfort rating
@@ -16,7 +16,7 @@ and a checklist of keys you know it in. Every graded rep is logged.
 | --- | --- |
 | `DESIGN.md` | The decisions worth keeping, and the traps that cost time |
 | `ANDROID_PLAN.md` | How this becomes the app: stack, domain model, build order |
-| `data/standards.json` | 258 jazz standards with composer, year, bars, meter, form, style, key |
+| `data/standards.json` | 2,522 tunes: every title in the Hal Leonard Real Books 1-6 and Real Dixieland Book, with composer, year, bars, meter, form, style, key where known |
 | `data/exercises.json` | 61 instrument-scoped practice exercises |
 | `app/` | The Android app (Kotlin, Compose, Room); `data/` ships as its assets |
 | `tools/cards.py` | Prints random tune x exercise x written-key cards for an instrument |
@@ -28,8 +28,12 @@ and a checklist of keys you know it in. Every graded rep is logged.
 reference by **David Miller**. Only factual fields were taken — composer, year,
 bars, meter, form, style, common key — deliberately not lyrics and not chord
 charts. If any of this ships, that credit ships with it. Corrections and the
-57 later additions were checked against [jazzstandards.com](https://www.jazzstandards.com),
-Wikipedia and the iReal Pro jazz playlist.
+verified additions were checked against [jazzstandards.com](https://www.jazzstandards.com),
+Wikipedia and the iReal Pro jazz playlist. Bulk rows take key and style from the
+iReal Pro main playlists and composer, meter and bars from the
+[Jazz Chord Progressions Corpus](https://github.com/carey-bunks/Jazz-Chord-Progressions-Corpus)
+(Bunks et al., ISMIR 2023), derived from Impro-Visor's Imaginary Book. Book
+contents come from Hal Leonard's published song lists.
 
 `data/exercises.json` is original, written for this project.
 

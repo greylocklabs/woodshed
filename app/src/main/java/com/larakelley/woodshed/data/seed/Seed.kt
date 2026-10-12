@@ -13,10 +13,14 @@ data class StandardSeed(
   val composer: String?,
   val year: Int?,
   val bars: Int?,
-  @SerialName("time_signature") val timeSignature: String,
+  @SerialName("time_signature") val timeSignature: String?,
   val form: String?,
   val style: String?,
   @SerialName("common_key") val commonKey: String?,
+  /** "Standards", or "Trad" for New Orleans and Dixieland repertoire. */
+  val collection: String,
+  /** False for rows imported in bulk whose fields have not been checked tune by tune. */
+  val verified: Boolean,
 )
 
 @Serializable
@@ -62,6 +66,7 @@ data class Seed(val standards: List<StandardSeed>, val exercises: List<ExerciseS
 object SeedValidator {
   private val SLUG = Regex("^[a-z0-9]+(-[a-z0-9]+)*$")
   private val TIME_SIGNATURE = Regex("^\\d+/\\d+$")
+  val COLLECTIONS = listOf("Standards", "Trad")
 
   fun validate(seed: Seed): List<String> = buildList {
     if (seed.standards.isEmpty()) add("standards.json is empty")
@@ -72,7 +77,8 @@ object SeedValidator {
       val at = "standard ${s.slug}"
       if (!SLUG.matches(s.slug)) add("$at: malformed slug")
       if (s.title.isBlank()) add("$at: blank title")
-      if (!TIME_SIGNATURE.matches(s.timeSignature)) add("$at: bad time signature ${s.timeSignature}")
+      if (s.timeSignature != null && !TIME_SIGNATURE.matches(s.timeSignature)) add("$at: bad time signature ${s.timeSignature}")
+      if (s.collection !in COLLECTIONS) add("$at: unknown collection ${s.collection}")
       if (s.year != null && s.year !in 1800..2100) add("$at: implausible year ${s.year}")
       if (s.bars != null && s.bars <= 0) add("$at: bars must be positive")
       if (s.composer != null && s.composer.isBlank()) add("$at: blank composer, use null for unknown")

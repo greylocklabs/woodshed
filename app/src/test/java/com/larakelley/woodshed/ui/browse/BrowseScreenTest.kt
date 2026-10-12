@@ -131,6 +131,16 @@ class BrowseScreenTest {
   }
 
   @Test
+  fun bulkTunesSayTheirDetailsAreUnchecked() {
+    val bulk = StandardEntity(9, "the-river-seine", "The River Seine", null, null, null, null, null, null, null, null, null, collection = "Trad", verified = false)
+    compose.setContent { BrowseScreen(BrowseState(tunes = tuneRows(listOf(bulk), Transposition.C), totalTunes = 1), {}, {}) }
+    compose.onNodeWithText("The River Seine").performClick()
+    compose.onNodeWithText("Trad repertoire").assertExists()
+    compose.onNodeWithTag("unverified").assertExists()
+    compose.onNodeWithText("Key unknown").assertExists()
+  }
+
+  @Test
   fun seedErrorIsShownNotSwallowed() {
     compose.setContent { BrowseScreen(BrowseState(seedError = "duplicate slug: x"), onSelectTransposition = {}, onSelectFamily = {}) }
     compose.onNodeWithText("Could not load the bundled data: duplicate slug: x").assertExists()
