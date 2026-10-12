@@ -140,7 +140,7 @@ class PracticeService(
       totalMinutes = minutes,
       focus = focus,
       tuneIds = tuneIds,
-      exercises = exercises.map { PlanExercise(it.id, it.category, it.minutes, it.appliesToTune) },
+      exercises = exercises.map { PlanExercise(it.id, it.category, it.minutes, it.appliesToTune, it.difficulty) },
       tuneExercise = { id -> tuneExercises.takeIf { it.isNotEmpty() }?.let { pickExercise(it, { e -> e.id }, history.getValue(id), random).id } },
       random = random,
     )

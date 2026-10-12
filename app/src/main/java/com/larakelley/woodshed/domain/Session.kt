@@ -16,7 +16,7 @@ enum class Focus(val label: String, val categories: List<String>) {
 }
 
 /** The planner's view of an exercise, so planning stays free of the database. */
-data class PlanExercise(val id: Long, val category: String, val minutes: Int, val appliesToTune: Boolean)
+data class PlanExercise(val id: Long, val category: String, val minutes: Int, val appliesToTune: Boolean, val difficulty: Int = 1)
 
 sealed interface PlanBlock {
   val minutes: Int
@@ -29,11 +29,14 @@ sealed interface PlanBlock {
 
 const val MIN_BLOCK_MINUTES = 3
 
+/** Warm-ups stay easy; harder tone work belongs with the Tone focus. */
+const val MAX_WARMUP_DIFFICULTY = 2
+
 /** Five minutes of warm-up per half hour, at least three. */
 private fun warmupMinutes(total: Int) = (total / 6).coerceIn(MIN_BLOCK_MINUTES, 10)
 
 /**
- * Lays out a session of about [totalMinutes]: a tone warm-up, then exercises for [focus], then the chosen tunes.
+ * Lays out a session of about [totalMinutes]: an easy tone warm-up, then exercises for [focus], then the chosen tunes.
  * Tunes get at least half of the time after the warm-up and at least five minutes each; tunes that do not fit are
  * left out from the end of [tuneIds]. With no focus, exercises come from every non-tune category. [tuneExercise]
  * picks the exercise to pair with a tune.
@@ -51,7 +54,7 @@ fun planSession(
   val blocks = mutableListOf<PlanBlock>()
   var left = totalMinutes
 
-  drills.filter { it.category in Focus.TONE.categories }.randomOrNull(random)?.let { warmup ->
+  drills.filter { it.category in Focus.TONE.categories && it.difficulty <= MAX_WARMUP_DIFFICULTY }.randomOrNull(random)?.let { warmup ->
     val minutes = minOf(warmup.minutes, warmupMinutes(totalMinutes), left)
     if (minutes >= MIN_BLOCK_MINUTES) {
       blocks += PlanBlock.Exercise(warmup.id, minutes)
