@@ -27,6 +27,7 @@ import com.larakelley.woodshed.data.PracticeService
 import com.larakelley.woodshed.data.Roll
 import com.larakelley.woodshed.data.TunePool
 import com.larakelley.woodshed.data.WoodshedRepository
+import com.larakelley.woodshed.data.seed.SeedValidator
 import com.larakelley.woodshed.domain.ClickTrack
 import com.larakelley.woodshed.domain.Grade
 import com.larakelley.woodshed.domain.KeyMask
@@ -147,6 +148,7 @@ fun DiceScreen(
       FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         DropdownChip("Tunes", c.pool.label, TunePool.entries.map { it.label to it }) { p -> onConstrain { it.copy(pool = p ?: TunePool.MY_TUNES) } }
         DropdownChip("Style", c.style ?: "Any", ui.styles.map { it to it }, allowAny = true) { s -> onConstrain { it.copy(style = s) } }
+        DropdownChip("Collection", c.collection ?: "Any", SeedValidator.COLLECTIONS.map { it to it }, allowAny = true) { v -> onConstrain { it.copy(collection = v) } }
         DropdownChip("Exercise", c.exerciseName ?: "Any", ui.exercises.map { it to it }, allowAny = true) { e -> onConstrain { it.copy(exerciseName = e) } }
         DropdownChip("Key", c.keyChoice.label, KeyChoice.entries.map { it.label to it }) { k -> onConstrain { it.copy(keyChoice = k ?: KeyChoice.USUAL) } }
       }

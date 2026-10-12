@@ -59,6 +59,21 @@ class SeedTest {
   fun rejectsWrongType() = assertRejected("year", standards = editRow(standards, 0) { it + ("year" to JsonPrimitive("c. 1937")) })
 
   @Test
+  fun acceptsUnknownTimeSignature() {
+    Seed.parse(editRow(standards, 0) { it + ("time_signature" to kotlinx.serialization.json.JsonNull) }, exercises)
+  }
+
+  @Test
+  fun rejectsUnknownCollection() = assertRejected("unknown collection Bebop", standards = editRow(standards, 0) { it + ("collection" to JsonPrimitive("Bebop")) })
+
+  @Test
+  fun everyBulkRowIsMarkedUnverified() {
+    val seed = Seed.parse(standards, exercises)
+    assertTrue(seed.standards.any { !it.verified })
+    assertTrue(seed.standards.filter { it.year != null && it.form != null }.any { it.verified })
+  }
+
+  @Test
   fun rejectsMalformedJson() = assertRejected("standards.json", standards = standards.dropLast(3))
 
   @Test

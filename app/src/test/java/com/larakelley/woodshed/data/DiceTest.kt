@@ -77,6 +77,13 @@ class DiceTest {
   }
 
   @Test
+  fun collectionNarrowsThePool() {
+    val trad = tunes.map { if (it.id == 2L) it.copy(collection = "Trad") else it }
+    val ids = (1..100).mapNotNull { roll(trad, states, emptyMap(), exercises, DiceConstraints(collection = "Trad"), Random(it)) }.map { it.tune.id }.toSet()
+    assertEquals(setOf(2L), ids)
+  }
+
+  @Test
   fun nothingMatchesGivesNull() {
     assertNull(roll(tunes, states, emptyMap(), exercises, DiceConstraints(pool = TunePool.WISHLIST, style = "Ballad"), Random(0)))
   }

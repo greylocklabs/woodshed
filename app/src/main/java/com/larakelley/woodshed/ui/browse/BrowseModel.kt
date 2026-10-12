@@ -37,6 +37,8 @@ data class TuneRow(
   val state: TuneStateEntity? = null,
   val knowledge: TuneKnowledgeEntity? = null,
   val transposition: Transposition = Transposition.C,
+  val collection: String = "Standards",
+  val verified: Boolean = true,
 ) {
   val status: String?
     get() = state?.lifecycle?.label
@@ -64,6 +66,7 @@ data class TuneFilter(
   val style: String? = null,
   /** Only tunes rated at least this comfortable. */
   val minComfort: Comfort? = null,
+  val collection: String? = null,
 )
 
 data class ExerciseFilter(val query: String = "", val category: String? = null)
@@ -104,7 +107,7 @@ fun tuneRows(
       shape = listOfNotNull(
         s.form,
         s.bars?.let { "$it bars" },
-        s.timeSignature.takeIf { it != "4/4" },
+        s.timeSignature?.takeIf { it != "4/4" },
         s.style.takeIf { it != s.form },
       ).joinToString(", "),
       style = s.style,
@@ -113,6 +116,8 @@ fun tuneRows(
       state = states[s.id],
       knowledge = knowledge[s.id],
       transposition = transposition,
+      collection = s.collection,
+      verified = s.verified,
     )
   }
 
@@ -138,7 +143,10 @@ fun filterTunes(rows: List<TuneRow>, filter: TuneFilter): List<TuneRow> =
       StatusFilter.LIBRARY -> lifecycle == null
     }
     val comfortOk = filter.minComfort == null || (row.knowledge?.comfort?.let { it >= filter.minComfort } ?: false)
-    statusOk && comfortOk && (filter.style == null || row.style == filter.style) && matchesQuery(filter.query, row.title, row.composer)
+    statusOk && comfortOk &&
+      (filter.style == null || row.style == filter.style) &&
+      (filter.collection == null || row.collection == filter.collection) &&
+      matchesQuery(filter.query, row.title, row.composer)
   }
 
 fun exerciseRows(exercises: List<ExerciseEntity>, family: Family?, filter: ExerciseFilter = ExerciseFilter()): List<ExerciseRow> =

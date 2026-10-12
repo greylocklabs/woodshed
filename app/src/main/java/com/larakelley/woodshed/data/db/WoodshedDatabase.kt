@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.AutoMigration
 import androidx.room.Dao
 import androidx.room.Database
+import androidx.room.DeleteColumn
 import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Room
@@ -12,6 +13,7 @@ import androidx.room.TypeConverter
 import androidx.room.TypeConverters
 import androidx.room.Update
 import androidx.room.Upsert
+import androidx.room.migration.AutoMigrationSpec
 import com.larakelley.woodshed.domain.Family
 import kotlinx.coroutines.flow.Flow
 
@@ -97,8 +99,13 @@ class Converters {
 
 @Database(
   entities = [StandardEntity::class, ExerciseEntity::class, TuneStateEntity::class, ReviewEventEntity::class, TuneKnowledgeEntity::class],
-  version = 3,
-  autoMigrations = [AutoMigration(from = 1, to = 2), AutoMigration(from = 2, to = 3)],
+  version = 5,
+  autoMigrations = [
+    AutoMigration(from = 1, to = 2),
+    AutoMigration(from = 2, to = 3),
+    AutoMigration(from = 3, to = 4),
+    AutoMigration(from = 4, to = 5, spec = WoodshedDatabase.DropBooks::class),
+  ],
 )
 @TypeConverters(Converters::class)
 abstract class WoodshedDatabase : RoomDatabase() {
@@ -111,6 +118,10 @@ abstract class WoodshedDatabase : RoomDatabase() {
   abstract fun reviewEvents(): ReviewEventDao
 
   abstract fun tuneKnowledge(): TuneKnowledgeDao
+
+  /** Version 4 listed every fake book a tune is printed in; version 5 keeps only its collection. */
+  @DeleteColumn(tableName = "standards", columnName = "books")
+  class DropBooks : AutoMigrationSpec
 
   companion object {
     fun create(context: Context): WoodshedDatabase =

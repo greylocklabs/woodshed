@@ -1,5 +1,6 @@
 package com.larakelley.woodshed.data.db
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
@@ -23,7 +24,7 @@ data class StandardEntity(
   val composer: String?,
   val year: Int?,
   val bars: Int?,
-  val timeSignature: String,
+  val timeSignature: String?,
   val form: String?,
   val style: String?,
   /** Exactly as written in the seed, kept even when it does not parse. */
@@ -32,6 +33,8 @@ data class StandardEntity(
   val commonKeyMinor: Boolean?,
   /** Set when the row disappears from the seed; history may still point at it. */
   val archivedAt: Long? = null,
+  @ColumnInfo(defaultValue = "Standards") val collection: String = "Standards",
+  @ColumnInfo(defaultValue = "1") val verified: Boolean = true,
 )
 
 @Entity(tableName = "exercises", indices = [Index(value = ["name"], unique = true)])

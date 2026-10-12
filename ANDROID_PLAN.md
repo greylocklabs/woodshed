@@ -11,7 +11,7 @@ Decisions already made:
 | Stack | Kotlin, Compose, Room |
 | Shape | Flash cards *and* a timed session mode |
 | Scope | Local-only, single user, offline. No account, no server, no sync |
-| Seed | `data/standards.json` (258), `data/exercises.json` (61), shipped as assets |
+| Seed | `data/standards.json` (2,522), `data/exercises.json` (61), shipped as assets |
 
 Kotlin over a Rust core via UniFFI: the two files worth salvaging
 (`roller.rs`, `keys.rs`) are small and well-specified, `DESIGN.md` already
@@ -41,7 +41,7 @@ All The Things You Are  ·  changes without the melody  ·  written F
 
 `applies_to_tune` marks the 8 exercises that take a tune: the `Standards`,
 `Improvisation` and `Transcription` procedures plus one `Ear Training` drill.
-Across 258 tunes that is about two thousand distinct cards per instrument.
+Across 2,522 tunes that is about twenty thousand distinct cards per instrument.
 `tools/cards.py` prints a random draw of them for trying the idea on paper.
 
 **The gap that stays open.** The vocabulary deck has no content and cannot be
@@ -147,7 +147,7 @@ key — and how the key behaves differs by material. Putting that on a per-item
 | `CYCLE` | One card per item | Next step round the circle each rep | Scales & patterns; tunes you have promoted |
 | `PER_KEY` | Twelve independent cards | Fixed per card | Licks, ii-V-I — where key-specific fluency *is* the skill |
 
-Materialising 258 tunes × 12 keys would mean seeing a tune in all twelve before
+Materialising 2,522 tunes × 12 keys would mean seeing a tune in all twelve before
 any of it counted as learned. `FIXED` with a per-tune promotion to `CYCLE`
 matches how repertoire actually gets learned and keeps the row count honest.
 `PER_KEY` is affordable precisely because vocabulary is a handful of items, not
@@ -233,7 +233,7 @@ phase-to-category mapping in `DESIGN.md` is complete and exact against the data
 ## Data and seeding
 
 Both JSON files ship as assets and seed on first launch. The natural keys are
-clean — all 258 slugs are unique, all 61 exercise names are unique — so
+clean — all 2,522 slugs are unique, all 61 exercise names are unique — so
 upsert-by-natural-key works with no disambiguation needed.
 
 ```sql
@@ -343,7 +343,7 @@ reps before anything is built on top of it.
 
 **M0 — Data in, and provably intact.** Room schema, seed importer from assets,
 transposition picker and family filter, transposition and key-spelling domain with the exhaustive
-test suite, browse screens for 258 tunes and 61 exercises. No practice loop yet.
+test suite, browse screens for the tunes and 61 exercises. No practice loop yet.
 *Proves the data survives the boundary. Ends with the re-seed-preserves-ids test
 passing.*
 
@@ -397,10 +397,10 @@ family-scoped, and the calls were checked against published pedagogy rather than
 a teacher. Cheap to fix in data, so still worth a second opinion from someone who
 teaches.
 
-**What does the app do with 258 tunes you will never learn?** A wishlist that
-large is a browsing corpus, not a queue. Something has to help you choose —
-filter by style, form or key, or a curated starting set. Unaddressed in the old
-design and still unaddressed here.
+**What does the app do with 2,500 tunes you will never learn?** A wishlist that
+large is a browsing corpus, not a queue. Search, filters by status, style,
+collection and comfort, and a wishlist you fill yourself cover most of it; a curated
+starting set is still open.
 
 **Does the composed card actually read as a card?** Finding one is the
 load-bearing bet of this plan. If *All The Things You Are · changes without the

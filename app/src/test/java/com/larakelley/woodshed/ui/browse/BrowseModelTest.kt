@@ -76,6 +76,20 @@ class BrowseModelTest {
   }
 
   @Test
+  fun collectionFilter() {
+    val tunes = listOf(standard(1, "A").copy(collection = "Trad"), standard(2, "B"), standard(3, "C"))
+    val rows = tuneRows(tunes, Transposition.C)
+    assertEquals(listOf("A"), filterTunes(rows, TuneFilter(collection = "Trad")).map { it.title })
+    assertEquals(listOf("B", "C"), filterTunes(rows, TuneFilter(collection = "Standards")).map { it.title })
+  }
+
+  @Test
+  fun unknownTimeSignatureIsLeftOutOfTheShape() {
+    val row = tuneRows(listOf(standard(1, "A").copy(timeSignature = null, bars = 32, style = "Swing")), Transposition.C).single()
+    assertEquals("32 bars, Swing", row.shape)
+  }
+
+  @Test
   fun exerciseSearchAndCategory() {
     val exercises = listOf(exercise(1, "Long tones", emptyList()), exercise(2, "Lip slurs", listOf(Family.BRASS)).copy(category = "Technique"))
     assertEquals(listOf("Lip slurs"), exerciseRows(exercises, null, ExerciseFilter(category = "Technique")).map { it.name })
