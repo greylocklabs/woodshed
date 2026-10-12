@@ -5,6 +5,7 @@ import android.content.res.AssetManager
 import androidx.core.content.edit
 import com.larakelley.woodshed.data.db.ExerciseEntity
 import com.larakelley.woodshed.data.db.StandardEntity
+import com.larakelley.woodshed.data.db.TuneStateEntity
 import com.larakelley.woodshed.data.db.WoodshedDatabase
 import com.larakelley.woodshed.data.seed.Seed
 import com.larakelley.woodshed.data.seed.SeedImporter
@@ -29,11 +30,17 @@ class WoodshedRepository(
   /** Null shows exercises for every family. */
   val family: StateFlow<Family?> = _family.asStateFlow()
 
+  private val _dailyNewLimit = MutableStateFlow(prefs.getInt(DAILY_NEW_LIMIT, 1))
+
+  /** How many wishlist tunes move into learning each day. */
+  val dailyNewLimit: StateFlow<Int> = _dailyNewLimit.asStateFlow()
+
   private val _seedError = MutableStateFlow<String?>(null)
   val seedError: StateFlow<String?> = _seedError.asStateFlow()
 
   val standards: Flow<List<StandardEntity>> = db.standards().observeActive()
   val exercises: Flow<List<ExerciseEntity>> = db.exercises().observeActive()
+  val tuneStates: Flow<List<TuneStateEntity>> = db.tuneStates().observeAll()
 
   fun setTransposition(transposition: Transposition) {
     prefs.edit { putString(TRANSPOSITION, transposition.name) }
@@ -43,6 +50,12 @@ class WoodshedRepository(
   fun setFamily(family: Family?) {
     prefs.edit { putString(FAMILY, family?.name) }
     _family.value = family
+  }
+
+  fun setDailyNewLimit(limit: Int) {
+    val clamped = limit.coerceIn(0, 10)
+    prefs.edit { putInt(DAILY_NEW_LIMIT, clamped) }
+    _dailyNewLimit.value = clamped
   }
 
   /** Imports the bundled seed when it differs from the last one imported. */
@@ -69,6 +82,7 @@ class WoodshedRepository(
   private companion object {
     const val TRANSPOSITION = "transposition"
     const val FAMILY = "family"
+    const val DAILY_NEW_LIMIT = "daily_new_limit"
     const val SEED_HASH = "seed_hash"
   }
 }
