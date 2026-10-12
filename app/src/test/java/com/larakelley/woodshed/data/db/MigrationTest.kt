@@ -165,4 +165,15 @@ class MigrationTest {
       db.query("SELECT COUNT(*) FROM playlist_tunes").use { it.moveToFirst(); assertEquals(1, it.getInt(0)) }
     }
   }
+
+  @Test
+  fun version8To9AddsYourExercisesAndEdits() {
+    helper.createDatabase("migration-test-8", 8).use { db ->
+      db.execSQL("INSERT INTO exercises (id, name, category, description, minutes, difficulty, tempoBpm, families, appliesToTune, archivedAt) VALUES (3, 'Long tones', 'Tone', 'Hold.', 10, 2, 60, '', 0, NULL)")
+    }
+    helper.runMigrationsAndValidate("migration-test-8", 9, true).use { db ->
+      db.query("SELECT userCreated FROM exercises WHERE id = 3").use { it.moveToFirst(); assertEquals(0, it.getInt(0)) }
+      db.execSQL("INSERT INTO exercise_overrides (exerciseId, minutes, families, updatedAt) VALUES (3, 5, 'BRASS', 1)")
+    }
+  }
 }

@@ -121,7 +121,7 @@ class PracticeService(
   /** The most overdue tune as a card, or null when nothing is due. */
   suspend fun nextCard(transposition: Transposition): Card? {
     val t = now()
-    val exercises = db.exercises().all().filter { it.appliesToTune && it.archivedAt == null }
+    val exercises = allExercises().filter { it.appliesToTune && it.archivedAt == null }
     for (state in states.due(t)) {
       val tune = tune(state.standardId) ?: continue
       if (tune.archivedAt != null) continue
@@ -134,7 +134,7 @@ class PracticeService(
 
   /** A session plan; see [planSession]. Exercises that don't suit [instrument] are left out; null keeps them all. */
   suspend fun plan(minutes: Int, focus: Set<Focus>, tuneIds: List<Long>, instrument: Instrument?): List<PlanBlock> {
-    val exercises = db.exercises().all().filter { it.archivedAt == null && (instrument == null || instrument.suits(it.families, it.category)) }
+    val exercises = allExercises().filter { it.archivedAt == null && (instrument == null || instrument.suits(it.families, it.category)) }
     val tuneExercises = exercises.filter { it.appliesToTune }
     val history = tuneIds.associateWith { id -> db.reviewEvents().forItem(ReviewEventEntity.TUNE, id).mapNotNull { it.exerciseId }.reversed().distinct() }
     return planSession(
@@ -150,7 +150,7 @@ class PracticeService(
   /** The card for a tune block, moving the tune into learning first if it is not already being practiced. */
   suspend fun cardForBlock(block: PlanBlock.Tune, transposition: Transposition): Card? {
     val tune = tune(block.tuneId) ?: return null
-    val exercise = db.exercises().all().firstOrNull { it.id == block.exerciseId } ?: return null
+    val exercise = allExercises().firstOrNull { it.id == block.exerciseId } ?: return null
     val lifecycle = states.get(tune.id)?.lifecycle
     if (lifecycle != Lifecycle.LEARNING && lifecycle != Lifecycle.REPERTOIRE) startLearning(tune.id)
     val state = states.get(tune.id) ?: return null
@@ -163,7 +163,7 @@ class PracticeService(
       tunes = allTunes(),
       states = states.all().associateBy { it.standardId },
       knowledge = db.tuneKnowledge().all().associateBy { it.standardId },
-      exercises = db.exercises().all(),
+      exercises = allExercises(),
       c = constraints,
       random = random,
       playlist = constraints.playlistId?.let { id -> db.playlists().entries(id).map { it.standardId }.toSet() },
@@ -209,6 +209,12 @@ class PracticeService(
     }
     val cycle = if (before.keyPolicy == KeyPolicy.CYCLE) before.cyclePosition + 1 else before.cyclePosition
     states.upsert(before.withCardState(after).copy(lifecycle = lifecycle, cyclePosition = cycle, lastReviewedAt = t))
+  }
+
+  /** Every exercise as the user sees it, with their edits applied. */
+  private suspend fun allExercises(): List<ExerciseEntity> {
+    val overrides = db.exerciseOverrides().all().associateBy { it.exerciseId }
+    return db.exercises().all().map { it.withOverride(overrides[it.id]) }
   }
 
   private suspend fun allTunes(): List<StandardEntity> {

@@ -82,6 +82,9 @@ private fun PlaylistButton(tune: TuneRow, playlists: List<Playlist>, actions: Pl
   if (picking) PlaylistPicker(tune, playlists, actions, onDismiss = { picking = false })
 }
 
+/** The exercise editor's target while adding rather than editing. */
+private const val NEW_EXERCISE = -1L
+
 /** The editor's target while adding a tune rather than editing one. */
 private const val NEW_TUNE = "+new"
 
@@ -103,6 +106,7 @@ fun BrowseScreen(
   modifier: Modifier = Modifier,
   actions: TuneActions = TuneActions(),
   playlistActions: PlaylistActions = PlaylistActions(),
+  exerciseActions: ExerciseActions = ExerciseActions(),
   onTuneFilter: ((TuneFilter) -> TuneFilter) -> Unit = {},
   onExerciseFilter: ((ExerciseFilter) -> ExerciseFilter) -> Unit = {},
   now: () -> Long = System::currentTimeMillis,
@@ -119,7 +123,9 @@ fun BrowseScreen(
   var editing by rememberSaveable { mutableStateOf<String?>(null) }
   var playlistsOpen by rememberSaveable { mutableStateOf(false) }
   var openPlaylist by rememberSaveable { mutableStateOf<Long?>(null) }
-  var openExercise by rememberSaveable { mutableStateOf<String?>(null) }
+  var openExercise by rememberSaveable { mutableStateOf<Long?>(null) }
+  /** An exercise's id while editing it, [NEW_EXERCISE] while adding one, or null. */
+  var editingExercise by rememberSaveable { mutableStateOf<Long?>(null) }
   val tabs = buildList {
     if (practiceTab != null) add("Practice")
     if (diceTab != null) add("Random")
@@ -179,10 +185,24 @@ fun BrowseScreen(
       PlaylistsScreen(state.playlists, playlistActions, onOpen = { openPlaylist = it }, onBack = { playlistsOpen = false }, modifier = Modifier.padding(padding))
       return@Scaffold
     }
-    val exercise = state.exercises.firstOrNull { it.name == openExercise }
+    editingExercise?.let { target ->
+      val editing = state.allExercises.firstOrNull { it.id == target }
+      ExerciseEditor(
+        editing,
+        categories = state.categories,
+        takenNames = state.allExercises.map { it.name.lowercase() }.toSet(),
+        onSave = { draft -> exerciseActions.save(editing?.id, draft) { id -> openExercise = id; editingExercise = null } },
+        onDelete = { editing?.let { exerciseActions.delete(it.id) }; openExercise = null; editingExercise = null },
+        onReset = { editing?.let { exerciseActions.reset(it.id) }; editingExercise = null },
+        onBack = { editingExercise = null },
+        modifier = Modifier.padding(padding),
+      )
+      return@Scaffold
+    }
+    val exercise = state.allExercises.firstOrNull { it.id == openExercise }
     if (exercise != null) {
       BackHandler { openExercise = null }
-      ExerciseDetail(exercise, onBack = { openExercise = null }, modifier = Modifier.padding(padding))
+      ExerciseDetail(exercise, onBack = { openExercise = null }, onEdit = { editingExercise = exercise.id }, modifier = Modifier.padding(padding))
       return@Scaffold
     }
     Column(Modifier.padding(padding).fillMaxSize()) {
@@ -215,7 +235,7 @@ fun BrowseScreen(
           }
         }
         else -> {
-          ExerciseFilters(state, onExerciseFilter)
+          ExerciseFilters(state, onExerciseFilter, onAdd = { editingExercise = NEW_EXERCISE })
           if (state.exercises.isEmpty()) {
             EmptyState(
               "💪",
@@ -312,7 +332,7 @@ private fun TuneFilters(state: BrowseState, onFilter: ((TuneFilter) -> TuneFilte
 }
 
 @Composable
-private fun ExerciseFilters(state: BrowseState, onFilter: ((ExerciseFilter) -> ExerciseFilter) -> Unit) {
+private fun ExerciseFilters(state: BrowseState, onFilter: ((ExerciseFilter) -> ExerciseFilter) -> Unit, onAdd: () -> Unit) {
   val f = state.exerciseFilter
   SearchField(f.query, "Search exercises") { q -> onFilter { it.copy(query = q) } }
   Row(Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -322,11 +342,16 @@ private fun ExerciseFilters(state: BrowseState, onFilter: ((ExerciseFilter) -> E
     DropdownChip("Category", f.category ?: "Any", state.categories.map { it to it }, allowAny = true) { c -> onFilter { it.copy(category = c) } }
     DropdownChip("Sort", f.sort.label, ExerciseSort.entries.map { it.label to it }) { o -> onFilter { it.copy(sort = o ?: ExerciseSort.CATEGORY) } }
   }
-  Text(
-    if (state.exercises.size == state.totalExercises) "${state.totalExercises} exercises" else "${state.exercises.size} of ${state.totalExercises} exercises",
-    style = MaterialTheme.typography.labelLarge,
-    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp).testTag("exercise-count"),
-  )
+  Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+    Text(
+      if (state.exercises.size == state.totalExercises) "${state.totalExercises} exercises" else "${state.exercises.size} of ${state.totalExercises} exercises",
+      style = MaterialTheme.typography.labelLarge,
+      modifier = Modifier.weight(1f).testTag("exercise-count"),
+    )
+    StickerButton(onClick = onAdd, modifier = Modifier.height(40.dp).testTag("add-exercise"), contentPadding = PaddingValues(horizontal = 14.dp)) {
+      Text("+ Add exercise", style = MaterialTheme.typography.labelLarge)
+    }
+  }
 }
 
 @Composable
@@ -534,10 +559,10 @@ private fun statusLine(state: TuneStateEntity?, now: Long): String {
 }
 
 @Composable
-private fun ExerciseList(exercises: List<ExerciseRow>, onOpen: (String) -> Unit) {
+private fun ExerciseList(exercises: List<ExerciseRow>, onOpen: (Long) -> Unit) {
   LazyColumn(Modifier.fillMaxSize().testTag("exercise-list")) {
-    items(exercises, key = { it.name }) { exercise ->
-      Column(Modifier.fillMaxWidth().clickable { onOpen(exercise.name) }.padding(horizontal = 16.dp, vertical = 10.dp)) {
+    items(exercises, key = { it.id }) { exercise ->
+      Column(Modifier.fillMaxWidth().clickable { onOpen(exercise.id) }.padding(horizontal = 16.dp, vertical = 10.dp)) {
         Text(exercise.name, style = MaterialTheme.typography.titleMedium)
         Text(exercise.summary + if (exercise.instruments != "All instruments") ", ${exercise.instruments}" else "", style = MaterialTheme.typography.bodySmall)
         Text(exercise.description, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 4.dp))

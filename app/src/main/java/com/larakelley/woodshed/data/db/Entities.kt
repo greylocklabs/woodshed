@@ -99,7 +99,41 @@ data class ExerciseEntity(
   val families: List<Family>,
   val appliesToTune: Boolean,
   val archivedAt: Long? = null,
+  /** Added by the user rather than the seed; re-seeding never updates or archives these. */
+  @ColumnInfo(defaultValue = "0") val userCreated: Boolean = false,
 )
+
+/** The user's edits to a seeded exercise, laid over it like [TuneOverrideEntity]. Null fields are not overridden. */
+@Entity(
+  tableName = "exercise_overrides",
+  foreignKeys = [ForeignKey(entity = ExerciseEntity::class, parentColumns = ["id"], childColumns = ["exerciseId"])],
+)
+data class ExerciseOverrideEntity(
+  @PrimaryKey val exerciseId: Long,
+  val name: String? = null,
+  val category: String? = null,
+  val description: String? = null,
+  val minutes: Int? = null,
+  val difficulty: Int? = null,
+  val tempoBpm: Int? = null,
+  val families: List<Family>? = null,
+  val appliesToTune: Boolean? = null,
+  val updatedAt: Long = 0,
+)
+
+/** This exercise as the user sees it, with their edits laid over the seed's values. */
+fun ExerciseEntity.withOverride(o: ExerciseOverrideEntity?): ExerciseEntity =
+  if (o == null) this
+  else copy(
+    name = o.name ?: name,
+    category = o.category ?: category,
+    description = o.description ?: description,
+    minutes = o.minutes ?: minutes,
+    difficulty = o.difficulty ?: difficulty,
+    tempoBpm = o.tempoBpm ?: tempoBpm,
+    families = o.families ?: families,
+    appliesToTune = o.appliesToTune ?: appliesToTune,
+  )
 
 /**
  * User-owned state for a tune; re-seeding never touches it. The scheduling columns are a cache that can be

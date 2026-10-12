@@ -2,6 +2,8 @@ package com.larakelley.woodshed.ui.browse
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.larakelley.woodshed.data.ExerciseDraft
+import com.larakelley.woodshed.data.ExerciseLibrary
 import com.larakelley.woodshed.data.Playlist
 import com.larakelley.woodshed.data.PlaylistService
 import com.larakelley.woodshed.data.PracticeService
@@ -75,9 +77,16 @@ data class ExerciseRow(
   val appliesToTune: Boolean = false,
   /** Session focus areas that draw on this exercise's category. */
   val focus: List<String> = emptyList(),
+  val id: Long = 0,
+  /** Added by the user. */
+  val userCreated: Boolean = false,
+  /** A seeded exercise the user has edited. */
+  val edited: Boolean = false,
+  /** The exercise's details as the editor starts from them. */
+  val draft: ExerciseDraft = ExerciseDraft(),
 )
 
-fun exerciseRow(e: ExerciseEntity): ExerciseRow {
+fun exerciseRow(e: ExerciseEntity, edited: Boolean = false): ExerciseRow {
   val tempo = e.tempoBpm?.let { ", $it bpm" } ?: ""
   return ExerciseRow(
     name = e.name,
@@ -90,6 +99,10 @@ fun exerciseRow(e: ExerciseEntity): ExerciseRow {
     tempoBpm = e.tempoBpm,
     appliesToTune = e.appliesToTune,
     focus = Focus.entries.filter { e.category in it.categories }.map { it.label },
+    id = e.id,
+    userCreated = e.userCreated,
+    edited = edited,
+    draft = ExerciseDraft.of(e),
   )
 }
 
@@ -158,6 +171,8 @@ data class BrowseState(
   val categories: List<String> = emptyList(),
   val seedError: String? = null,
   val playlists: List<Playlist> = emptyList(),
+  /** Every exercise, unfiltered, for looking one up and checking names. */
+  val allExercises: List<ExerciseRow> = emptyList(),
   /** Every tune, unfiltered, for looking one up by id or slug. */
   val allTunes: List<TuneRow> = emptyList(),
 )
@@ -249,7 +264,12 @@ fun sortTunes(rows: List<TuneRow>, sort: TuneSort): List<TuneRow> = when (sort) 
  * Exercises for [filter]'s instrument, or with none chosen, for any of [mine]; an empty [mine] keeps everything.
  * An instrument the user no longer plays counts as none chosen.
  */
-fun exerciseRows(exercises: List<ExerciseEntity>, filter: ExerciseFilter = ExerciseFilter(), mine: Collection<Instrument> = emptyList()): List<ExerciseRow> {
+fun exerciseRows(
+  exercises: List<ExerciseEntity>,
+  filter: ExerciseFilter = ExerciseFilter(),
+  mine: Collection<Instrument> = emptyList(),
+  edited: Set<Long> = emptySet(),
+): List<ExerciseRow> {
   val chosen = filter.instrument?.takeIf { mine.isEmpty() || it in mine }
   return exercises
     .filter { e -> if (chosen != null) chosen.suits(e.families, e.category) else mine.isEmpty() || mine.any { it.suits(e.families, e.category) } }
@@ -263,7 +283,7 @@ fun exerciseRows(exercises: List<ExerciseEntity>, filter: ExerciseFilter = Exerc
         ExerciseSort.DIFFICULTY -> compareBy({ it.difficulty }, { it.name.lowercase() })
       }
     )
-    .map(::exerciseRow)
+    .map { exerciseRow(it, it.id in edited) }
 }
 
 /** What the tune detail screen can do to a tune. */
@@ -283,6 +303,14 @@ data class TuneActions(
   val resetTune: (Long) -> Unit = {},
 )
 
+/** What the exercise editor can do. */
+data class ExerciseActions(
+  /** Saves an exercise: a new one when the id is null. Reports the saved exercise's id. */
+  val save: (Long?, ExerciseDraft, (Long) -> Unit) -> Unit = { _, _, _ -> },
+  val delete: (Long) -> Unit = {},
+  val reset: (Long) -> Unit = {},
+)
+
 /** What the playlist screens and the tune page's playlist picker can do. */
 data class PlaylistActions(
   /** Creates a playlist, adding the tune if one is given, and reports the new playlist's id. */
@@ -299,6 +327,7 @@ class BrowseViewModel(
   private val practice: PracticeService,
   private val tunes: TuneLibrary,
   private val lists: PlaylistService,
+  private val exerciseLibrary: ExerciseLibrary,
 ) : ViewModel() {
   private val tuneFilter = MutableStateFlow(TuneFilter())
   private val exerciseFilter = MutableStateFlow(ExerciseFilter(instrument = repository.instrument.value))
@@ -310,7 +339,13 @@ class BrowseViewModel(
 
   private data class TunePart(val all: List<TuneRow>, val filter: TuneFilter, val rows: List<TuneRow>, val playlists: List<Playlist>)
 
-  private data class ExercisePart(val all: List<ExerciseEntity>, val filter: ExerciseFilter, val mine: List<Instrument>, val rows: List<ExerciseRow>)
+  private data class ExercisePart(
+    val all: List<ExerciseEntity>,
+    val filter: ExerciseFilter,
+    val mine: List<Instrument>,
+    val rows: List<ExerciseRow>,
+    val allRows: List<ExerciseRow>,
+  )
 
   private val tunePart = combine(library, tuneFilter, repository.playlists) { rows, filter, playlists ->
     // A deleted playlist drops out of the filter rather than leaving an empty list.
@@ -319,10 +354,11 @@ class BrowseViewModel(
     TunePart(rows, shown, filterTunes(rows, shown, chosen?.tuneIds), playlists)
   }
 
-  private val exercisePart = combine(repository.exercises, exerciseFilter, repository.myInstruments) { exercises, filter, mine ->
+  private val exercisePart = combine(repository.exercises, exerciseFilter, repository.myInstruments, repository.exerciseOverrides) { exercises, filter, mine, overrides ->
     val offered = Instrument.entries.filter { mine.isEmpty() || it in mine }
     val shown = filter.copy(instrument = filter.instrument?.takeIf { it in offered })
-    ExercisePart(exercises, shown, offered, exerciseRows(exercises, shown, mine))
+    val edited = overrides.map { it.exerciseId }.toSet()
+    ExercisePart(exercises, shown, offered, exerciseRows(exercises, shown, mine, edited), exerciseRows(exercises, edited = edited))
   }
 
   val state: StateFlow<BrowseState> =
@@ -334,6 +370,7 @@ class BrowseViewModel(
           exercises = ex.rows,
           totalExercises = exerciseRows(ex.all, mine = ex.mine).size,
           myInstruments = ex.mine,
+          allExercises = ex.allRows,
           tuneFilter = tunes.filter,
           exerciseFilter = ex.filter,
           styles = tunes.all.mapNotNull { it.style }.distinct().sorted(),
@@ -365,6 +402,19 @@ class BrowseViewModel(
     },
     deleteTune = { launch { tunes.delete(it) } },
     resetTune = { launch { tunes.resetToOriginal(it) } },
+  )
+
+  val exerciseActions = ExerciseActions(
+    save = { id, draft, saved ->
+      viewModelScope.launch {
+        if (id == null) saved(exerciseLibrary.add(draft)) else {
+          exerciseLibrary.edit(id, draft)
+          saved(id)
+        }
+      }
+    },
+    delete = { launch { exerciseLibrary.delete(it) } },
+    reset = { launch { exerciseLibrary.resetToOriginal(it) } },
   )
 
   val playlistActions = PlaylistActions(

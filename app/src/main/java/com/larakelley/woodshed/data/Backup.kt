@@ -1,6 +1,8 @@
 package com.larakelley.woodshed.data
 
 import androidx.room.withTransaction
+import com.larakelley.woodshed.data.db.ExerciseEntity
+import com.larakelley.woodshed.data.db.ExerciseOverrideEntity
 import com.larakelley.woodshed.data.db.PlaylistEntity
 import com.larakelley.woodshed.data.db.PlaylistTuneEntity
 import com.larakelley.woodshed.data.db.ReviewEventEntity
@@ -10,6 +12,7 @@ import com.larakelley.woodshed.data.db.TuneOverrideEntity
 import com.larakelley.woodshed.data.db.TuneStateEntity
 import com.larakelley.woodshed.data.db.WoodshedDatabase
 import com.larakelley.woodshed.domain.Comfort
+import com.larakelley.woodshed.domain.Family
 import com.larakelley.woodshed.domain.Grade
 import com.larakelley.woodshed.domain.Key
 import com.larakelley.woodshed.domain.KeyPolicy
@@ -36,6 +39,10 @@ data class Backup(
   @SerialName("my_tunes") val myTunes: List<BackupMyTune> = emptyList(),
   /** The user's edits to seeded tunes. */
   val edits: List<BackupEdit> = emptyList(),
+  /** Exercises the user added, restored before history that refers to them by name. */
+  @SerialName("my_exercises") val myExercises: List<BackupExercise> = emptyList(),
+  /** The user's edits to seeded exercises, keyed by the seed's name. */
+  @SerialName("exercise_edits") val exerciseEdits: List<BackupExerciseEdit> = emptyList(),
   /** Playlists, with tunes named by slug in order. */
   val playlists: List<BackupPlaylist> = emptyList(),
   val tunes: List<BackupTune>,
@@ -71,6 +78,32 @@ data class BackupMyTune(
   val key: String? = null,
   val tonality: Tonality? = null,
   val collection: String = "Standards",
+)
+
+@Serializable
+data class BackupExercise(
+  val name: String,
+  val category: String,
+  val description: String,
+  val minutes: Int,
+  val difficulty: Int,
+  @SerialName("tempo_bpm") val tempoBpm: Int? = null,
+  val families: List<Family> = emptyList(),
+  @SerialName("applies_to_tune") val appliesToTune: Boolean = false,
+)
+
+@Serializable
+data class BackupExerciseEdit(
+  val exercise: String,
+  val name: String? = null,
+  val category: String? = null,
+  val description: String? = null,
+  val minutes: Int? = null,
+  val difficulty: Int? = null,
+  @SerialName("tempo_bpm") val tempoBpm: Int? = null,
+  val families: List<Family>? = null,
+  @SerialName("applies_to_tune") val appliesToTune: Boolean? = null,
+  @SerialName("updated_at") val updatedAt: Long = 0,
 )
 
 @Serializable
@@ -169,6 +202,13 @@ class BackupService(
       myTunes = db.standards().userCreated().filter { it.archivedAt == null }.map {
         BackupMyTune(it.slug, it.title, it.composer, it.year, it.bars, it.timeSignature, it.form, it.style, it.keyName, it.tonality, it.collection)
       },
+      myExercises = db.exercises().userCreated().filter { it.archivedAt == null }.map {
+        BackupExercise(it.name, it.category, it.description, it.minutes, it.difficulty, it.tempoBpm, it.families, it.appliesToTune)
+      },
+      exerciseEdits = db.exerciseOverrides().all().mapNotNull { o ->
+        val name = exercises[o.exerciseId] ?: return@mapNotNull null
+        BackupExerciseEdit(name, o.name, o.category, o.description, o.minutes, o.difficulty, o.tempoBpm, o.families, o.appliesToTune, o.updatedAt)
+      },
       playlists = db.playlists().all().let { lists ->
         val created = lists.associate { it.id to it.createdAt }
         playlists(lists, db.playlists().entries()).map { p -> BackupPlaylist(p.name, p.tuneIds.mapNotNull { slugs[it] }, created.getValue(p.id)) }
@@ -219,6 +259,31 @@ class BackupService(
         )
         val existing = db.standards().bySlug(t.slug)
         if (existing == null) db.standards().insert(row) else db.standards().update(listOf(row.copy(id = existing.id)))
+      }
+      val keepExercises = backup.myExercises.map { it.name }.toSet()
+      for (old in db.exercises().userCreated()) {
+        if (old.name !in keepExercises && old.archivedAt == null) db.exercises().update(listOf(old.copy(archivedAt = now())))
+      }
+      for (e in backup.myExercises) {
+        val row = ExerciseEntity(
+          name = e.name, category = e.category, description = e.description, minutes = e.minutes, difficulty = e.difficulty,
+          tempoBpm = e.tempoBpm, families = e.families, appliesToTune = e.appliesToTune, userCreated = true,
+        )
+        val existing = db.exercises().byName(e.name)
+        // A seeded exercise with the same name keeps it; the restored one is marked as the user's.
+        when {
+          existing == null -> db.exercises().insert(row)
+          existing.userCreated -> db.exercises().update(listOf(row.copy(id = existing.id)))
+          else -> db.exercises().insert(row.copy(name = "${e.name} (yours)"))
+        }
+      }
+      db.exerciseOverrides().deleteAll()
+      val exerciseIds = db.exercises().all().associate { it.name to it.id }
+      for (e in backup.exerciseEdits) {
+        val id = exerciseIds[e.exercise] ?: continue
+        db.exerciseOverrides().upsert(
+          ExerciseOverrideEntity(id, e.name, e.category, e.description, e.minutes, e.difficulty, e.tempoBpm, e.families, e.appliesToTune, e.updatedAt)
+        )
       }
       val ids = db.standards().all().associate { it.slug to it.id }
       db.tuneOverrides().deleteAll()
