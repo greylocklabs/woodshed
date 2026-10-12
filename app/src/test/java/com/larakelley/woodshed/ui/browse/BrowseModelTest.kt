@@ -145,6 +145,13 @@ class BrowseModelTest {
   }
 
   @Test
+  fun aPlaylistShowsOnlyItsTunesInItsOrder() {
+    val rows = tuneRows(listOf(standard(1, "Alpha"), standard(2, "Bravo"), standard(3, "Charlie")), Transposition.C)
+    assertEquals(listOf("Charlie", "Alpha"), filterTunes(rows, TuneFilter(sort = TuneSort.TITLE), playlist = listOf(3L, 1L)).map { it.title })
+    assertEquals(listOf("Charlie"), filterTunes(rows, TuneFilter(query = "char"), playlist = listOf(3L, 1L)).map { it.title })
+  }
+
+  @Test
   fun exercisesSortByNameMinutesAndDifficulty() {
     val exercises = listOf(
       exercise(1, "Scales", emptyList()).copy(minutes = 10, difficulty = 3, category = "Scales & Patterns"),

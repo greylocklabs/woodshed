@@ -71,6 +71,9 @@ class WoodshedRepository(
   /** The user's edits to seeded tunes. */
   val overrides: Flow<List<TuneOverrideEntity>> = db.tuneOverrides().observeAll()
 
+  /** The user's playlists, each with its tunes in order. */
+  val playlists: Flow<List<Playlist>> = combine(db.playlists().observeAll(), db.playlists().observeEntries(), ::playlists)
+
   /** Active tunes as the user sees them, with their edits applied. */
   val standards: Flow<List<StandardEntity>> = combine(db.standards().observeActive(), overrides) { standards, overrides ->
     val byId = overrides.associateBy { it.standardId }

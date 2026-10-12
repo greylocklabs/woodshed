@@ -1,6 +1,8 @@
 package com.larakelley.woodshed.data
 
 import androidx.room.withTransaction
+import com.larakelley.woodshed.data.db.PlaylistEntity
+import com.larakelley.woodshed.data.db.PlaylistTuneEntity
 import com.larakelley.woodshed.data.db.ReviewEventEntity
 import com.larakelley.woodshed.data.db.StandardEntity
 import com.larakelley.woodshed.data.db.TuneKnowledgeEntity
@@ -34,6 +36,8 @@ data class Backup(
   @SerialName("my_tunes") val myTunes: List<BackupMyTune> = emptyList(),
   /** The user's edits to seeded tunes. */
   val edits: List<BackupEdit> = emptyList(),
+  /** Playlists, with tunes named by slug in order. */
+  val playlists: List<BackupPlaylist> = emptyList(),
   val tunes: List<BackupTune>,
   val knowledge: List<BackupKnowledge>,
   val reviews: List<BackupReview>,
@@ -68,6 +72,9 @@ data class BackupMyTune(
   val tonality: Tonality? = null,
   val collection: String = "Standards",
 )
+
+@Serializable
+data class BackupPlaylist(val name: String, val tunes: List<String>, @SerialName("created_at") val createdAt: Long = 0)
 
 @Serializable
 data class BackupEdit(
@@ -129,7 +136,15 @@ data class BackupReview(
 )
 
 /** What a restore brought back, and how many rows named tunes this install does not have. */
-data class RestoreResult(val tunes: Int, val knowledge: Int, val reviews: Int, val skipped: Int, val myTunes: Int = 0, val edits: Int = 0)
+data class RestoreResult(
+  val tunes: Int,
+  val knowledge: Int,
+  val reviews: Int,
+  val skipped: Int,
+  val myTunes: Int = 0,
+  val edits: Int = 0,
+  val playlists: Int = 0,
+)
 
 class BackupException(message: String) : Exception(message)
 
@@ -153,6 +168,10 @@ class BackupService(
       settings = repository.backupSettings(),
       myTunes = db.standards().userCreated().filter { it.archivedAt == null }.map {
         BackupMyTune(it.slug, it.title, it.composer, it.year, it.bars, it.timeSignature, it.form, it.style, it.keyName, it.tonality, it.collection)
+      },
+      playlists = db.playlists().all().let { lists ->
+        val created = lists.associate { it.id to it.createdAt }
+        playlists(lists, db.playlists().entries()).map { p -> BackupPlaylist(p.name, p.tuneIds.mapNotNull { slugs[it] }, created.getValue(p.id)) }
       },
       edits = db.tuneOverrides().all().mapNotNull { o ->
         val slug = slugs[o.standardId] ?: return@mapNotNull null
@@ -255,7 +274,13 @@ class BackupService(
         )
         reviews++
       }
-      RestoreResult(tunes, knowledge, reviews, skipped, backup.myTunes.size, edits)
+      db.playlists().deleteAll()
+      for (p in backup.playlists) {
+        val id = db.playlists().insert(PlaylistEntity(name = p.name, createdAt = p.createdAt))
+        val order = p.tunes.mapNotNull { ids[it] }.distinct()
+        db.playlists().upsertEntries(order.mapIndexed { i, tune -> PlaylistTuneEntity(id, tune, i) })
+      }
+      RestoreResult(tunes, knowledge, reviews, skipped, backup.myTunes.size, edits, backup.playlists.size)
     }
     repository.applyBackupSettings(backup.settings)
     return result

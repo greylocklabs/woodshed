@@ -150,4 +150,19 @@ class MigrationTest {
       db.execSQL("INSERT INTO tune_overrides (standardId, keyName, keyPitchClass, updatedAt) VALUES (7, 'D', 2, 1)")
     }
   }
+
+  @Test
+  fun version7To8AddsPlaylists() {
+    helper.createDatabase("migration-test-7", 7).use { db ->
+      db.execSQL(
+        "INSERT INTO standards (id, slug, title, composer, year, bars, timeSignature, form, style, keyName, keyPitchClass, tonality, archivedAt, collection, verified, userCreated) " +
+          "VALUES (7, 'solar', 'Solar', 'Miles Davis', 1954, 12, '4/4', NULL, 'Swing', 'C', 0, 'MINOR', NULL, 'Standards', 1, 0)"
+      )
+    }
+    helper.runMigrationsAndValidate("migration-test-7", 8, true).use { db ->
+      db.execSQL("INSERT INTO playlists (id, name, createdAt) VALUES (1, 'Gig', 0)")
+      db.execSQL("INSERT INTO playlist_tunes (playlistId, standardId, position) VALUES (1, 7, 0)")
+      db.query("SELECT COUNT(*) FROM playlist_tunes").use { it.moveToFirst(); assertEquals(1, it.getInt(0)) }
+    }
+  }
 }

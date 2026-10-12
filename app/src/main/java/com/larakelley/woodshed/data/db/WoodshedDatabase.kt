@@ -100,6 +100,33 @@ interface TuneOverrideDao {
 }
 
 @Dao
+interface PlaylistDao {
+  @Query("SELECT * FROM playlists ORDER BY name COLLATE NOCASE") fun observeAll(): Flow<List<PlaylistEntity>>
+
+  @Query("SELECT * FROM playlists") suspend fun all(): List<PlaylistEntity>
+
+  @Query("SELECT * FROM playlist_tunes ORDER BY playlistId, position") fun observeEntries(): Flow<List<PlaylistTuneEntity>>
+
+  @Query("SELECT * FROM playlist_tunes ORDER BY playlistId, position") suspend fun entries(): List<PlaylistTuneEntity>
+
+  @Query("SELECT * FROM playlist_tunes WHERE playlistId = :playlistId ORDER BY position") suspend fun entries(playlistId: Long): List<PlaylistTuneEntity>
+
+  @Insert suspend fun insert(playlist: PlaylistEntity): Long
+
+  @Update suspend fun update(playlist: PlaylistEntity)
+
+  @Query("DELETE FROM playlists WHERE id = :id") suspend fun delete(id: Long)
+
+  @Query("DELETE FROM playlists") suspend fun deleteAll()
+
+  @Upsert suspend fun upsertEntries(entries: List<PlaylistTuneEntity>)
+
+  @Query("DELETE FROM playlist_tunes WHERE playlistId = :playlistId AND standardId = :standardId") suspend fun removeEntry(playlistId: Long, standardId: Long)
+
+  @Query("DELETE FROM playlist_tunes WHERE playlistId = :playlistId") suspend fun clear(playlistId: Long)
+}
+
+@Dao
 interface ReviewEventDao {
   @Insert suspend fun insert(event: ReviewEventEntity): Long
 
@@ -122,8 +149,8 @@ class Converters {
 }
 
 @Database(
-  entities = [StandardEntity::class, ExerciseEntity::class, TuneStateEntity::class, ReviewEventEntity::class, TuneKnowledgeEntity::class, TuneOverrideEntity::class],
-  version = 7,
+  entities = [StandardEntity::class, ExerciseEntity::class, TuneStateEntity::class, ReviewEventEntity::class, TuneKnowledgeEntity::class, TuneOverrideEntity::class, PlaylistEntity::class, PlaylistTuneEntity::class],
+  version = 8,
   autoMigrations = [
     AutoMigration(from = 1, to = 2),
     AutoMigration(from = 2, to = 3),
@@ -131,6 +158,7 @@ class Converters {
     AutoMigration(from = 4, to = 5, spec = WoodshedDatabase.DropBooks::class),
     AutoMigration(from = 5, to = 6, spec = WoodshedDatabase.SplitKey::class),
     AutoMigration(from = 6, to = 7),
+    AutoMigration(from = 7, to = 8),
   ],
 )
 @TypeConverters(Converters::class)
@@ -146,6 +174,8 @@ abstract class WoodshedDatabase : RoomDatabase() {
   abstract fun tuneKnowledge(): TuneKnowledgeDao
 
   abstract fun tuneOverrides(): TuneOverrideDao
+
+  abstract fun playlists(): PlaylistDao
 
   /** Version 4 listed every fake book a tune is printed in; version 5 keeps only its collection. */
   @DeleteColumn(tableName = "standards", columnName = "books")

@@ -63,6 +63,8 @@ data class DiceUi(
   val styles: List<String> = emptyList(),
   val exercises: List<String> = emptyList(),
   val graded: Grade? = null,
+  /** Playlists to roll from, by id and name. */
+  val playlists: List<Pair<Long, String>> = emptyList(),
 )
 
 class DiceViewModel(
@@ -73,6 +75,18 @@ class DiceViewModel(
   private val _ui = MutableStateFlow(DiceUi())
   val ui: StateFlow<DiceUi> = _ui.asStateFlow()
   private var roll: Roll? = null
+
+  init {
+    viewModelScope.launch {
+      repository.playlists.collect { lists ->
+        _ui.update { ui ->
+          // A deleted playlist stops constraining the roll.
+          val kept = ui.constraints.playlistId?.takeIf { id -> lists.any { it.id == id } }
+          ui.copy(playlists = lists.map { it.id to it.name }, constraints = ui.constraints.copy(playlistId = kept))
+        }
+      }
+    }
+  }
 
   fun setOptions(styles: List<String>, exercises: List<String>) = _ui.update { it.copy(styles = styles, exercises = exercises) }
 
@@ -143,7 +157,14 @@ fun DiceScreen(
       verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
       FlowRow(Modifier.padding(vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-        DropdownChip("Tunes", c.pool.label, TunePool.entries.map { it.label to it }) { p -> onConstrain { it.copy(pool = p ?: TunePool.MY_TUNES) } }
+        if (c.playlistId == null) {
+          DropdownChip("Tunes", c.pool.label, TunePool.entries.map { it.label to it }) { p -> onConstrain { it.copy(pool = p ?: TunePool.MY_TUNES) } }
+        }
+        if (ui.playlists.isNotEmpty()) {
+          DropdownChip("Playlist", ui.playlists.firstOrNull { it.first == c.playlistId }?.second ?: "Any", ui.playlists.map { it.second to it.first }, allowAny = true) { id ->
+            onConstrain { it.copy(playlistId = id) }
+          }
+        }
         DropdownChip("Style", c.style ?: "Any", ui.styles.map { it to it }, allowAny = true) { s -> onConstrain { it.copy(style = s) } }
         DropdownChip("Collection", c.collection ?: "Any", SeedValidator.COLLECTIONS.map { it to it }, allowAny = true) { v -> onConstrain { it.copy(collection = v) } }
         DropdownChip("Exercise", c.exerciseName ?: "Any", ui.exercises.map { it to it }, allowAny = true) { e -> onConstrain { it.copy(exerciseName = e) } }
