@@ -358,9 +358,10 @@ length, focus areas and tunes (due ones ticked), review and edit the plan, then
 step through it with a per-block timer. The foreground service, notification and
 interruption-safe state are still to do.
 
-**M3 — Audio.** Drone at arbitrary pitch, tempo control per exercise. The
-sample-accurate metronome on a streaming `AudioTrack` already shipped with the
-card screens. Measure latency before considering Oboe. *Session mode stops
+**M3 — Audio.** Drone at arbitrary pitch. Shipped early: the sample-accurate
+metronome on a streaming `AudioTrack`, now its own tab with tap tempo, jazz
+tempo presets, meters and 2-and-4 clicks, and a microphone tuner tab using YIN
+pitch detection. Measure latency before considering Oboe. *Session mode stops
 needing a second device on the stand.*
 
 **M4 — Vocabulary deck.** Lick capture — title, notes, optional photo of
@@ -368,10 +369,49 @@ manuscript, optional audio memo — plus `PER_KEY` cards over the circle of
 fourths. The one milestone that needs new content from you, which is why it is
 last rather than first. *Closes the gap in finding one.*
 
-**M5 — Living with it.** Stats derived from the event log, JSON export as real
-backup, Bluetooth pedal, landscape polish, practice reminder. Revisit the phase
+**M5 — Living with it.** Stats derived from the event log, Bluetooth pedal,
+landscape polish, practice reminder. JSON backup to a file shipped early. Revisit the phase
 shares and the new-card cap against several months of actual reps. *The first
 point at which the guesses can be replaced with measurements.*
+
+**M6 — Your own material.** User-owned rows beside the seed, never touched by
+re-seeding, and included in the backup file:
+
+- **Your tunes:** add, edit and delete tunes. They behave like seeded tunes in
+  lists, sessions and the Random tab. Editing a seeded tune stores an override
+  rather than changing the seed row.
+- **Playlists:** named, ordered lists of tunes, such as a gig set or the tunes
+  for a jam. A playlist can be the tune pool for a session or a roll.
+- **Transcribe tab:** solos to learn by ear. Each one names the tune, soloist,
+  recording and a link, with optional start and end times, and a status of
+  wishlist, active or done. The tab is seeded with a few solos Lara picks, and
+  users add their own. Transcriptions are scheduled and graded like tunes. An
+  active transcription takes priority in session plans and in the Random tab.
+
+**M7 — Recordings.** Each standard links to a classic recording or a short set
+of them: artist, album, year and a listening link. Finding these takes a large
+research pass, run like the key research: sourced, in batches, never guessed.
+Links rot, so each one carries the date it was last checked.
+
+**M8 — Reporting problems in context.** A "Report a problem" action on a tune,
+exercise, recording or transcription opens a new GitHub issue in the browser,
+prefilled with the item, the field in question (key, link, credit) and the app
+version. It uses GitHub's new-issue URL, so the app holds no token and sends
+nothing until the user submits. It adds no personal details to the report.
+Broken links, wrong keys and missing recordings are the expected bulk.
+
+**Polish backlog.** Small, independent, no new data:
+
+- An emoji before each tab name in the main navigation.
+- Metronome: show "bpm" only under the current tempo; rename "Tempos" to
+  "Common tempos", since the list is not complete, and move it to the end so
+  the main controls fit without scrolling.
+- An A-Z fast-scroll strip on the right edge of long lists such as Tunes.
+- Exercises tab: filter by every instrument in the instrument list, not just
+  the four exercise families, using the same rule as session planning.
+  Instruments outside those families see the exercises for everyone.
+- Sorting on the Tunes tab (title, composer, year, key, last practiced,
+  comfort) and the Exercises tab (category, name, minutes, difficulty).
 
 ---
 
@@ -406,3 +446,6 @@ starting set is still open.
 load-bearing bet of this plan. If *All The Things You Are · changes without the
 melody · written F* feels like a chore assignment rather than a prompt, M1 needs
 rethinking before M4 builds on the same model.
+
+**Which solos seed the Transcribe tab?** M6 starts it with a few solos Lara
+picks. The list, and the recording and timestamps for each, are still to choose.
