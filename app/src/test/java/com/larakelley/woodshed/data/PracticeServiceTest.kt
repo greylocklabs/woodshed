@@ -164,8 +164,8 @@ class PracticeServiceTest {
   }
 
   @Test
-  fun unparseableKeyStillMakesACard() = runTest {
-    practice.startLearning(id("on-green-dolphin-street"))
+  fun unknownKeyStillMakesACard() = runTest {
+    practice.startLearning(id("think-on-me"))
     val card = practice.nextCard(Transposition.Bb)!!
     assertNull(card.writtenKey)
     practice.grade(card, Grade.GOOD)

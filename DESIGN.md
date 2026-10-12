@@ -114,6 +114,13 @@ Two tiers share the file, marked by `verified`:
   itself derived from Impro-Visor's Imaginary Book. Year and form are left
   empty, and 829 titles found in neither source carry only a title.
 
+Keys missing after that were researched tune by tune: the corpus chords, iReal
+Pro forum charts (where three or more agree they win), Musicnotes listings,
+guitarcomposerstoolbox Real Book pages, Hooktheory and IMSLP. Musicnotes gives the
+key of one edition rather than the song, so a key resting on a single edition is
+a starting point, not a citation. Tunes with no source stating a key, or whose
+sources disagree, stay null.
+
 Field coverage, which is the useful part to know before designing around it:
 
 | Field | Verified: distinct / absent | Bulk: absent |
@@ -121,7 +128,7 @@ Field coverage, which is the useful part to know before designing around it:
 | form | 15 (AABA at 203) / 195 | all |
 | style | 13 / 73 | 1,193 |
 | time_signature | 5 / 88 | 780 |
-| common_key | 23 / 119 | 1,193 |
+| key, tonality | 22 / 8 | 264 |
 | composer | / 5 | 779 |
 
 **Absence is common and meaningful.** Model every field but title, slug and
