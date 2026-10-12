@@ -65,6 +65,7 @@ import com.larakelley.woodshed.domain.delayLabel
 import com.larakelley.woodshed.domain.titleSortKey
 import com.larakelley.woodshed.theme.BackButton
 import com.larakelley.woodshed.theme.CallieChip
+import com.larakelley.woodshed.theme.EmptyState
 import com.larakelley.woodshed.theme.StickerButton
 import com.larakelley.woodshed.theme.neutralSticker
 import com.larakelley.woodshed.ui.report.ReportButton
@@ -166,11 +167,33 @@ fun BrowseScreen(
         "Tuner" -> tunerTab?.invoke()
         "Tunes" -> {
           TuneFilters(state, onTuneFilter, onAdd = { editing = NEW_TUNE })
-          TuneList(state.tunes, alphabetical = state.tuneFilter.sort == TuneSort.TITLE, onOpen = { openSlug = it })
+          if (state.tunes.isEmpty()) {
+            EmptyState(
+              "🔍",
+              "No tunes match",
+              "Nothing fits this search and these filters. Clear them, or add the tune yourself.",
+              action = "Clear search and filters",
+              onAction = { onTuneFilter { TuneFilter(sort = it.sort) } },
+              scrolls = true,
+            )
+          } else {
+            TuneList(state.tunes, alphabetical = state.tuneFilter.sort == TuneSort.TITLE, onOpen = { openSlug = it })
+          }
         }
         else -> {
           ExerciseFilters(state, onExerciseFilter)
-          ExerciseList(state.exercises, onOpen = { openExercise = it })
+          if (state.exercises.isEmpty()) {
+            EmptyState(
+              "💪",
+              "No exercises match",
+              "Nothing fits this search and these filters.",
+              action = "Clear search and filters",
+              onAction = { onExerciseFilter { ExerciseFilter(instrument = it.instrument, sort = it.sort) } },
+              scrolls = true,
+            )
+          } else {
+            ExerciseList(state.exercises, onOpen = { openExercise = it })
+          }
         }
       }
     }

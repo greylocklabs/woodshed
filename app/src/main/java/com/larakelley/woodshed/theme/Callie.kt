@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
@@ -25,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -119,4 +121,36 @@ fun SwitchRow(
 @Composable
 fun Helper(text: String, modifier: Modifier = Modifier) {
   Text(text, style = MaterialTheme.typography.bodySmall, color = LocalCallie.current.textMuted, modifier = modifier)
+}
+
+/**
+ * What a list shows when nothing is in it: a large emoji, a heading, a line of help and, when there is a way out,
+ * a button to take it. Centred in the space the list would have used.
+ */
+@Composable
+fun EmptyState(
+  emoji: String,
+  title: String,
+  message: String,
+  modifier: Modifier = Modifier,
+  action: String? = null,
+  onAction: () -> Unit = {},
+  /** Set where the empty state fills a fixed area, so it scrolls when space is short; leave off inside a scrolling list. */
+  scrolls: Boolean = false,
+) {
+  Column(
+    modifier.fillMaxWidth().then(if (scrolls) Modifier.verticalScroll(rememberScrollState()) else Modifier)
+      .padding(horizontal = 32.dp, vertical = 40.dp).testTag("empty-state"),
+    horizontalAlignment = Alignment.CenterHorizontally,
+    verticalArrangement = Arrangement.spacedBy(8.dp),
+  ) {
+    Text(emoji, fontSize = 56.sp)
+    Text(title, style = MaterialTheme.typography.headlineSmall, textAlign = TextAlign.Center)
+    Text(message, style = MaterialTheme.typography.bodyMedium, color = LocalCallie.current.textMuted, textAlign = TextAlign.Center)
+    if (action != null) {
+      StickerButton(onClick = onAction, sticker = neutralSticker, modifier = Modifier.padding(top = 8.dp).height(44.dp).testTag("empty-action"), contentPadding = PaddingValues(horizontal = 18.dp)) {
+        Text(action, style = MaterialTheme.typography.labelLarge)
+      }
+    }
+  }
 }

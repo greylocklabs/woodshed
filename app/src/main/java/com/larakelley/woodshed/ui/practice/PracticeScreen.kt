@@ -47,6 +47,7 @@ import com.larakelley.woodshed.domain.Instrument
 import com.larakelley.woodshed.domain.PlanBlock
 import com.larakelley.woodshed.theme.BackButton
 import com.larakelley.woodshed.theme.CallieChip
+import com.larakelley.woodshed.theme.EmptyState
 import com.larakelley.woodshed.theme.LocalCallie
 import com.larakelley.woodshed.theme.StickerButton
 import com.larakelley.woodshed.theme.neutralSticker
@@ -123,7 +124,7 @@ private fun SessionSetup(ui: PracticeUi, actions: SetupActions) {
         Spacer(Modifier.height(16.dp))
         Text("Tunes (${setup.selected.size} picked)", style = MaterialTheme.typography.titleMedium)
         if (setup.tunes.isEmpty()) {
-          Text("🪵 No tunes yet. Add some to your wishlist or start learning them in the Tunes tab.", modifier = Modifier.padding(vertical = 8.dp))
+          EmptyState("🪵", "No tunes yet", "Add tunes to your wishlist or start learning them in the Tunes tab. You can still shed exercises without them.")
         }
       }
       var lastGroup: TuneGroup? = null
@@ -174,7 +175,7 @@ private fun PlanReview(plan: List<PlanItem>, actions: SetupActions) {
       Text("${plan.sumOf { it.block.minutes }} min planned", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f).testTag("plan-total"))
     }
     if (plan.isEmpty()) {
-      Text("🤷 Nothing fits. Go back and pick tunes, a focus or a longer session.", modifier = Modifier.padding(16.dp))
+      EmptyState("🤷", "Nothing fits", "Go back and pick tunes, a focus or a longer session.", action = "Back to setup", onAction = actions.discardPlan)
     }
     LazyColumn(Modifier.weight(1f).fillMaxWidth()) {
       itemsIndexed(plan) { i, item ->
