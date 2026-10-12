@@ -6,48 +6,49 @@ import org.junit.Test
 
 class KeyTest {
   @Test
-  fun eachInstrumentReadsItsBuiltInPitchAsWrittenC() {
+  fun eachTranspositionReadsItsOwnPitchAsWrittenC() {
     // A wrong offset makes every displayed key silently wrong; this is the check that catches it.
-    for (instrument in Instrument.entries) {
-      val builtIn = requireNotNull(Key.parse(instrument.builtIn))
-      assertEquals(instrument.name, "C", builtIn.writtenFor(instrument).displayName)
+    for (transposition in Transposition.entries) {
+      val builtIn = requireNotNull(Key.parse(transposition.name))
+      assertEquals(transposition.name, "C", builtIn.writtenFor(transposition).displayName)
     }
   }
 
   @Test
   fun knownTranspositions() {
     val cases = listOf(
-      Triple("C", Instrument.ALTO_SAX, "A"),
-      Triple("Bb", Instrument.TENOR_SAX, "C"),
-      Triple("F", Instrument.TRUMPET, "G"),
-      Triple("Eb", Instrument.ALTO_FLUTE, "Ab"),
-      Triple("G-", Instrument.ALTO_SAX, "E minor"),
-      Triple("Eb-", Instrument.TENOR_SAX, "F minor"),
-      Triple("Db", Instrument.TROMBONE, "Db"),
+      Triple("C", Transposition.Eb, "A"),
+      Triple("Bb", Transposition.Bb, "C"),
+      Triple("F", Transposition.Bb, "G"),
+      Triple("Eb", Transposition.G, "Ab"),
+      Triple("Eb", Transposition.F, "Bb"),
+      Triple("G-", Transposition.Eb, "E minor"),
+      Triple("Eb-", Transposition.Bb, "F minor"),
+      Triple("Db", Transposition.C, "Db"),
     )
-    for ((concert, instrument, written) in cases) {
-      assertEquals("$concert on $instrument", written, Key.parse(concert)!!.writtenFor(instrument).displayName)
+    for ((concert, transposition, written) in cases) {
+      assertEquals("$concert in $transposition", written, Key.parse(concert)!!.writtenFor(transposition).displayName)
     }
   }
 
   @Test
-  fun everyKeyOnEveryInstrumentInBothModes() {
-    // 11 instruments x 12 keys x 2 modes = 264 cases.
+  fun everyKeyInEveryTranspositionInBothModes() {
+    // 5 transpositions x 12 keys x 2 modes = 120 cases.
     var checked = 0
-    for (instrument in Instrument.entries) {
+    for (transposition in Transposition.entries) {
       for (pc in 0..11) {
         for (minor in listOf(false, true)) {
-          val written = Key(pc, minor).writtenFor(instrument)
-          val expectedPc = (pc + instrument.offset) % 12
+          val written = Key(pc, minor).writtenFor(transposition)
+          val expectedPc = (pc + transposition.offset) % 12
           val table = if (minor) Key.MINOR_SPELLING else Key.MAJOR_SPELLING
           val expected = if (minor) "${table[expectedPc]} minor" else table[expectedPc]
           assertEquals(expected, written.displayName)
-          assertEquals(Key(pc, minor), written.transpose(-instrument.offset))
+          assertEquals(Key(pc, minor), written.transpose(-transposition.offset))
           checked++
         }
       }
     }
-    assertEquals(264, checked)
+    assertEquals(120, checked)
   }
 
   @Test
