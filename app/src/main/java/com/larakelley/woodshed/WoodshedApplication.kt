@@ -3,6 +3,7 @@ package com.larakelley.woodshed
 import android.app.Application
 import android.content.Context
 import com.larakelley.woodshed.audio.Metronome
+import com.larakelley.woodshed.audio.Tuner
 import com.larakelley.woodshed.data.BackupService
 import com.larakelley.woodshed.data.PracticeService
 import com.larakelley.woodshed.data.WoodshedRepository
@@ -19,6 +20,8 @@ class WoodshedApplication : Application() {
   val repository: WoodshedRepository by lazy { WoodshedRepository(database, prefs, assets) }
 
   val metronome: Metronome by lazy { Metronome(prefs) }
+
+  val tuner: Tuner by lazy { Tuner(prefs) }
 
   val practice: PracticeService by lazy { PracticeService(database) }
 

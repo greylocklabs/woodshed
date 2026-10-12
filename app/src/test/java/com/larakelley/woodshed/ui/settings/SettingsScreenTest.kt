@@ -10,7 +10,6 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import com.larakelley.woodshed.data.ThemeMode
 import com.larakelley.woodshed.domain.Instrument
-import com.larakelley.woodshed.domain.Transposition
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -24,12 +23,12 @@ class SettingsScreenTest {
   @get:Rule val compose = createComposeRule()
 
   @Test
-  fun generalTabSetsAppearanceAndKey() {
+  fun generalTabSetsAppearance() {
     val picked = mutableListOf<Any>()
-    compose.setContent { SettingsScreen(SettingsUi(), SettingsActions(setThemeMode = { picked += it }, setTransposition = { picked += it }), onBack = {}) }
+    compose.setContent { SettingsScreen(SettingsUi(), SettingsActions(setThemeMode = { picked += it }), onBack = {}) }
     compose.onNodeWithTag("theme-dark").performClick()
-    compose.onNodeWithTag("key-bb").performClick()
-    assertEquals(listOf<Any>(ThemeMode.DARK, Transposition.Bb), picked)
+    compose.onNodeWithTag("key-bb").assertDoesNotExist()
+    assertEquals(listOf<Any>(ThemeMode.DARK), picked)
   }
 
   @Test
@@ -69,6 +68,8 @@ class SettingsScreenTest {
     compose.onNodeWithTag("made-by").assertExists()
     compose.onNodeWithText("Lara Kelley", substring = true).assertExists()
     compose.onNodeWithTag("donate").assertExists()
+    compose.onNodeWithTag("source").assertExists()
+    compose.onNodeWithText("buy me a coffee", substring = true).assertExists()
     compose.onNodeWithTag("close-settings").performClick()
     assertEquals(true, closed)
   }

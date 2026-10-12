@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -42,14 +41,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
-import com.larakelley.woodshed.audio.MetronomeState
 import com.larakelley.woodshed.domain.Focus
 import com.larakelley.woodshed.domain.Grade
 import com.larakelley.woodshed.domain.Instrument
 import com.larakelley.woodshed.domain.PlanBlock
 import com.larakelley.woodshed.theme.BackButton
+import com.larakelley.woodshed.theme.CallieChip
 import com.larakelley.woodshed.theme.LocalCallie
 import com.larakelley.woodshed.theme.StickerButton
+import com.larakelley.woodshed.theme.neutralSticker
 import com.larakelley.woodshed.ui.browse.ExerciseFacts
 import com.larakelley.woodshed.ui.browse.ExerciseRow
 import kotlinx.coroutines.delay
@@ -90,9 +90,9 @@ private fun SessionSetup(ui: PracticeUi, actions: SetupActions) {
           else "Sets the key and exercises. Choose the instruments you play in Settings to shorten this list.",
           style = MaterialTheme.typography.bodySmall,
         )
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        FlowRow(Modifier.padding(vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
           setup.instruments.forEach { i ->
-            FilterChip(
+            CallieChip(
               selected = setup.instrument == i,
               onClick = { actions.setInstrument(i) },
               label = { Text(i.label) },
@@ -102,9 +102,9 @@ private fun SessionSetup(ui: PracticeUi, actions: SetupActions) {
         }
         Spacer(Modifier.height(16.dp))
         Text("How long", style = MaterialTheme.typography.titleMedium)
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        FlowRow(Modifier.padding(vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
           LENGTHS.forEach { m ->
-            FilterChip(selected = setup.minutes == m, onClick = { actions.setMinutes(m) }, label = { Text("$m min") }, modifier = Modifier.testTag("length-$m"))
+            CallieChip(selected = setup.minutes == m, onClick = { actions.setMinutes(m) }, label = { Text("$m min") }, modifier = Modifier.testTag("length-$m"))
           }
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -115,9 +115,9 @@ private fun SessionSetup(ui: PracticeUi, actions: SetupActions) {
         Spacer(Modifier.height(16.dp))
         Text("Focus", style = MaterialTheme.typography.titleMedium)
         Text("Leave all off for a mix", style = MaterialTheme.typography.bodySmall)
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        FlowRow(Modifier.padding(vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
           Focus.entries.forEach { f ->
-            FilterChip(selected = f in setup.focus, onClick = { actions.toggleFocus(f) }, label = { Text("${f.emoji} ${f.label}") }, modifier = Modifier.testTag("focus-${f.name.lowercase()}"))
+            CallieChip(selected = f in setup.focus, onClick = { actions.toggleFocus(f) }, label = { Text("${f.emoji} ${f.label}") }, modifier = Modifier.testTag("focus-${f.name.lowercase()}"))
           }
         }
         Spacer(Modifier.height(16.dp))
@@ -208,9 +208,8 @@ fun SessionScreen(
   onGrade: (Grade) -> Unit,
   onNext: () -> Unit,
   onStop: () -> Unit,
-  metronome: MetronomeState = MetronomeState(),
-  onToggleMetronome: () -> Unit = {},
-  onSetBpm: (Int) -> Unit = {},
+  /** Sets the metronome to an exercise's tempo and starts it. */
+  onUseTempo: (Int) -> Unit = {},
 ) {
   val view = LocalView.current
   DisposableEffect(Unit) {
@@ -219,11 +218,11 @@ fun SessionScreen(
   }
   BackHandler(onBack = onStop)
 
-  Column(Modifier.fillMaxSize().safeDrawingPadding()) {
+  Column(Modifier.fillMaxSize()) {
     val step = ui.step
     Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
       Text(if (step == null) "Done" else "${ui.stepIndex + 1} of ${ui.stepCount}", modifier = Modifier.weight(1f).padding(start = 8.dp))
-      if (step != null) StepTimer(ui.stepIndex, step.minutes)
+      if (step != null) StepTimer(ui.stepStartedAt, step.minutes)
       TextButton(onClick = onStop) { Text("End session") }
     }
     if (step == null) {
@@ -241,9 +240,13 @@ fun SessionScreen(
       when (step) {
         is StepView.Exercise -> {
           Text(step.name, style = MaterialTheme.typography.displaySmall, modifier = Modifier.testTag("step-title"))
-          Text(listOfNotNull(step.category, step.tempoBpm?.let { "$it bpm" }).joinToString(", "), style = MaterialTheme.typography.titleMedium)
-          Spacer(Modifier.height(8.dp))
+          Text(step.category, style = MaterialTheme.typography.titleMedium)
           Text(step.description, style = MaterialTheme.typography.titleMedium)
+          step.tempoBpm?.let { bpm ->
+            StickerButton(onClick = { onUseTempo(bpm) }, sticker = neutralSticker, modifier = Modifier.height(44.dp).testTag("use-tempo")) {
+              Text("⏱️ Metronome at $bpm bpm", style = MaterialTheme.typography.labelLarge)
+            }
+          }
         }
         is StepView.Tune -> {
           val card = step.card
@@ -256,11 +259,10 @@ fun SessionScreen(
         }
       }
     }
-    MetronomeBar(metronome, onToggleMetronome, onSetBpm)
     when (step) {
       is StepView.Exercise ->
-        StickerButton(onClick = onNext, modifier = Modifier.fillMaxWidth().fillMaxHeight(0.2f).padding(8.dp).testTag("step-done"), radius = 16.dp) {
-          Text("✅ Done", style = MaterialTheme.typography.headlineSmall)
+        StickerButton(onClick = onNext, modifier = Modifier.fillMaxWidth().padding(16.dp).height(64.dp).testTag("step-done")) {
+          Text("✅ Done", style = MaterialTheme.typography.titleLarge)
         }
       is StepView.Tune -> {
         TextButton(onClick = onNext, modifier = Modifier.align(Alignment.End).testTag("step-skip")) { Text("Skip without grading") }
@@ -270,14 +272,15 @@ fun SessionScreen(
   }
 }
 
-/** Time on the current block against its planned minutes; restarts when the block changes. */
+/** Time on the current block against its planned minutes. */
 @Composable
-private fun StepTimer(stepIndex: Int, minutes: Int) {
-  var elapsed by remember(stepIndex) { mutableLongStateOf(0L) }
-  LaunchedEffect(stepIndex) {
+private fun StepTimer(startedAt: Long, minutes: Int) {
+  // Counts from when the block started rather than from when this screen appeared, so leaving the tab keeps time.
+  var elapsed by remember(startedAt) { mutableLongStateOf(0L) }
+  LaunchedEffect(startedAt) {
     while (true) {
+      elapsed = ((System.currentTimeMillis() - startedAt) / 1000).coerceAtLeast(0)
       delay(1000)
-      elapsed += 1
     }
   }
   val over = elapsed >= minutes * 60L

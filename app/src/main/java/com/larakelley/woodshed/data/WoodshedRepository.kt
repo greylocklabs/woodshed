@@ -46,10 +46,11 @@ class WoodshedRepository(
   val instrument: StateFlow<Instrument?> = _instrument.asStateFlow()
 
   private val _myInstruments = MutableStateFlow(
-    prefs.getStringSet(MY_INSTRUMENTS, emptySet())!!.mapNotNull { n -> Instrument.entries.firstOrNull { it.name == n } }.toSet()
+    if (!prefs.contains(MY_INSTRUMENTS)) DEFAULT_INSTRUMENTS
+    else prefs.getStringSet(MY_INSTRUMENTS, emptySet())!!.mapNotNull { n -> Instrument.entries.firstOrNull { it.name == n } }.toSet()
   )
 
-  /** The instruments the user plays, offered when planning a session. Empty until they choose, which offers all. */
+  /** The instruments the user plays, offered when planning a session. Starts as a jazz combo; empty offers all. */
   val myInstruments: StateFlow<Set<Instrument>> = _myInstruments.asStateFlow()
 
   private val _themeMode = MutableStateFlow(enumPref(THEME_MODE) ?: ThemeMode.SYSTEM)
@@ -157,6 +158,8 @@ class WoodshedRepository(
   private companion object {
     const val TRANSPOSITION = "transposition"
     const val FAMILY = "family"
+    /** A fresh install starts with a jazz combo's front line and rhythm section. */
+    val DEFAULT_INSTRUMENTS = setOf(Instrument.TRUMPET, Instrument.TENOR_SAX, Instrument.BASS, Instrument.PIANO, Instrument.DRUMS)
     const val INSTRUMENT = "instrument"
     const val MY_INSTRUMENTS = "my_instruments"
     const val THEME_MODE = "theme_mode"
