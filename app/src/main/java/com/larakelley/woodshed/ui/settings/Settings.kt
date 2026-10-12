@@ -45,6 +45,7 @@ import com.larakelley.woodshed.data.ThemeMode
 import com.larakelley.woodshed.data.WoodshedRepository
 import com.larakelley.woodshed.domain.Instrument
 import com.larakelley.woodshed.domain.InstrumentGroup
+import com.larakelley.woodshed.domain.ReportSubject
 import com.larakelley.woodshed.domain.Transposition
 import com.larakelley.woodshed.theme.BackButton
 import com.larakelley.woodshed.theme.Helper
@@ -54,6 +55,7 @@ import com.larakelley.woodshed.theme.SectionLabel
 import com.larakelley.woodshed.theme.StickerButton
 import com.larakelley.woodshed.theme.SwitchRow
 import com.larakelley.woodshed.theme.neutralSticker
+import com.larakelley.woodshed.ui.report.ReportButton
 import java.text.DateFormat
 import java.time.LocalDate
 import java.util.Date
@@ -296,6 +298,9 @@ private fun AboutTab(ui: SettingsUi) {
       style = MaterialTheme.typography.bodyLarge,
       modifier = Modifier.testTag("source"),
     )
+    SectionLabel("Feedback")
+    Helper("Found a wrong key or a broken link? Each tune and exercise page has a report button too.")
+    ReportButton(ReportSubject.APP, label = "🚩 Report a bug or idea")
     SectionLabel("Support")
     Helper("Woodshed is free. If it helps your practice, you can buy me a coffee.")
     StickerButton(onClick = { uris.openUri(KO_FI) }, modifier = Modifier.fillMaxWidth().height(52.dp).padding(top = 8.dp).testTag("donate")) {
