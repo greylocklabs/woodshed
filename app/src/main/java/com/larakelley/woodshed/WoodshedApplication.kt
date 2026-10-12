@@ -3,6 +3,7 @@ package com.larakelley.woodshed
 import android.app.Application
 import android.content.Context
 import com.larakelley.woodshed.audio.Metronome
+import com.larakelley.woodshed.data.BackupService
 import com.larakelley.woodshed.data.PracticeService
 import com.larakelley.woodshed.data.WoodshedRepository
 import com.larakelley.woodshed.data.db.WoodshedDatabase
@@ -20,6 +21,8 @@ class WoodshedApplication : Application() {
   val metronome: Metronome by lazy { Metronome(prefs) }
 
   val practice: PracticeService by lazy { PracticeService(database) }
+
+  val backups: BackupService by lazy { BackupService(database, repository) }
 
   private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 

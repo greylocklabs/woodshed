@@ -46,6 +46,7 @@ import com.larakelley.woodshed.audio.MetronomeState
 import com.larakelley.woodshed.domain.Focus
 import com.larakelley.woodshed.domain.Grade
 import com.larakelley.woodshed.domain.PlanBlock
+import com.larakelley.woodshed.theme.BackButton
 import com.larakelley.woodshed.theme.StickerButton
 import com.larakelley.woodshed.ui.browse.ExerciseFacts
 import com.larakelley.woodshed.ui.browse.ExerciseRow
@@ -126,7 +127,7 @@ private fun SessionSetup(ui: PracticeUi, actions: SetupActions) {
       }
     }
     StickerButton(onClick = actions.buildPlan, modifier = Modifier.fillMaxWidth().padding(16.dp).height(64.dp).testTag("build-plan")) {
-      Text("✨ Plan session", style = MaterialTheme.typography.titleLarge)
+      Text("🎵 Start shedding", style = MaterialTheme.typography.titleLarge)
     }
   }
 }
@@ -144,8 +145,8 @@ private fun PlanReview(plan: List<PlanItem>, actions: SetupActions) {
     )
   }
   Column(Modifier.fillMaxSize()) {
-    Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-      TextButton(onClick = actions.discardPlan) { Text("Back") }
+    Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+      BackButton("Back", actions.discardPlan, Modifier.padding(end = 12.dp))
       Text("${plan.sumOf { it.block.minutes }} min planned", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f).testTag("plan-total"))
     }
     if (plan.isEmpty()) {

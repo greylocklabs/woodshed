@@ -1,0 +1,113 @@
+package com.larakelley.woodshed.data
+
+import android.app.Application
+import android.content.Context
+import androidx.room.Room
+import androidx.test.core.app.ApplicationProvider
+import com.larakelley.woodshed.data.db.WoodshedDatabase
+import com.larakelley.woodshed.data.seed.Seed
+import com.larakelley.woodshed.data.seed.SeedImporter
+import com.larakelley.woodshed.domain.Comfort
+import com.larakelley.woodshed.domain.Focus
+import com.larakelley.woodshed.domain.Grade
+import com.larakelley.woodshed.domain.KeyPolicy
+import com.larakelley.woodshed.domain.Lifecycle
+import com.larakelley.woodshed.domain.Transposition
+import kotlin.random.Random
+import kotlinx.coroutines.test.runTest
+import org.junit.After
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertThrows
+import org.junit.Assert.assertTrue
+import org.junit.Before
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
+
+@RunWith(RobolectricTestRunner::class)
+@Config(application = Application::class)
+class BackupTest {
+  private val context = ApplicationProvider.getApplicationContext<Application>()
+  private lateinit var db: WoodshedDatabase
+  private lateinit var repository: WoodshedRepository
+  private lateinit var practice: PracticeService
+  private lateinit var backups: BackupService
+
+  @Before
+  fun setUp() = runTest {
+    db = Room.inMemoryDatabaseBuilder(context, WoodshedDatabase::class.java).allowMainThreadQueries().build()
+    val read = { name: String -> context.assets.open(name).bufferedReader().use { it.readText() } }
+    SeedImporter(db).import(Seed.parse(read("standards.json"), read("exercises.json")))
+    repository = WoodshedRepository(db, context.getSharedPreferences("backup-test", Context.MODE_PRIVATE).also { it.edit().clear().commit() }, context.assets)
+    practice = PracticeService(db, random = Random(1))
+    backups = BackupService(db, repository, now = { 42L })
+  }
+
+  @After
+  fun tearDown() = db.close()
+
+  private suspend fun id(slug: String) = db.standards().bySlug(slug)!!.id
+
+  @Test
+  fun exportThenRestoreBringsEverythingBack() = runTest {
+    practice.startLearning(id("solar"))
+    practice.setKeyPolicy(id("solar"), KeyPolicy.CYCLE)
+    practice.grade(practice.nextCard(Transposition.Bb)!!, Grade.GOOD)
+    practice.addToWishlist(id("nardis"))
+    practice.setComfort(id("solar"), Comfort.SHAKY)
+    practice.toggleKnownKey(id("solar"), 0)
+    repository.setTransposition(Transposition.Eb)
+    repository.setThemeMode(ThemeMode.DARK)
+    repository.rememberSession(45, setOf(Focus.SPEED))
+    val states = db.tuneStates().all().sortedBy { it.standardId }
+    val knowledge = db.tuneKnowledge().all()
+    val events = db.reviewEvents().all().map { it.copy(id = 0) }
+
+    val text = backups.export()
+    assertTrue(text.contains("\"format\": \"woodshed-backup\"") && text.contains("\"version\": 1"))
+    db.tuneStates().deleteAll()
+    db.tuneKnowledge().deleteAll()
+    db.reviewEvents().deleteAll()
+    repository.setTransposition(Transposition.C)
+    repository.setThemeMode(ThemeMode.SYSTEM)
+
+    val result = backups.restore(text)
+    assertEquals(RestoreResult(tunes = 2, knowledge = 1, reviews = 1, skipped = 0), result)
+    assertEquals(states, db.tuneStates().all().sortedBy { it.standardId })
+    assertEquals(knowledge, db.tuneKnowledge().all())
+    assertEquals(events, db.reviewEvents().all().map { it.copy(id = 0) })
+    assertEquals(Transposition.Eb, repository.transposition.value)
+    assertEquals(ThemeMode.DARK, repository.themeMode.value)
+    assertEquals(setOf(Focus.SPEED), repository.sessionFocus)
+  }
+
+  @Test
+  fun restoreReplacesRatherThanMerges() = runTest {
+    practice.addToWishlist(id("solar"))
+    val text = backups.export()
+    practice.addToWishlist(id("nardis"))
+    backups.restore(text)
+    assertEquals(listOf(id("solar")), db.tuneStates().all().map { it.standardId })
+  }
+
+  @Test
+  fun unknownTunesAreSkippedAndCounted() = runTest {
+    practice.addToWishlist(id("solar"))
+    val text = backups.export().replace("\"solar\"", "\"no-such-tune\"")
+    val result = backups.restore(text)
+    assertEquals(1, result.skipped)
+    assertTrue(db.tuneStates().all().isEmpty())
+  }
+
+  @Test
+  fun aFileThatIsNotABackupIsRejectedWithoutTouchingData() = runTest {
+    practice.addToWishlist(id("solar"))
+    assertThrows(BackupException::class.java) { kotlinx.coroutines.runBlocking { backups.restore("{\"hello\": 1}") } }
+    assertThrows(BackupException::class.java) { kotlinx.coroutines.runBlocking { backups.restore("not json") } }
+    val unmarked = backups.export().replace("\"format\": \"woodshed-backup\",", "")
+    assertThrows(BackupException::class.java) { kotlinx.coroutines.runBlocking { backups.restore(unmarked) } }
+    assertEquals(1, db.tuneStates().all().size)
+    assertEquals(Lifecycle.WISHLIST, db.tuneStates().all().single().lifecycle)
+  }
+}

@@ -19,6 +19,13 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
+/** Light or dark: follow the system, or pick one. */
+enum class ThemeMode(val label: String) {
+  SYSTEM("System"),
+  LIGHT("Light"),
+  DARK("Dark"),
+}
+
 class WoodshedRepository(
   private val db: WoodshedDatabase,
   private val prefs: SharedPreferences,
@@ -31,6 +38,14 @@ class WoodshedRepository(
 
   /** Null shows exercises for every family. */
   val family: StateFlow<Family?> = _family.asStateFlow()
+
+  private val _themeMode = MutableStateFlow(enumPref(THEME_MODE) ?: ThemeMode.SYSTEM)
+  val themeMode: StateFlow<ThemeMode> = _themeMode.asStateFlow()
+
+  private val _lastBackupAt = MutableStateFlow(prefs.getLong(LAST_BACKUP_AT, 0L).takeIf { it > 0 })
+
+  /** When a backup was last exported from this device, or null if never. */
+  val lastBackupAt: StateFlow<Long?> = _lastBackupAt.asStateFlow()
 
   /** The last session length and focus, offered again next time. */
   val sessionMinutes: Int
@@ -54,6 +69,32 @@ class WoodshedRepository(
   fun setFamily(family: Family?) {
     prefs.edit { putString(FAMILY, family?.name) }
     _family.value = family
+  }
+
+  fun setThemeMode(mode: ThemeMode) {
+    prefs.edit { putString(THEME_MODE, mode.name) }
+    _themeMode.value = mode
+  }
+
+  fun markBackedUp(at: Long) {
+    prefs.edit { putLong(LAST_BACKUP_AT, at) }
+    _lastBackupAt.value = at
+  }
+
+  fun backupSettings() = BackupSettings(
+    transposition = transposition.value.name,
+    family = family.value?.name,
+    themeMode = themeMode.value.name,
+    sessionMinutes = sessionMinutes,
+    sessionFocus = sessionFocus.map { it.name },
+  )
+
+  /** Applies a restored backup's settings, ignoring any value this version does not know. */
+  fun applyBackupSettings(s: BackupSettings) {
+    Transposition.entries.firstOrNull { it.name == s.transposition }?.let(::setTransposition)
+    setFamily(Family.entries.firstOrNull { it.name == s.family })
+    ThemeMode.entries.firstOrNull { it.name == s.themeMode }?.let(::setThemeMode)
+    rememberSession(s.sessionMinutes ?: sessionMinutes, s.sessionFocus.mapNotNull { n -> Focus.entries.firstOrNull { it.name == n } }.toSet())
   }
 
   fun rememberSession(minutes: Int, focus: Set<Focus>) {
@@ -87,6 +128,8 @@ class WoodshedRepository(
   private companion object {
     const val TRANSPOSITION = "transposition"
     const val FAMILY = "family"
+    const val THEME_MODE = "theme_mode"
+    const val LAST_BACKUP_AT = "last_backup_at"
     const val SESSION_MINUTES = "session_minutes"
     const val SESSION_FOCUS = "session_focus"
     const val SEED_HASH = "seed_hash"

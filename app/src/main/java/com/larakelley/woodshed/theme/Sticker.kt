@@ -5,11 +5,14 @@ import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -66,3 +69,12 @@ fun StickerButton(
 /** The neutral sticker: raised surface, body text, dark edge. */
 val neutralSticker: Sticker
   @Composable get() = LocalCallie.current.let { Sticker(it.surfaceAlt, it.text, it.edge) }
+
+/** Callie's back control: a small neutral sticker with a chevron, set apart from the page's own actions. */
+@Composable
+fun BackButton(label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+  StickerButton(onClick = onClick, modifier = modifier.height(40.dp), sticker = neutralSticker, contentPadding = PaddingValues(start = 10.dp, end = 14.dp)) {
+    Text("‹", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(end = 6.dp))
+    Text(label, style = MaterialTheme.typography.labelLarge)
+  }
+}

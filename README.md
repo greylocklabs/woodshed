@@ -7,10 +7,12 @@ horn players. Carried out of an abandoned attempt to build jazz practice tools
 into [larakelley.com](https://github.com/lararosekelley/larakelley.com).
 
 The app is at milestone M1 of `ANDROID_PLAN.md`: search and filter 2,522 tunes
-with keys written for your transposition, pick tunes to learn, and practice them
-as cards scheduled by spaced repetition, with a metronome on the stand. A dice
-tab rolls a random card within constraints. Each tune can carry a comfort rating
-and a checklist of keys you know it in. Every graded rep is logged.
+with keys written for your transposition, pick tunes to learn, and plan sessions
+by length, focus and tunes, with spaced-repetition grading and a metronome on the
+stand. The Random tab rolls a card within constraints. Each tune can carry a
+comfort rating and a checklist of keys you know it in. Every graded rep is
+logged, and Settings saves and restores a backup file through the system file
+picker, so it can live in Google Drive, Dropbox or local storage.
 
 ## What is here
 
