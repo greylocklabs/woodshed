@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
@@ -139,7 +140,7 @@ private fun PlanReview(plan: List<PlanItem>, actions: SetupActions) {
     LazyColumn(Modifier.weight(1f).fillMaxWidth()) {
       itemsIndexed(plan) { i, item ->
         Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp).testTag("plan-$i"), verticalAlignment = Alignment.CenterVertically) {
-          Text("${item.block.minutes} min", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(end = 12.dp))
+          Text("${item.block.minutes} min", style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(72.dp))
           Column(Modifier.weight(1f)) {
             Text(item.title, style = MaterialTheme.typography.titleMedium)
             Text(if (item.block is PlanBlock.Tune) "Tune: ${item.detail}" else item.detail, style = MaterialTheme.typography.bodySmall)
