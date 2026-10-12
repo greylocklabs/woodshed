@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.larakelley.woodshed.data.ExerciseDraft
 import com.larakelley.woodshed.data.ExerciseLibrary
+import com.larakelley.woodshed.data.MediaService
 import com.larakelley.woodshed.data.Playlist
 import com.larakelley.woodshed.data.PlaylistService
 import com.larakelley.woodshed.data.PracticeService
@@ -13,6 +14,7 @@ import com.larakelley.woodshed.data.WoodshedRepository
 import com.larakelley.woodshed.data.db.ExerciseEntity
 import com.larakelley.woodshed.data.db.StandardEntity
 import com.larakelley.woodshed.data.db.TuneKnowledgeEntity
+import com.larakelley.woodshed.data.db.TuneMediaEntity
 import com.larakelley.woodshed.data.db.TuneStateEntity
 import com.larakelley.woodshed.data.db.homeKey
 import com.larakelley.woodshed.domain.Comfort
@@ -171,6 +173,8 @@ data class BrowseState(
   val categories: List<String> = emptyList(),
   val seedError: String? = null,
   val playlists: List<Playlist> = emptyList(),
+  /** Recording and video links by tune id, in order. */
+  val media: Map<Long, List<TuneMediaEntity>> = emptyMap(),
   /** Every exercise, unfiltered, for looking one up and checking names. */
   val allExercises: List<ExerciseRow> = emptyList(),
   /** Every tune, unfiltered, for looking one up by id or slug. */
@@ -328,6 +332,7 @@ class BrowseViewModel(
   private val tunes: TuneLibrary,
   private val lists: PlaylistService,
   private val exerciseLibrary: ExerciseLibrary,
+  private val mediaService: MediaService,
 ) : ViewModel() {
   private val tuneFilter = MutableStateFlow(TuneFilter())
   private val exerciseFilter = MutableStateFlow(ExerciseFilter(instrument = repository.instrument.value))
@@ -337,7 +342,13 @@ class BrowseViewModel(
     tuneRows(standards, transposition, states.associateBy { it.standardId }, knowledge.associateBy { it.standardId }, overrides.map { it.standardId }.toSet())
   }
 
-  private data class TunePart(val all: List<TuneRow>, val filter: TuneFilter, val rows: List<TuneRow>, val playlists: List<Playlist>)
+  private data class TunePart(
+    val all: List<TuneRow>,
+    val filter: TuneFilter,
+    val rows: List<TuneRow>,
+    val playlists: List<Playlist>,
+    val media: Map<Long, List<TuneMediaEntity>>,
+  )
 
   private data class ExercisePart(
     val all: List<ExerciseEntity>,
@@ -347,11 +358,11 @@ class BrowseViewModel(
     val allRows: List<ExerciseRow>,
   )
 
-  private val tunePart = combine(library, tuneFilter, repository.playlists) { rows, filter, playlists ->
+  private val tunePart = combine(library, tuneFilter, repository.playlists, repository.media) { rows, filter, playlists, media ->
     // A deleted playlist drops out of the filter rather than leaving an empty list.
     val chosen = playlists.firstOrNull { it.id == filter.playlistId }
     val shown = if (chosen == null) filter.copy(playlistId = null) else filter
-    TunePart(rows, shown, filterTunes(rows, shown, chosen?.tuneIds), playlists)
+    TunePart(rows, shown, filterTunes(rows, shown, chosen?.tuneIds), playlists, media.groupBy { it.standardId })
   }
 
   private val exercisePart = combine(repository.exercises, exerciseFilter, repository.myInstruments, repository.exerciseOverrides) { exercises, filter, mine, overrides ->
@@ -377,6 +388,7 @@ class BrowseViewModel(
           categories = ex.all.map { it.category }.distinct().sortedBy { Phase.categoryRank(it) },
           seedError = error,
           playlists = tunes.playlists,
+          media = tunes.media,
           allTunes = tunes.all,
         )
       }
@@ -415,6 +427,11 @@ class BrowseViewModel(
     },
     delete = { launch { exerciseLibrary.delete(it) } },
     reset = { launch { exerciseLibrary.resetToOriginal(it) } },
+  )
+
+  val mediaActions = MediaActions(
+    add = { tune, url, title, done -> viewModelScope.launch { done(mediaService.add(tune, url, title)) } },
+    remove = { launch { mediaService.remove(it) } },
   )
 
   val playlistActions = PlaylistActions(

@@ -176,4 +176,18 @@ class MigrationTest {
       db.execSQL("INSERT INTO exercise_overrides (exerciseId, minutes, families, updatedAt) VALUES (3, 5, 'BRASS', 1)")
     }
   }
+
+  @Test
+  fun version9To10AddsTuneLinks() {
+    helper.createDatabase("migration-test-9", 9).use { db ->
+      db.execSQL(
+        "INSERT INTO standards (id, slug, title, composer, year, bars, timeSignature, form, style, keyName, keyPitchClass, tonality, archivedAt, collection, verified, userCreated) " +
+          "VALUES (7, 'solar', 'Solar', 'Miles Davis', 1954, 12, '4/4', NULL, 'Swing', 'C', 0, 'MINOR', NULL, 'Standards', 1, 0)"
+      )
+    }
+    helper.runMigrationsAndValidate("migration-test-9", 10, true).use { db ->
+      db.execSQL("INSERT INTO tune_media (standardId, url, title, position, createdAt) VALUES (7, 'https://youtu.be/jNQXAC9IVRw', NULL, 0, 0)")
+      db.query("SELECT COUNT(*) FROM tune_media").use { it.moveToFirst(); assertEquals(1, it.getInt(0)) }
+    }
+  }
 }

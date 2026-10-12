@@ -6,6 +6,7 @@ import com.larakelley.woodshed.audio.Metronome
 import com.larakelley.woodshed.audio.Tuner
 import com.larakelley.woodshed.data.BackupService
 import com.larakelley.woodshed.data.ExerciseLibrary
+import com.larakelley.woodshed.data.MediaService
 import com.larakelley.woodshed.data.PlaylistService
 import com.larakelley.woodshed.data.PracticeService
 import com.larakelley.woodshed.data.TuneLibrary
@@ -35,6 +36,8 @@ class WoodshedApplication : Application() {
   val playlists: PlaylistService by lazy { PlaylistService(database) }
 
   val exercises: ExerciseLibrary by lazy { ExerciseLibrary(database) }
+
+  val media: MediaService by lazy { MediaService(database) }
 
   private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 

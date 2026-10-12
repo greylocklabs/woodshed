@@ -7,6 +7,7 @@ import com.larakelley.woodshed.data.db.ExerciseEntity
 import com.larakelley.woodshed.data.db.ExerciseOverrideEntity
 import com.larakelley.woodshed.data.db.StandardEntity
 import com.larakelley.woodshed.data.db.TuneKnowledgeEntity
+import com.larakelley.woodshed.data.db.TuneMediaEntity
 import com.larakelley.woodshed.data.db.TuneOverrideEntity
 import com.larakelley.woodshed.data.db.TuneStateEntity
 import com.larakelley.woodshed.data.db.WoodshedDatabase
@@ -71,6 +72,9 @@ class WoodshedRepository(
 
   /** The user's edits to seeded tunes. */
   val overrides: Flow<List<TuneOverrideEntity>> = db.tuneOverrides().observeAll()
+
+  /** Recordings and videos attached to tunes. */
+  val media: Flow<List<TuneMediaEntity>> = db.tuneMedia().observeAll()
 
   /** The user's playlists, each with its tunes in order. */
   val playlists: Flow<List<Playlist>> = combine(db.playlists().observeAll(), db.playlists().observeEntries(), ::playlists)
