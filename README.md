@@ -4,8 +4,8 @@ Notes, data, and a build plan for **Woodshed**, an Android practice app for
 horn players. Carried out of an abandoned attempt to build jazz practice tools
 into [larakelley.com](https://github.com/lararosekelley/larakelley.com).
 
-Nothing here runs yet. It is a design record, a plan, and two data files that
-took real effort to produce.
+No app yet. This is a design record, a plan, two data files that took real effort
+to produce, and a script for trying the card idea on paper.
 
 ## What is here
 
@@ -13,18 +13,31 @@ took real effort to produce.
 | --- | --- |
 | `DESIGN.md` | The decisions worth keeping, and the traps that cost time |
 | `ANDROID_PLAN.md` | How this becomes the app: stack, domain model, build order |
-| `data/standards.json` | 201 jazz standards with composer, year, bars, meter, form, style, key |
-| `data/exercises.json` | 44 instrument-scoped practice exercises |
+| `data/standards.json` | 258 jazz standards with composer, year, bars, meter, form, style, key |
+| `data/exercises.json` | 61 instrument-scoped practice exercises |
+| `tools/cards.py` | Prints random tune x exercise x written-key cards for an instrument |
 
 ## Credit
 
-`data/standards.json` is factual metadata scraped from
+`data/standards.json` started as factual metadata scraped from
 [standardrepertoire.com](https://standardrepertoire.com), a jazz standards
 reference by **David Miller**. Only factual fields were taken — composer, year,
 bars, meter, form, style, common key — deliberately not lyrics and not chord
-charts. If any of this ships, that credit ships with it.
+charts. If any of this ships, that credit ships with it. Corrections and the
+57 later additions were checked against [jazzstandards.com](https://www.jazzstandards.com),
+Wikipedia and the iReal Pro jazz playlist.
 
 `data/exercises.json` is original, written for this project.
+
+## Trying the cards
+
+```
+python3 tools/cards.py -i tenor-sax -n 20 --detail
+python3 -m unittest discover tools
+```
+
+Instruments are named like `alto-sax`, `trumpet`, `alto-flute`; `--help` lists
+them. `--seed` repeats a draw and `--style Ballad` narrows the tunes.
 
 ## Where the code is
 
