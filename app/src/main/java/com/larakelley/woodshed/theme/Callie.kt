@@ -1,6 +1,7 @@
 package com.larakelley.woodshed.theme
 
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -18,11 +19,13 @@ import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -43,7 +46,11 @@ fun SectionLabel(text: String, modifier: Modifier = Modifier) {
  */
 @Composable
 fun <T> PillChoice(options: List<Pair<String, T>>, selected: T, onSelect: (T) -> Unit, modifier: Modifier = Modifier, tagPrefix: String = "pill") {
-  Row(modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
+  Row(
+    modifier.horizontalScroll(rememberScrollState()).padding(vertical = 6.dp),
+    horizontalArrangement = Arrangement.spacedBy(4.dp),
+    verticalAlignment = Alignment.CenterVertically,
+  ) {
     options.forEach { (label, value) ->
       val tag = Modifier.testTag("$tagPrefix-${label.lowercase().replace(' ', '-')}")
       if (value == selected) {
@@ -51,7 +58,14 @@ fun <T> PillChoice(options: List<Pair<String, T>>, selected: T, onSelect: (T) ->
           Text(label, style = MaterialTheme.typography.labelLarge)
         }
       } else {
-        TextButton(onClick = { onSelect(value) }, modifier = tag.height(41.dp), shape = RoundedCornerShape(11.dp), contentPadding = PaddingValues(horizontal = 16.dp)) {
+        val interaction = remember { MutableInteractionSource() }
+        TextButton(
+          onClick = { onSelect(value) },
+          modifier = tag.height(41.dp).pressBounce(interaction),
+          shape = RoundedCornerShape(11.dp),
+          contentPadding = PaddingValues(horizontal = 16.dp),
+          interactionSource = interaction,
+        ) {
           Text(label, style = MaterialTheme.typography.labelLarge, color = LocalCallie.current.text)
         }
       }
@@ -80,9 +94,17 @@ fun CallieSwitch(checked: Boolean, onCheckedChange: ((Boolean) -> Unit)?, modifi
 
 /** A setting's label, optional helper text under it, and its toggle at the far right; the whole row toggles. */
 @Composable
-fun SwitchRow(label: String, checked: Boolean, onChange: (Boolean) -> Unit, modifier: Modifier = Modifier, helper: String? = null) {
+fun SwitchRow(
+  label: String,
+  checked: Boolean,
+  onChange: (Boolean) -> Unit,
+  modifier: Modifier = Modifier,
+  helper: String? = null,
+  horizontalPadding: Dp = 0.dp,
+) {
+  // The row is the touch target, so its pressed highlight spans the full width it is given.
   Row(
-    modifier.fillMaxWidth().heightIn(min = 48.dp).toggleable(value = checked, role = Role.Switch, onValueChange = onChange),
+    modifier.fillMaxWidth().heightIn(min = 52.dp).toggleable(value = checked, role = Role.Switch, onValueChange = onChange).padding(horizontal = horizontalPadding, vertical = 4.dp),
     verticalAlignment = Alignment.CenterVertically,
   ) {
     Column(Modifier.weight(1f).padding(end = 12.dp)) {

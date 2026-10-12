@@ -20,7 +20,6 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.larakelley.woodshed.audio.MetronomeState
 import com.larakelley.woodshed.data.DiceConstraints
 import com.larakelley.woodshed.data.KeyChoice
 import com.larakelley.woodshed.data.PracticeService
@@ -36,7 +35,6 @@ import com.larakelley.woodshed.domain.delayLabel
 import com.larakelley.woodshed.theme.StickerButton
 import com.larakelley.woodshed.ui.browse.DropdownChip
 import com.larakelley.woodshed.ui.practice.GradeButtons
-import com.larakelley.woodshed.ui.practice.MetronomeBar
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -136,9 +134,6 @@ fun DiceScreen(
   onRoll: () -> Unit,
   onGrade: (Grade) -> Unit,
   onToggleKeyKnown: () -> Unit,
-  metronome: MetronomeState,
-  onToggleMetronome: () -> Unit,
-  onSetBpm: (Int) -> Unit,
 ) {
   val c = ui.constraints
   Column(Modifier.fillMaxSize()) {
@@ -146,7 +141,7 @@ fun DiceScreen(
       Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(16.dp),
       verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-      FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+      FlowRow(Modifier.padding(vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
         DropdownChip("Tunes", c.pool.label, TunePool.entries.map { it.label to it }) { p -> onConstrain { it.copy(pool = p ?: TunePool.MY_TUNES) } }
         DropdownChip("Style", c.style ?: "Any", ui.styles.map { it to it }, allowAny = true) { s -> onConstrain { it.copy(style = s) } }
         DropdownChip("Collection", c.collection ?: "Any", SeedValidator.COLLECTIONS.map { it to it }, allowAny = true) { v -> onConstrain { it.copy(collection = v) } }
@@ -173,7 +168,6 @@ fun DiceScreen(
         ui.graded?.let { Text("Logged as ${it.name.lowercase()}.") }
       }
     }
-    if (ui.card != null) MetronomeBar(metronome, onToggleMetronome, onSetBpm)
     ui.card?.buttons?.let { GradeButtons(it, onGrade, Modifier.fillMaxHeight(0.25f)) }
   }
 }

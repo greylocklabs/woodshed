@@ -43,9 +43,9 @@ class PracticeScreenTest {
   private val tuneStep = StepView.Tune(card, minutes = 10)
 
   /** The step timer ticks forever, so a test clock that advances itself until idle would never stop. */
-  private fun session(ui: PracticeUi, onGrade: (Grade) -> Unit = {}, onNext: () -> Unit = {}) {
+  private fun session(ui: PracticeUi, onGrade: (Grade) -> Unit = {}, onNext: () -> Unit = {}, onUseTempo: (Int) -> Unit = {}) {
     compose.mainClock.autoAdvance = false
-    compose.setContent { SessionScreen(ui, onGrade = onGrade, onNext = onNext, onStop = {}) }
+    compose.setContent { SessionScreen(ui, onGrade = onGrade, onNext = onNext, onStop = {}, onUseTempo = onUseTempo) }
     compose.mainClock.advanceTimeByFrame()
   }
 
@@ -64,10 +64,13 @@ class PracticeScreenTest {
   @Test
   fun exerciseStepIsFinishedWithDone() {
     var next = 0
+    val tempos = mutableListOf<Int>()
     val step = StepView.Exercise("Long tones", "Tone", "Hold each note.", tempoBpm = 60, minutes = 5)
-    session(PracticeUi(running = true, step = step, stepIndex = 1, stepCount = 3), onNext = { next++ })
+    session(PracticeUi(running = true, step = step, stepIndex = 1, stepCount = 3), onNext = { next++ }, onUseTempo = { tempos += it })
 
-    compose.onNodeWithText("Tone, 60 bpm").assertExists()
+    compose.onNodeWithText("Tone").assertExists()
+    compose.onNodeWithTag("use-tempo").performClick()
+    assertEquals(listOf(60), tempos)
     compose.onNodeWithText("2 of 3").assertExists()
     compose.onNodeWithTag("step-timer").assertExists()
     compose.onNodeWithTag("grade-good").assertDoesNotExist()

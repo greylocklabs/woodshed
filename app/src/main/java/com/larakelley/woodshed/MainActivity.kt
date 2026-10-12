@@ -7,6 +7,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -21,10 +22,13 @@ import com.larakelley.woodshed.ui.practice.PracticeHome
 import com.larakelley.woodshed.ui.practice.PracticeViewModel
 import com.larakelley.woodshed.ui.practice.SessionScreen
 import com.larakelley.woodshed.ui.practice.SetupActions
-import com.larakelley.woodshed.ui.practice.StepView
 import com.larakelley.woodshed.ui.settings.SettingsActions
 import com.larakelley.woodshed.ui.settings.SettingsScreen
 import com.larakelley.woodshed.ui.settings.SettingsViewModel
+import com.larakelley.woodshed.ui.tools.MetronomeActions
+import com.larakelley.woodshed.ui.tools.MetronomeScreen
+import com.larakelley.woodshed.ui.tools.TunerActions
+import com.larakelley.woodshed.ui.tools.TunerScreen
 import kotlinx.coroutines.flow.first
 
 class MainActivity : ComponentActivity() {
@@ -53,17 +57,12 @@ class MainActivity : ComponentActivity() {
         val practiceUi by practice.ui.collectAsStateWithLifecycle()
         val diceUi by dice.ui.collectAsStateWithLifecycle()
         val click by metronome.state.collectAsStateWithLifecycle()
+        val tuning by app.tuner.state.collectAsStateWithLifecycle()
 
         LaunchedEffect(browseState.styles) {
           val tuneExercises = app.repository.exercises.first().filter { it.appliesToTune }.map { it.name }
           dice.setOptions(browseState.styles, tuneExercises)
         }
-        val step = practiceUi.step
-        val beats = if (practiceUi.running) (step as? StepView.Tune)?.card?.beatsPerBar ?: 4 else diceUi.card?.beatsPerBar
-        LaunchedEffect(beats) { beats?.let(metronome::setBeatsPerBar) }
-        // An exercise with a set tempo starts the metronome there; the player can still change it.
-        val tempo = (step as? StepView.Exercise)?.tempoBpm
-        LaunchedEffect(practiceUi.stepIndex, tempo) { tempo?.let(metronome::setBpm) }
         val setupActions = SetupActions(
           setInstrument = practice::setInstrument,
           setMinutes = practice::setMinutes,
@@ -77,41 +76,42 @@ class MainActivity : ComponentActivity() {
         )
 
         Surface(color = MaterialTheme.colorScheme.background) {
-          if (practiceUi.running) {
-            SessionScreen(
-              practiceUi,
-              practice::grade,
-              practice::next,
-              onStop = { metronome.stop(); practice.stop() },
-              metronome = click,
-              onToggleMetronome = metronome::toggle,
-              onSetBpm = metronome::setBpm,
-            )
-          } else {
-            BrowseScreen(
-              browseState,
-              browse::selectTransposition,
-              browse::selectFamily,
-              actions = browse.actions,
-              onTuneFilter = browse::updateTuneFilter,
-              onExerciseFilter = browse::updateExerciseFilter,
-              practiceTab = {
+          BrowseScreen(
+            browseState,
+            browse::selectTransposition,
+            browse::selectFamily,
+            actions = browse.actions,
+            onTuneFilter = browse::updateTuneFilter,
+            onExerciseFilter = browse::updateExerciseFilter,
+            practiceTab = {
+              // A running session lives in this tab, so switching to the metronome or tuner and back keeps it.
+              if (practiceUi.running) {
+                SessionScreen(practiceUi, practice::grade, practice::next, onStop = practice::stop, onUseTempo = { metronome.setBpm(it); metronome.start() })
+              } else {
                 LaunchedEffect(Unit) { practice.refresh() }
                 PracticeHome(practiceUi, setupActions)
-              },
-              settings = { onBack, modifier ->
-                SettingsScreen(
-                  settingsUi,
-                  SettingsActions(settings::setInstrument, settings::toggleMyInstrument, settings::setTransposition, settings::setThemeMode, settings::export, settings::restore),
-                  onBack = { settings.clearMessage(); onBack() },
-                  modifier = modifier,
-                )
-              },
-              diceTab = {
-                DiceScreen(diceUi, dice::constrain, dice::roll, dice::grade, dice::toggleKeyKnown, click, metronome::toggle, metronome::setBpm)
-              },
-            )
-          }
+              }
+            },
+            metronomeTab = {
+              MetronomeScreen(click, MetronomeActions(metronome::toggle, metronome::setBpm, metronome::setBeatsPerBar, metronome::setAccentFirst, metronome::setFeel))
+            },
+            tunerTab = {
+              // The microphone is only on while this tab is showing.
+              DisposableEffect(Unit) { onDispose { app.tuner.stop() } }
+              TunerScreen(tuning, browseState.transposition, TunerActions(app.tuner::start, app.tuner::stop, app.tuner::setA4))
+            },
+            settings = { onBack, modifier ->
+              SettingsScreen(
+                settingsUi,
+                SettingsActions(settings::setInstrument, settings::toggleMyInstrument, settings::setTransposition, settings::setThemeMode, settings::export, settings::restore),
+                onBack = { settings.clearMessage(); onBack() },
+                modifier = modifier,
+              )
+            },
+            diceTab = {
+              DiceScreen(diceUi, dice::constrain, dice::roll, dice::grade, dice::toggleKeyKnown)
+            },
+          )
         }
       }
     }
@@ -119,7 +119,8 @@ class MainActivity : ComponentActivity() {
 
   override fun onStop() {
     super.onStop()
-    // The metronome only plays while the app is on screen.
+    // The metronome and tuner only run while the app is on screen.
     app.metronome.stop()
+    app.tuner.stop()
   }
 }

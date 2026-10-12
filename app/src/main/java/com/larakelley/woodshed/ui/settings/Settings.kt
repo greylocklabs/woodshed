@@ -6,6 +6,7 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -45,6 +46,7 @@ import com.larakelley.woodshed.data.WoodshedRepository
 import com.larakelley.woodshed.domain.Instrument
 import com.larakelley.woodshed.domain.InstrumentGroup
 import com.larakelley.woodshed.domain.Transposition
+import com.larakelley.woodshed.theme.BackButton
 import com.larakelley.woodshed.theme.Helper
 import com.larakelley.woodshed.theme.LocalCallie
 import com.larakelley.woodshed.theme.PillChoice
@@ -156,21 +158,21 @@ enum class SettingsTab(val label: String) {
 
 const val KO_FI = "https://ko-fi.com/sayonara_lara"
 const val AUTHOR_SITE = "https://larakelley.com"
+const val SOURCE = "https://github.com/lararosekelley/woodshed"
 
-/** Laid out like Callie's settings: a title with a close sticker, pill tabs, then labelled sections. */
+/** Laid out like Callie's settings: a back sticker and title, pill tabs, then labelled sections. */
 @Composable
 fun SettingsScreen(ui: SettingsUi, actions: SettingsActions, onBack: () -> Unit, modifier: Modifier = Modifier) {
   BackHandler(onBack = onBack)
   var tab by rememberSaveable { mutableStateOf(SettingsTab.GENERAL) }
   Column(modifier.fillMaxSize()) {
-    Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-      Text("Settings", style = MaterialTheme.typography.headlineMedium, modifier = Modifier.weight(1f))
-      StickerButton(onClick = onBack, sticker = neutralSticker, modifier = Modifier.size(44.dp).testTag("close-settings"), contentPadding = PaddingValues(0.dp)) {
-        Text("×", style = MaterialTheme.typography.titleLarge)
-      }
+    Column(Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp)) {
+      BackButton("Back", onBack, Modifier.testTag("close-settings"))
+      Text("Settings", style = MaterialTheme.typography.headlineMedium, modifier = Modifier.padding(top = 8.dp))
     }
     PillChoice(SettingsTab.entries.map { it.label to it }, tab, { tab = it }, Modifier.padding(horizontal = 12.dp, vertical = 12.dp), tagPrefix = "tab")
-    Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp).padding(bottom = 24.dp)) {
+    // No side padding here: toggle rows span the width so their pressed highlight does too; other content pads itself.
+    Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(bottom = 24.dp)) {
       when (tab) {
         SettingsTab.GENERAL -> GeneralTab(ui, actions)
         SettingsTab.INSTRUMENTS -> InstrumentsTab(ui, actions)
@@ -183,34 +185,38 @@ fun SettingsScreen(ui: SettingsUi, actions: SettingsActions, onBack: () -> Unit,
 
 @Composable
 private fun GeneralTab(ui: SettingsUi, actions: SettingsActions) {
-  SectionLabel("Appearance")
-  PillChoice(ThemeMode.entries.map { it.label to it }, ui.themeMode, actions.setThemeMode, tagPrefix = "theme")
-  SectionLabel("Keys")
-  PillChoice(Transposition.entries.map { it.name to it }, ui.transposition, actions.setTransposition, tagPrefix = "key")
-  Helper(
-    ui.instrument?.let { "Your ${it.label.lowercase()} reads in ${it.transposition.name}. Pick another key here for a one-off, such as reading a part for another horn." }
-      ?: "Keys are written for this transposition. Choosing an instrument sets it for you."
-  )
+  Padded {
+      SectionLabel("Appearance")
+      PillChoice(ThemeMode.entries.map { it.label to it }, ui.themeMode, actions.setThemeMode, tagPrefix = "theme")
+      Helper("System follows the phone's light or dark setting.")
+  }
 }
+
+/** Settings content other than full-width rows sits on the page's 16dp margins. */
+@Composable
+private fun Padded(content: @Composable ColumnScope.() -> Unit) = Column(Modifier.padding(horizontal = 16.dp), content = content)
 
 @Composable
 private fun InstrumentsTab(ui: SettingsUi, actions: SettingsActions) {
   val offered = Instrument.entries.filter { ui.myInstruments.isEmpty() || it in ui.myInstruments }
-  SectionLabel("Playing now")
-  if (offered.isNotEmpty()) {
-    PillChoice(offered.map { it.label to it }, ui.instrument, { it?.let(actions.setInstrument) }, tagPrefix = "now")
+  Padded {
+      SectionLabel("Playing now")
+      if (offered.isNotEmpty()) {
+        PillChoice(offered.map { it.label to it }, ui.instrument, { it?.let(actions.setInstrument) }, tagPrefix = "now")
+      }
+      Helper("Sets the key music is written in and which exercises sessions suggest. You can also change it when you start a session.")
+      SectionLabel("Instruments I play")
+      Helper("Only these are offered when you start a session.")
   }
-  Helper("Sets the key music is written in and which exercises sessions suggest. You can also change it when you start a session.")
-  SectionLabel("Instruments I play")
-  Helper("Only these are offered when you start a session. With none chosen, every instrument is.")
   InstrumentGroup.entries.forEach { group ->
-    SectionLabel(group.label)
+    Padded { SectionLabel(group.label) }
     Instrument.entries.filter { it.group == group }.forEach { i ->
       SwitchRow(
         label = i.label,
         checked = i in ui.myInstruments,
         onChange = { actions.toggleMyInstrument(i, it) },
-        helper = if (i.family == null) "Reads in ${i.transposition.name}. Exercises for every instrument; ones for this instrument are still to come." else "Reads in ${i.transposition.name}",
+        helper = "Reads in ${i.transposition.name}",
+        horizontalPadding = 16.dp,
         modifier = Modifier.testTag("plays-${i.name.lowercase()}"),
       )
     }
@@ -226,27 +232,29 @@ private fun BackupTab(ui: SettingsUi, actions: SettingsActions) {
   val openFile = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> uri?.let { actions.restore(it, resolver) } }
   var confirmRestore by rememberSaveable { mutableStateOf(false) }
 
-  SectionLabel("Backup file")
-  Text(
-    "Save your tunes, comfort, known keys, review history and settings to a file. Choose Google Drive, Dropbox or " +
-      "a folder on this phone when the picker opens, then restore from that file on any device.",
-    style = MaterialTheme.typography.bodyMedium,
-  )
-  Helper(
-    ui.lastBackupAt?.let { "Last saved ${DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT).format(Date(it))}" } ?: "Not backed up from this phone yet",
-    Modifier.padding(vertical = 8.dp).testTag("last-backup"),
-  )
-  StickerButton(onClick = { saveFile.launch("woodshed-backup-${LocalDate.now()}.json") }, modifier = Modifier.fillMaxWidth().height(52.dp).testTag("export")) {
-    Text("Save a backup")
+  Padded {
+    SectionLabel("Backup file")
+    Text(
+      "Save your tunes, comfort, known keys, review history and settings to a file. Choose Google Drive, Dropbox or " +
+        "a folder on this phone when the picker opens, then restore from that file on any device.",
+      style = MaterialTheme.typography.bodyMedium,
+    )
+    Helper(
+      ui.lastBackupAt?.let { "Last saved ${DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT).format(Date(it))}" } ?: "Not backed up from this phone yet",
+      Modifier.padding(vertical = 8.dp).testTag("last-backup"),
+    )
+    StickerButton(onClick = { saveFile.launch("woodshed-backup-${LocalDate.now()}.json") }, modifier = Modifier.fillMaxWidth().height(52.dp).testTag("export")) {
+      Text("Save a backup")
+    }
+    StickerButton(
+      onClick = { confirmRestore = true },
+      sticker = neutralSticker,
+      modifier = Modifier.fillMaxWidth().height(52.dp).padding(top = 8.dp).testTag("restore"),
+    ) { Text("Restore from a backup") }
+    ui.message?.let { Text(it, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 8.dp).testTag("backup-message")) }
+    SectionLabel("Automatic")
+    Helper("Android also backs Woodshed up to your Google account with the rest of the phone, when device backup is on.")
   }
-  StickerButton(
-    onClick = { confirmRestore = true },
-    sticker = neutralSticker,
-    modifier = Modifier.fillMaxWidth().height(52.dp).padding(top = 8.dp).testTag("restore"),
-  ) { Text("Restore from a backup") }
-  ui.message?.let { Text(it, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 8.dp).testTag("backup-message")) }
-  SectionLabel("Automatic")
-  Helper("Android also backs Woodshed up to your Google account with the rest of the phone, when device backup is on.")
 
   if (confirmRestore) {
     AlertDialog(
@@ -267,24 +275,36 @@ private fun BackupTab(ui: SettingsUi, actions: SettingsActions) {
 private fun AboutTab(ui: SettingsUi) {
   val uris = LocalUriHandler.current
   val accent = LocalCallie.current.accent
-  SectionLabel("Woodshed ${ui.version}")
-  Text(
-    buildAnnotatedString {
-      append("Made with \u2764\uFE0F in Brooklyn by ")
-      withLink(LinkAnnotation.Url(AUTHOR_SITE, TextLinkStyles(SpanStyle(color = accent, fontWeight = FontWeight.Bold)))) { append("Lara Kelley") }
-      append(".")
-    },
-    style = MaterialTheme.typography.bodyLarge,
-    modifier = Modifier.testTag("made-by"),
-  )
-  SectionLabel("Support")
-  Helper("Woodshed is free. If it helps your practice, you can buy Lara a coffee.")
-  StickerButton(onClick = { uris.openUri(KO_FI) }, modifier = Modifier.fillMaxWidth().height(52.dp).padding(top = 8.dp).testTag("donate")) {
-    Text("\u2615 Donate on Ko-fi")
+  Padded {
+    SectionLabel("Woodshed ${ui.version}")
+    Text(
+      buildAnnotatedString {
+        append("Made with \u2764\uFE0F in Brooklyn by ")
+        withLink(LinkAnnotation.Url(AUTHOR_SITE, TextLinkStyles(SpanStyle(color = accent, fontWeight = FontWeight.Bold)))) { append("Lara Kelley") }
+        append(".")
+      },
+      style = MaterialTheme.typography.bodyLarge,
+      modifier = Modifier.testTag("made-by"),
+    )
+    SectionLabel("Source")
+    Text(
+      buildAnnotatedString {
+        append("Woodshed is open source. ")
+        withLink(LinkAnnotation.Url(SOURCE, TextLinkStyles(SpanStyle(color = accent, fontWeight = FontWeight.Bold)))) { append("See the code on GitHub") }
+        append(".")
+      },
+      style = MaterialTheme.typography.bodyLarge,
+      modifier = Modifier.testTag("source"),
+    )
+    SectionLabel("Support")
+    Helper("Woodshed is free. If it helps your practice, you can buy me a coffee.")
+    StickerButton(onClick = { uris.openUri(KO_FI) }, modifier = Modifier.fillMaxWidth().height(52.dp).padding(top = 8.dp).testTag("donate")) {
+      Text("\u2615 Donate on Ko-fi")
+    }
+    SectionLabel("Credits")
+    Helper(
+      "Tune data draws on standardrepertoire.com by David Miller, jazzstandards.com, Wikipedia, iReal Pro charts and the " +
+        "Jazz Chord Progressions Corpus. The Nunito and Fraunces typefaces are used under the SIL Open Font License."
+    )
   }
-  SectionLabel("Credits")
-  Helper(
-    "Tune data draws on standardrepertoire.com by David Miller, jazzstandards.com, Wikipedia, iReal Pro charts and the " +
-      "Jazz Chord Progressions Corpus. The Nunito and Fraunces typefaces are used under the SIL Open Font License."
-  )
 }

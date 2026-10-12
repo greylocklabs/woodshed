@@ -58,6 +58,7 @@ import com.larakelley.woodshed.domain.Tonality
 import com.larakelley.woodshed.domain.Transposition
 import com.larakelley.woodshed.domain.delayLabel
 import com.larakelley.woodshed.theme.BackButton
+import com.larakelley.woodshed.theme.CallieChip
 import com.larakelley.woodshed.theme.StickerButton
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -73,6 +74,8 @@ fun BrowseScreen(
   now: () -> Long = System::currentTimeMillis,
   practiceTab: (@Composable () -> Unit)? = null,
   diceTab: (@Composable () -> Unit)? = null,
+  metronomeTab: (@Composable () -> Unit)? = null,
+  tunerTab: (@Composable () -> Unit)? = null,
   settings: (@Composable (onBack: () -> Unit, modifier: Modifier) -> Unit)? = null,
 ) {
   var settingsOpen by rememberSaveable { mutableStateOf(false) }
@@ -82,6 +85,8 @@ fun BrowseScreen(
   val tabs = buildList {
     if (practiceTab != null) add("Practice")
     if (diceTab != null) add("Random")
+    if (metronomeTab != null) add("Metronome")
+    if (tunerTab != null) add("Tuner")
     add("Tunes")
     add("Exercises")
   }
@@ -121,6 +126,8 @@ fun BrowseScreen(
       when (tabs[tab]) {
         "Practice" -> practiceTab?.invoke()
         "Random" -> diceTab?.invoke()
+        "Metronome" -> metronomeTab?.invoke()
+        "Tuner" -> tunerTab?.invoke()
         "Tunes" -> {
           TuneFilters(state, onTuneFilter)
           TuneList(state.tunes, onOpen = { openSlug = it })
@@ -148,7 +155,7 @@ private fun AppTitle() {
 fun <T> DropdownChip(name: String, current: String, options: List<Pair<String, T>>, allowAny: Boolean = false, onSelect: (T?) -> Unit) {
   var open by rememberSaveable { mutableStateOf(false) }
   Box {
-    FilterChip(selected = open, onClick = { open = true }, label = { Text("$name: $current") }, modifier = Modifier.testTag("chip-$name"))
+    CallieChip(selected = open, onClick = { open = true }, label = { Text("$name: $current") }, modifier = Modifier.testTag("chip-$name"))
     DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
       if (allowAny) DropdownMenuItem(text = { Text("Any") }, onClick = { onSelect(null); open = false })
       options.forEach { (label, value) -> DropdownMenuItem(text = { Text(label) }, onClick = { onSelect(value); open = false }) }
@@ -194,9 +201,9 @@ private fun ExerciseFilters(state: BrowseState, onSelectFamily: (Family?) -> Uni
   SearchField(f.query, "Search exercises") { q -> onFilter { it.copy(query = q) } }
   Row(Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
     DropdownChip("Category", f.category ?: "Any", state.categories.map { it to it }, allowAny = true) { c -> onFilter { it.copy(category = c) } }
-    FilterChip(selected = state.family == null, onClick = { onSelectFamily(null) }, label = { Text("All horns") })
+    CallieChip(selected = state.family == null, onClick = { onSelectFamily(null) }, label = { Text("All horns") })
     Family.entries.forEach { family ->
-      FilterChip(selected = state.family == family, onClick = { onSelectFamily(family) }, label = { Text(family.displayName) })
+      CallieChip(selected = state.family == family, onClick = { onSelectFamily(family) }, label = { Text(family.displayName) })
     }
   }
   Text(
@@ -316,9 +323,9 @@ private fun TuneDetail(tune: TuneRow, actions: TuneActions, now: () -> Long, onB
     HorizontalDivider()
     Text("How well I know it", style = MaterialTheme.typography.titleMedium)
     val comfort = tune.knowledge?.comfort
-    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    FlowRow(Modifier.padding(vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
       Comfort.entries.forEach { level ->
-        FilterChip(
+        CallieChip(
           selected = comfort == level,
           onClick = { actions.setComfort(id, if (comfort == level) null else level) },
           label = { Text(level.label) },
@@ -347,11 +354,11 @@ private fun KnownKeys(tune: TuneRow, onToggle: (Int) -> Unit) {
   val minor = tune.tonality == Tonality.MINOR
   val transposition = tune.transposition
   Text("Keys I know it in (${KeyMask.count(mask)} of 12)", style = MaterialTheme.typography.titleMedium)
-  FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+  FlowRow(Modifier.padding(vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
     Key.CIRCLE_OF_FOURTHS.forEach { written ->
       val concert = Math.floorMod(written - transposition.offset, 12)
       val label = Key(written, minor).displayName.removeSuffix(" minor") + if (minor) "m" else ""
-      FilterChip(selected = KeyMask.contains(mask, concert), onClick = { onToggle(concert) }, label = { Text(label) }, modifier = Modifier.testTag("key-$concert"))
+      CallieChip(selected = KeyMask.contains(mask, concert), onClick = { onToggle(concert) }, label = { Text(label) }, modifier = Modifier.testTag("key-$concert"))
     }
   }
 }

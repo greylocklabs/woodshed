@@ -6,11 +6,32 @@ import kotlin.math.floor
 import kotlin.math.roundToLong
 import kotlin.math.sin
 
+/** Which beats of the bar click. */
+enum class Feel(val label: String) {
+  EVERY_BEAT("Every beat"),
+  /** Beats 2 and 4, and every other beat in longer bars, where the hi-hat sits in swing. */
+  BACKBEAT("2 and 4"),
+  DOWNBEAT("Beat 1 only");
+
+  /** Whether the beat at [beatInBar] (0 is beat 1) clicks. */
+  fun sounds(beatInBar: Int): Boolean = when (this) {
+    EVERY_BEAT -> true
+    BACKBEAT -> beatInBar % 2 == 1
+    DOWNBEAT -> beatInBar == 0
+  }
+}
+
 /**
  * Renders metronome clicks into PCM at sample-accurate positions. Each beat's frame is computed from its index,
  * never accumulated, so timing cannot drift however long it runs or however the output is chunked.
  */
-class ClickTrack(val sampleRate: Int, val bpm: Int, val beatsPerBar: Int) {
+class ClickTrack(
+  val sampleRate: Int,
+  val bpm: Int,
+  val beatsPerBar: Int,
+  val accentFirst: Boolean = true,
+  val feel: Feel = Feel.EVERY_BEAT,
+) {
   init {
     require(bpm in MIN_BPM..MAX_BPM) { "bpm out of range: $bpm" }
     require(beatsPerBar >= 1)
@@ -24,7 +45,12 @@ class ClickTrack(val sampleRate: Int, val bpm: Int, val beatsPerBar: Int) {
   /** The first frame of beat [index]. */
   fun beatFrame(index: Long): Long = (index * framesPerBeat).roundToLong()
 
-  fun isAccent(index: Long): Boolean = Math.floorMod(index, beatsPerBar.toLong()) == 0L
+  /** Position of beat [index] in its bar, from 0. */
+  fun beatInBar(index: Long): Int = Math.floorMod(index, beatsPerBar.toLong()).toInt()
+
+  fun isAccent(index: Long): Boolean = accentFirst && beatInBar(index) == 0 && feel != Feel.BACKBEAT
+
+  fun sounds(index: Long): Boolean = feel.sounds(beatInBar(index))
 
   /** Fills [out] with the frames starting at [startFrame]: clicks where beats fall, silence elsewhere. */
   fun render(startFrame: Long, out: ShortArray) {
@@ -34,6 +60,10 @@ class ClickTrack(val sampleRate: Int, val bpm: Int, val beatsPerBar: Int) {
     while (true) {
       val onset = beatFrame(beat)
       if (onset >= end) break
+      if (!sounds(beat)) {
+        beat++
+        continue
+      }
       val wave = if (isAccent(beat)) accent else normal
       for (i in 0 until clickFrames) {
         val frame = onset + i

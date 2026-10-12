@@ -117,6 +117,8 @@ data class PracticeUi(
   val running: Boolean = false,
   val step: StepView? = null,
   val stepIndex: Int = 0,
+  /** When the current block began, in epoch milliseconds. */
+  val stepStartedAt: Long = 0,
   val stepCount: Int = 0,
   val reviewedThisSession: Int = 0,
 )
@@ -265,6 +267,6 @@ class PracticeViewModel(
       }
     }
     if (block != null && step == null) return show(index + 1)
-    _ui.update { it.copy(step = step, stepIndex = index) }
+    _ui.update { it.copy(step = step, stepIndex = index, stepStartedAt = now()) }
   }
 }
