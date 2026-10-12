@@ -47,6 +47,7 @@ import com.larakelley.woodshed.data.seed.SeedValidator
 import com.larakelley.woodshed.domain.Comfort
 import com.larakelley.woodshed.domain.Family
 import com.larakelley.woodshed.domain.Key
+import com.larakelley.woodshed.domain.Tonality
 import com.larakelley.woodshed.domain.KeyMask
 import com.larakelley.woodshed.domain.KeyPolicy
 import com.larakelley.woodshed.domain.Lifecycle
@@ -142,6 +143,7 @@ private fun TuneFilters(state: BrowseState, onFilter: ((TuneFilter) -> TuneFilte
     DropdownChip("Show", f.status.label, StatusFilter.entries.map { it.label to it }) { s -> onFilter { it.copy(status = s ?: StatusFilter.ALL) } }
     DropdownChip("Style", f.style ?: "Any", state.styles.map { it to it }, allowAny = true) { s -> onFilter { it.copy(style = s) } }
     DropdownChip("Collection", f.collection ?: "Any", SeedValidator.COLLECTIONS.map { it to it }, allowAny = true) { c -> onFilter { it.copy(collection = c) } }
+    DropdownChip("Tonality", f.tonality?.label ?: "Any", Tonality.entries.map { it.label to it }, allowAny = true) { t -> onFilter { it.copy(tonality = t) } }
     DropdownChip("Comfort", f.minComfort?.let { "${it.label}+" } ?: "Any", Comfort.entries.map { "${it.label} or better" to it }, allowAny = true) { c ->
       onFilter { it.copy(minComfort = c) }
     }
@@ -254,7 +256,7 @@ private fun TuneDetail(tune: TuneRow, actions: TuneActions, now: () -> Long, onB
         OutlinedButton(onClick = { actions.markKnown(id) }, Modifier.fillMaxWidth()) { Text("I already know it") }
       }
       Lifecycle.LEARNING, Lifecycle.REPERTOIRE -> {
-        if (Key.parse(tune.rawKey) != null) {
+        if (tune.homeKey != null) {
           Row(verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
               Text("Practice in every key")
@@ -309,7 +311,7 @@ private fun TuneDetail(tune: TuneRow, actions: TuneActions, now: () -> Long, onB
 @Composable
 private fun KnownKeys(tune: TuneRow, onToggle: (Int) -> Unit) {
   val mask = tune.knowledge?.knownKeys ?: 0
-  val minor = Key.parse(tune.rawKey)?.minor ?: false
+  val minor = tune.tonality == Tonality.MINOR
   val transposition = tune.transposition
   Text("Keys I know it in (${KeyMask.count(mask)} of 12)", style = MaterialTheme.typography.titleMedium)
   FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

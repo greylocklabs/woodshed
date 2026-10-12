@@ -4,9 +4,11 @@ import com.larakelley.woodshed.data.db.ExerciseEntity
 import com.larakelley.woodshed.data.db.StandardEntity
 import com.larakelley.woodshed.data.db.TuneKnowledgeEntity
 import com.larakelley.woodshed.data.db.TuneStateEntity
+import com.larakelley.woodshed.data.db.homeKey
 import com.larakelley.woodshed.domain.Key
 import com.larakelley.woodshed.domain.KeyMask
 import com.larakelley.woodshed.domain.Lifecycle
+import com.larakelley.woodshed.domain.Tonality
 import kotlin.random.Random
 
 /** Which tunes the dice draw from. */
@@ -64,8 +66,8 @@ fun roll(
   if (pool.isEmpty() || choices.isEmpty()) return null
 
   val tune = pool.random(random)
-  val usual = Key.parse(tune.commonKeyRaw)
-  val minor = usual?.minor ?: false
+  val usual = tune.homeKey
+  val minor = tune.tonality == Tonality.MINOR
   val key = when (c.keyChoice) {
     KeyChoice.USUAL -> usual
     KeyChoice.ANY -> Key(random.nextInt(12), minor)

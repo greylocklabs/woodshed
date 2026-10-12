@@ -40,6 +40,13 @@ def parse_key(raw):
     return pc, minor == "-"
 
 
+def seed_key(tune):
+    """The tune's key in parse_key's format: tonic plus "-" for minor, or None when unknown."""
+    if not tune["key"]:
+        return None
+    return tune["key"] + ("-" if tune["tonality"] == "minor" else "")
+
+
 def spell(pc, minor):
     return (MINOR[pc] + " minor") if minor else MAJOR[pc]
 
@@ -79,8 +86,8 @@ def main():
     rng = random.Random(args.seed)
     print(f"{len(cards)} possible cards for {args.instrument}; drawing {min(args.count, len(cards))}\n")
     for tune, ex in rng.sample(cards, min(args.count, len(cards))):
-        key = written_key(tune["common_key"], offset)
-        key_text = f"written {key}" if key else f"concert {tune['common_key'] or 'key unknown'}, transpose it yourself"
+        key = written_key(seed_key(tune), offset)
+        key_text = f"written {key}" if key else "key unknown"
         print(f"{tune['title']} | {ex['name']} | {key_text}")
         if args.detail:
             form = " ".join(str(x) for x in (tune["form"], tune["bars"] and f"{tune['bars']} bars") if x)

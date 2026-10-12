@@ -9,7 +9,7 @@ class KeyTest {
   fun eachTranspositionReadsItsOwnPitchAsWrittenC() {
     // A wrong offset makes every displayed key silently wrong; this is the check that catches it.
     for (transposition in Transposition.entries) {
-      val builtIn = requireNotNull(Key.parse(transposition.name))
+      val builtIn = requireNotNull(Key.of(transposition.name, Tonality.MAJOR))
       assertEquals(transposition.name, "C", builtIn.writtenFor(transposition).displayName)
     }
   }
@@ -17,17 +17,17 @@ class KeyTest {
   @Test
   fun knownTranspositions() {
     val cases = listOf(
-      Triple("C", Transposition.Eb, "A"),
-      Triple("Bb", Transposition.Bb, "C"),
-      Triple("F", Transposition.Bb, "G"),
-      Triple("Eb", Transposition.G, "Ab"),
-      Triple("Eb", Transposition.F, "Bb"),
-      Triple("G-", Transposition.Eb, "E minor"),
-      Triple("Eb-", Transposition.Bb, "F minor"),
-      Triple("Db", Transposition.C, "Db"),
+      Triple(Key.of("C", Tonality.MAJOR), Transposition.Eb, "A"),
+      Triple(Key.of("Bb", Tonality.MAJOR), Transposition.Bb, "C"),
+      Triple(Key.of("F", Tonality.MAJOR), Transposition.Bb, "G"),
+      Triple(Key.of("Eb", Tonality.MAJOR), Transposition.G, "Ab"),
+      Triple(Key.of("Eb", Tonality.MAJOR), Transposition.F, "Bb"),
+      Triple(Key.of("G", Tonality.MINOR), Transposition.Eb, "E minor"),
+      Triple(Key.of("Eb", Tonality.MINOR), Transposition.Bb, "F minor"),
+      Triple(Key.of("Db", Tonality.MAJOR), Transposition.C, "Db"),
     )
     for ((concert, transposition, written) in cases) {
-      assertEquals("$concert in $transposition", written, Key.parse(concert)!!.writtenFor(transposition).displayName)
+      assertEquals("$concert in $transposition", written, concert!!.writtenFor(transposition).displayName)
     }
   }
 
@@ -61,16 +61,17 @@ class KeyTest {
 
   @Test
   fun parsesSeedFormat() {
-    assertEquals(Key(3, false), Key.parse("Eb"))
-    assertEquals(Key(5, true), Key.parse("F-"))
-    assertEquals(Key(1, true), Key.parse("C#-"))
-    assertEquals(Key(11, false), Key.parse("B"))
+    assertEquals(Key(3, false), Key.of("Eb", Tonality.MAJOR))
+    assertEquals(Key(5, true), Key.of("F", Tonality.MINOR))
+    assertEquals(Key(1, true), Key.of("C#", Tonality.MINOR))
+    assertEquals(Key(11, false), Key.of("B", Tonality.MAJOR))
+    assertEquals(Tonality.MINOR, Tonality.fromSeedName("minor"))
   }
 
   @Test
   fun unparseableKeysAreNullNotGuessed() {
-    for (raw in listOf("Eb, C", "", "H", "eb", "C minor", "Cb-x", null)) {
-      assertNull(raw, Key.parse(raw))
+    for (raw in listOf("Eb, C", "", "H", "eb", "C minor", "C-", "Cb-x", null)) {
+      assertNull(raw, Key.pitchClassOf(raw))
     }
   }
 

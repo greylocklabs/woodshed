@@ -4,6 +4,9 @@ import android.app.Application
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import com.larakelley.woodshed.data.db.WoodshedDatabase
+import com.larakelley.woodshed.data.db.homeKey
+import com.larakelley.woodshed.domain.Key
+import com.larakelley.woodshed.domain.Tonality
 import com.larakelley.woodshed.domain.Family
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
@@ -56,19 +59,19 @@ class SeedImporterTest {
     val nullFormsInSeed = seedRows.count { it.jsonObject["form"] is kotlinx.serialization.json.JsonNull }
     assertTrue(nullFormsInSeed > 0)
     assertEquals(nullFormsInSeed, db.standards().all().count { it.form == null })
-    assertTrue(db.standards().all().none { it.form == "" || it.composer == "" || it.commonKeyRaw == "" })
+    assertTrue(db.standards().all().none { it.form == "" || it.composer == "" || it.keyName == "" })
   }
 
   @Test
-  fun storesRawKeyBesideTheParsedOne() = runTest {
+  fun storesKeyAndTonalitySeparately() = runTest {
     SeedImporter(db).import(Seed.parse(standardsJson, exercisesJson))
-    val dolphin = db.standards().bySlug("on-green-dolphin-street")!!
-    assertEquals("Eb, C", dolphin.commonKeyRaw)
-    assertNull(dolphin.commonKeyPitchClass)
     val valentine = db.standards().bySlug("my-funny-valentine")!!
-    assertEquals("C-", valentine.commonKeyRaw)
-    assertEquals(0, valentine.commonKeyPitchClass)
-    assertEquals(true, valentine.commonKeyMinor)
+    assertEquals("C", valentine.keyName)
+    assertEquals(0, valentine.keyPitchClass)
+    assertEquals(Tonality.MINOR, valentine.tonality)
+    assertEquals(Key(0, true), valentine.homeKey)
+    val blues = db.standards().bySlug("blue-monk")!!
+    assertEquals(Tonality.MAJOR, blues.tonality)
   }
 
   @Test

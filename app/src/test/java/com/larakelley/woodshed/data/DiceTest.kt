@@ -4,8 +4,10 @@ import com.larakelley.woodshed.data.db.ExerciseEntity
 import com.larakelley.woodshed.data.db.StandardEntity
 import com.larakelley.woodshed.data.db.TuneKnowledgeEntity
 import com.larakelley.woodshed.data.db.TuneStateEntity
+import com.larakelley.woodshed.domain.Key
 import com.larakelley.woodshed.domain.KeyMask
 import com.larakelley.woodshed.domain.Lifecycle
+import com.larakelley.woodshed.domain.Tonality
 import kotlin.random.Random
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -13,10 +15,10 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class DiceTest {
-  private fun tune(id: Long, key: String?, style: String = "Swing") =
-    StandardEntity(id, "t$id", "Tune $id", null, null, 32, "4/4", "AABA", style, key, null, null)
+  private fun tune(id: Long, key: String?, tonality: Tonality?, style: String = "Swing") =
+    StandardEntity(id, "t$id", "Tune $id", null, null, 32, "4/4", "AABA", style, key, Key.pitchClassOf(key), tonality)
 
-  private val tunes = listOf(tune(1, "F"), tune(2, "C-", "Ballad"), tune(3, "Eb, C"), tune(4, "Bb"))
+  private val tunes = listOf(tune(1, "F", Tonality.MAJOR), tune(2, "C", Tonality.MINOR, "Ballad"), tune(3, null, null), tune(4, "Bb", Tonality.MAJOR))
   private val states = mapOf(
     1L to TuneStateEntity(1, Lifecycle.LEARNING),
     2L to TuneStateEntity(2, Lifecycle.REPERTOIRE),
@@ -52,7 +54,7 @@ class DiceTest {
   }
 
   @Test
-  fun usualKeyIsTheTunesKeyOrNullWhenItDoesNotParse() {
+  fun usualKeyIsTheTunesKeyOrNullWhenUnknown() {
     for (r in rolls(DiceConstraints())) {
       when (r.tune.id) {
         1L -> assertEquals("F", r.concertKey!!.displayName)

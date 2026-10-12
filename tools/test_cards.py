@@ -1,6 +1,6 @@
 import unittest
 
-from cards import INSTRUMENTS, MAJOR, load, parse_key, written_key
+from cards import INSTRUMENTS, MAJOR, load, parse_key, seed_key, written_key
 
 
 class Transposition(unittest.TestCase):
@@ -29,10 +29,9 @@ class Transposition(unittest.TestCase):
 
 
 class SeedData(unittest.TestCase):
-    def test_every_key_in_data_parses_or_is_known_compound(self):
-        unparsed = {t["common_key"] for t in load("standards.json")
-                    if t["common_key"] and parse_key(t["common_key"]) is None}
-        self.assertEqual(unparsed, {"Eb, C"})
+    def test_every_key_in_data_parses(self):
+        unparsed = {t["key"] for t in load("standards.json") if t["key"] and parse_key(seed_key(t)) is None}
+        self.assertEqual(unparsed, set())
 
     def test_some_exercises_apply_to_tunes(self):
         self.assertTrue(any(e["applies_to_tune"] for e in load("exercises.json")))

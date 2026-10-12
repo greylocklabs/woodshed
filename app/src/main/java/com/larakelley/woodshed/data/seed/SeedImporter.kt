@@ -6,6 +6,7 @@ import com.larakelley.woodshed.data.db.StandardEntity
 import com.larakelley.woodshed.data.db.WoodshedDatabase
 import com.larakelley.woodshed.domain.Family
 import com.larakelley.woodshed.domain.Key
+import com.larakelley.woodshed.domain.Tonality
 
 /**
  * Reconciles the database with the seed by natural key (slug, exercise name). Rows keep their ids so
@@ -25,7 +26,6 @@ class SeedImporter(private val db: WoodshedDatabase, private val now: () -> Long
     val updates = mutableListOf<StandardEntity>()
     var inserted = 0
     for (s in seeds) {
-      val key = Key.parse(s.commonKey)
       val row = StandardEntity(
         id = existing[s.slug]?.id ?: 0,
         slug = s.slug,
@@ -36,9 +36,9 @@ class SeedImporter(private val db: WoodshedDatabase, private val now: () -> Long
         timeSignature = s.timeSignature,
         form = s.form,
         style = s.style,
-        commonKeyRaw = s.commonKey,
-        commonKeyPitchClass = key?.pitchClass,
-        commonKeyMinor = key?.minor,
+        keyName = s.key,
+        keyPitchClass = Key.pitchClassOf(s.key),
+        tonality = Tonality.fromSeedName(s.tonality),
         collection = s.collection,
         verified = s.verified,
       )

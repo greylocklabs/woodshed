@@ -37,7 +37,7 @@ data class PracticeUi(
 
 fun cardView(card: Card, preview: Map<Grade, Long>, now: Long): CardView {
   val key = when {
-    card.writtenKey == null -> card.tune.commonKeyRaw?.let { "Concert $it" } ?: "Key unknown"
+    card.writtenKey == null -> "Key unknown"
     card.transposition == Transposition.C -> "Concert ${card.writtenKey!!.displayName}"
     else -> "Written ${card.writtenKey!!.displayName}"
   }

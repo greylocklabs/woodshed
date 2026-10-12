@@ -7,6 +7,8 @@ import com.larakelley.woodshed.data.db.TuneStateEntity
 import com.larakelley.woodshed.domain.Comfort
 import com.larakelley.woodshed.domain.Family
 import com.larakelley.woodshed.domain.Lifecycle
+import com.larakelley.woodshed.domain.Key
+import com.larakelley.woodshed.domain.Tonality
 import com.larakelley.woodshed.domain.Transposition
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -14,15 +16,15 @@ import org.junit.Test
 class BrowseModelTest {
   @Test
   fun keyLabelTransposesForTheHorn() {
-    assertEquals("C", keyLabel("Eb", Transposition.Eb))
-    assertEquals("Concert Eb", keyLabel("Eb", Transposition.C))
-    assertEquals("Concert C minor", keyLabel("C-", Transposition.C))
+    assertEquals("C", keyLabel(Key(3, false), Tonality.MAJOR, Transposition.Eb))
+    assertEquals("Concert Eb", keyLabel(Key(3, false), Tonality.MAJOR, Transposition.C))
+    assertEquals("Concert C minor", keyLabel(Key(0, true), Tonality.MINOR, Transposition.C))
   }
 
   @Test
-  fun keyLabelShowsRawTextRatherThanGuessing() {
-    assertEquals("Concert Eb, C", keyLabel("Eb, C", Transposition.Bb))
-    assertEquals("Key unknown", keyLabel(null, Transposition.Bb))
+  fun keyLabelKeepsATonalityWhoseKeyIsUnknown() {
+    assertEquals("Minor, key unknown", keyLabel(null, Tonality.MINOR, Transposition.Bb))
+    assertEquals("Key unknown", keyLabel(null, null, Transposition.Bb))
   }
 
   @Test
@@ -81,6 +83,14 @@ class BrowseModelTest {
     val rows = tuneRows(tunes, Transposition.C)
     assertEquals(listOf("A"), filterTunes(rows, TuneFilter(collection = "Trad")).map { it.title })
     assertEquals(listOf("B", "C"), filterTunes(rows, TuneFilter(collection = "Standards")).map { it.title })
+  }
+
+  @Test
+  fun tonalityFilter() {
+    val tunes = listOf(standard(1, "A").copy(tonality = Tonality.MINOR), standard(2, "B").copy(tonality = Tonality.MAJOR), standard(3, "C"))
+    val rows = tuneRows(tunes, Transposition.C)
+    assertEquals(listOf("A"), filterTunes(rows, TuneFilter(tonality = Tonality.MINOR)).map { it.title })
+    assertEquals(listOf("B"), filterTunes(rows, TuneFilter(tonality = Tonality.MAJOR)).map { it.title })
   }
 
   @Test

@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.room.testing.MigrationTestHelper
 import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -15,7 +16,7 @@ import org.robolectric.annotation.Config
 @Config(application = Application::class)
 class MigrationTest {
   @get:Rule
-  val helper = MigrationTestHelper(InstrumentationRegistry.getInstrumentation(), WoodshedDatabase::class.java, listOf(WoodshedDatabase.DropBooks()))
+  val helper = MigrationTestHelper(InstrumentationRegistry.getInstrumentation(), WoodshedDatabase::class.java, listOf(WoodshedDatabase.DropBooks(), WoodshedDatabase.SplitKey()))
 
   @Test
   fun version1To2KeepsSeededRowsAndAddsPracticeTables() {
@@ -94,6 +95,32 @@ class MigrationTest {
         assertEquals("Solar", it.getString(0))
         assertEquals("Standards", it.getString(1))
         assertEquals(1, it.getInt(2))
+      }
+      db.query("SELECT keyPolicy, cyclePosition FROM tune_state WHERE standardId = 7").use {
+        it.moveToFirst()
+        assertEquals("CYCLE", it.getString(0))
+        assertEquals(3, it.getInt(1))
+      }
+      db.query("SELECT knownKeys FROM tune_knowledge WHERE standardId = 7").use { it.moveToFirst(); assertEquals(5, it.getInt(0)) }
+    }
+  }
+
+  @Test
+  fun version5To6SplitsKeyAndTonality() {
+    helper.createDatabase("migration-test-5", 5).use { db ->
+      db.execSQL(
+        "INSERT INTO standards (id, slug, title, composer, year, bars, timeSignature, form, style, commonKeyRaw, commonKeyPitchClass, commonKeyMinor, archivedAt, collection, verified) " +
+          "VALUES (7, 'solar', 'Solar', 'Miles Davis', 1954, 12, '4/4', NULL, 'Swing', 'C-', 0, 1, NULL, 'Standards', 1)"
+      )
+      db.execSQL("INSERT INTO tune_state (standardId, lifecycle, keyPolicy, cyclePosition, reps, lapses, intervalDays, ease) VALUES (7, 'LEARNING', 'CYCLE', 3, 2, 0, 3.0, 2.5)")
+      db.execSQL("INSERT INTO tune_knowledge (standardId, comfort, knownKeys, updatedAt) VALUES (7, 'SHAKY', 5, 0)")
+    }
+    helper.runMigrationsAndValidate("migration-test-5", 6, true).use { db ->
+      db.query("SELECT title, keyPitchClass, keyName, tonality FROM standards WHERE id = 7").use {
+        it.moveToFirst()
+        assertEquals("Solar", it.getString(0))
+        assertEquals(0, it.getInt(1))
+        assertTrue(it.isNull(2) && it.isNull(3))
       }
       db.query("SELECT keyPolicy, cyclePosition FROM tune_state WHERE standardId = 7").use {
         it.moveToFirst()

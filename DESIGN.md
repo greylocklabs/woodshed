@@ -94,8 +94,11 @@ The scraped values were checked tune by tune against jazzstandards.com,
 Wikipedia and allsolos.com, and confirmed errors were corrected: wrong keys (My
 Funny Valentine, Caravan, Love For Sale), chart lengths recorded as chorus
 lengths (Giant Steps, Stolen Moments), misspelled composers, and missing
-co-writers. `common_key` is the key usually called, not the published original,
-and sources still disagree on a handful of tunes. Tunes added later were sourced
+co-writers. `key` is the concert tonic usually called, not the published original,
+and sources still disagree on a handful of tunes. `tonality` is `major` or
+`minor` and is separate from the key: a tune has one tonality, and only its key
+moves when it is practised round the circle. Dorian and other modal minor tunes
+count as minor; dominant blues counts as major. Tunes added later were sourced
 the same way.
 
 The list covers every title in Hal Leonard's Real Book volumes 1 to 6 and The
@@ -137,7 +140,7 @@ follows the published credit where authorship is disputed (Blue In Green, Donna
 Lee, Four, Tune Up), and leaves out lyrics added later to an instrumental.
 
 `style` adds `Trad` for New Orleans two-beat repertoire. Known quirks left
-as-is: `Latin/Swing` and `Swing,Ballad` are compound style values, minor keys use a trailing hyphen (`F-`), sharps occur (`C#-`), and Take
+as-is: `Latin/Swing` and `Swing,Ballad` are compound style values, and Take
 Five was listed as 5/5 upstream and hand-corrected to 5/4.
 
 `data/exercises.json` is 61 self-contained exercises, no method books needed.

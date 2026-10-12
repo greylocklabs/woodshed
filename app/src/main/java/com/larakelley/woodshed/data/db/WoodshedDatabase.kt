@@ -7,6 +7,7 @@ import androidx.room.Database
 import androidx.room.DeleteColumn
 import androidx.room.Insert
 import androidx.room.Query
+import androidx.room.RenameColumn
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverter
@@ -99,12 +100,13 @@ class Converters {
 
 @Database(
   entities = [StandardEntity::class, ExerciseEntity::class, TuneStateEntity::class, ReviewEventEntity::class, TuneKnowledgeEntity::class],
-  version = 5,
+  version = 6,
   autoMigrations = [
     AutoMigration(from = 1, to = 2),
     AutoMigration(from = 2, to = 3),
     AutoMigration(from = 3, to = 4),
     AutoMigration(from = 4, to = 5, spec = WoodshedDatabase.DropBooks::class),
+    AutoMigration(from = 5, to = 6, spec = WoodshedDatabase.SplitKey::class),
   ],
 )
 @TypeConverters(Converters::class)
@@ -122,6 +124,11 @@ abstract class WoodshedDatabase : RoomDatabase() {
   /** Version 4 listed every fake book a tune is printed in; version 5 keeps only its collection. */
   @DeleteColumn(tableName = "standards", columnName = "books")
   class DropBooks : AutoMigrationSpec
+
+  /** Version 6 stores the tonic and the tonality separately; re-seeding fills both. */
+  @DeleteColumn.Entries(DeleteColumn(tableName = "standards", columnName = "commonKeyRaw"), DeleteColumn(tableName = "standards", columnName = "commonKeyMinor"))
+  @RenameColumn(tableName = "standards", fromColumnName = "commonKeyPitchClass", toColumnName = "keyPitchClass")
+  class SplitKey : AutoMigrationSpec
 
   companion object {
     fun create(context: Context): WoodshedDatabase =
