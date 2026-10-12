@@ -143,7 +143,7 @@ key — and how the key behaves differs by material. Putting that on a per-item
 
 | Policy | Scheduling | Key comes from | Applies to |
 | --- | --- | --- | --- |
-| `FIXED` | One card per item | The tune's `common_key`, transposed | Repertoire, by default |
+| `FIXED` | One card per item | The tune's `key` and `tonality`, transposed | Repertoire, by default |
 | `CYCLE` | One card per item | Next step round the circle each rep | Scales & patterns; tunes you have promoted |
 | `PER_KEY` | Twelve independent cards | Fixed per card | Licks, ii-V-I — where key-specific fluency *is* the skill |
 
@@ -239,7 +239,7 @@ upsert-by-natural-key works with no disambiguation needed.
 ```sql
 -- author-owned: refreshed on every re-seed
 standards(id, slug UNIQUE, title, composer, year, bars,
-          time_signature, form?, style?, common_key_raw?, common_key?)
+          time_signature, form?, style?, key?, tonality?)
 
 -- user-owned: never touched by re-seed
 tune_state(standard_id, lifecycle, key_policy, cycle_position,
@@ -267,9 +267,8 @@ Four rules, all of them lessons the old branches paid for:
 
 **Known quirks: preserve, don't normalise.** Compound styles (`Latin/Swing`,
 `Swing,Ballad`) will tempt you into splitting on a delimiter; two rows is not
-worth the loss. Minor keys carry a trailing hyphen (`F-`, `C#-`), sharps occur,
-and `"Eb, C"` does not parse at all. Store the raw string next to the parsed
-value in every case.
+worth the loss. Key and tonality are separate fields; minor tonics are spelled
+with sharps where musicians write them (`C#`, `F#`).
 
 ## Audio: metronome and drone
 

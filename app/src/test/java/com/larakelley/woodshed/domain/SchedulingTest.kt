@@ -57,12 +57,12 @@ class SchedulingTest {
 
   @Test
   fun fixedPolicyUsesTheTunesKey() {
-    assertEquals(Key.parse("Eb"), concertKeyFor("Eb", KeyPolicy.FIXED, cyclePosition = 5))
+    assertEquals(Key(3, false), concertKeyFor(Key(3, false), KeyPolicy.FIXED, cyclePosition = 5))
   }
 
   @Test
   fun cyclePolicyWalksTheCircleFromTheTunesKey() {
-    val keys = (0..12).map { concertKeyFor("Bb-", KeyPolicy.CYCLE, it)!!.displayName }
+    val keys = (0..12).map { concertKeyFor(Key(10, true), KeyPolicy.CYCLE, it)!!.displayName }
     assertEquals(
       listOf("Bb minor", "Eb minor", "G# minor", "C# minor", "F# minor", "B minor", "E minor", "A minor", "D minor", "G minor", "C minor", "F minor", "Bb minor"),
       keys,
@@ -70,9 +70,9 @@ class SchedulingTest {
   }
 
   @Test
-  fun unparseableKeyHasNoConcertKeyUnderEitherPolicy() {
-    assertNull(concertKeyFor("Eb, C", KeyPolicy.FIXED, 0))
-    assertNull(concertKeyFor("Eb, C", KeyPolicy.CYCLE, 3))
+  fun unknownKeyHasNoConcertKeyUnderEitherPolicy() {
+    assertNull(concertKeyFor(null, KeyPolicy.FIXED, 0))
+    assertNull(concertKeyFor(null, KeyPolicy.CYCLE, 3))
   }
 
   @Test

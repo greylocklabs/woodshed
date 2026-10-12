@@ -7,6 +7,7 @@ import com.larakelley.woodshed.data.db.StandardEntity
 import com.larakelley.woodshed.data.db.TuneKnowledgeEntity
 import com.larakelley.woodshed.data.db.TuneStateEntity
 import com.larakelley.woodshed.data.db.WoodshedDatabase
+import com.larakelley.woodshed.data.db.homeKey
 import com.larakelley.woodshed.domain.CardState
 import com.larakelley.woodshed.domain.Comfort
 import com.larakelley.woodshed.domain.Grade
@@ -131,7 +132,7 @@ class PracticeService(
       if (tune.archivedAt != null) continue
       val recent = db.reviewEvents().forItem(ReviewEventEntity.TUNE, tune.id).mapNotNull { it.exerciseId }.reversed()
       val exercise = pickExercise(exercises, { it.id }, recent.distinct(), random)
-      return Card(tune, state, exercise, concertKeyFor(tune.commonKeyRaw, state.keyPolicy, state.cyclePosition), transposition, t)
+      return Card(tune, state, exercise, concertKeyFor(tune.homeKey, state.keyPolicy, state.cyclePosition), transposition, t)
     }
     return null
   }

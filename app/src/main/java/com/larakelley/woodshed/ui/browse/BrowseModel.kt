@@ -8,12 +8,14 @@ import com.larakelley.woodshed.data.db.ExerciseEntity
 import com.larakelley.woodshed.data.db.StandardEntity
 import com.larakelley.woodshed.data.db.TuneKnowledgeEntity
 import com.larakelley.woodshed.data.db.TuneStateEntity
+import com.larakelley.woodshed.data.db.homeKey
 import com.larakelley.woodshed.domain.Comfort
 import com.larakelley.woodshed.domain.Family
 import com.larakelley.woodshed.domain.Key
 import com.larakelley.woodshed.domain.KeyPolicy
 import com.larakelley.woodshed.domain.Lifecycle
 import com.larakelley.woodshed.domain.Phase
+import com.larakelley.woodshed.domain.Tonality
 import com.larakelley.woodshed.domain.Transposition
 import com.larakelley.woodshed.domain.titleSortKey
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -33,7 +35,8 @@ data class TuneRow(
   val shape: String,
   val style: String?,
   val key: String,
-  val rawKey: String?,
+  val homeKey: Key?,
+  val tonality: Tonality?,
   val state: TuneStateEntity? = null,
   val knowledge: TuneKnowledgeEntity? = null,
   val transposition: Transposition = Transposition.C,
@@ -67,6 +70,7 @@ data class TuneFilter(
   /** Only tunes rated at least this comfortable. */
   val minComfort: Comfort? = null,
   val collection: String? = null,
+  val tonality: Tonality? = null,
 )
 
 data class ExerciseFilter(val query: String = "", val category: String? = null)
@@ -85,9 +89,9 @@ data class BrowseState(
   val seedError: String? = null,
 )
 
-/** The key to show for a tune: written for the transposition, or the raw text when it does not parse. */
-fun keyLabel(raw: String?, transposition: Transposition): String {
-  val key = Key.parse(raw) ?: return if (raw == null) "Key unknown" else "Concert $raw"
+/** The key to show for a tune, written for the transposition. */
+fun keyLabel(key: Key?, tonality: Tonality?, transposition: Transposition): String {
+  if (key == null) return tonality?.let { "${it.label}, key unknown" } ?: "Key unknown"
   return if (transposition == Transposition.C) "Concert ${key.displayName}" else key.writtenFor(transposition).displayName
 }
 
@@ -111,8 +115,9 @@ fun tuneRows(
         s.style.takeIf { it != s.form },
       ).joinToString(", "),
       style = s.style,
-      key = keyLabel(s.commonKeyRaw, transposition),
-      rawKey = s.commonKeyRaw,
+      key = keyLabel(s.homeKey, s.tonality, transposition),
+      homeKey = s.homeKey,
+      tonality = s.tonality,
       state = states[s.id],
       knowledge = knowledge[s.id],
       transposition = transposition,
@@ -146,6 +151,7 @@ fun filterTunes(rows: List<TuneRow>, filter: TuneFilter): List<TuneRow> =
     statusOk && comfortOk &&
       (filter.style == null || row.style == filter.style) &&
       (filter.collection == null || row.collection == filter.collection) &&
+      (filter.tonality == null || row.tonality == filter.tonality) &&
       matchesQuery(filter.query, row.title, row.composer)
   }
 

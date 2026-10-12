@@ -20,6 +20,7 @@ import com.larakelley.woodshed.domain.Comfort
 import com.larakelley.woodshed.domain.Family
 import com.larakelley.woodshed.domain.KeyMask
 import com.larakelley.woodshed.domain.Lifecycle
+import com.larakelley.woodshed.domain.Tonality
 import com.larakelley.woodshed.domain.Transposition
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -36,8 +37,8 @@ class BrowseScreenTest {
   @get:Rule val compose = createComposeRule()
 
   private val standards = listOf(
-    StandardEntity(1, "body-and-soul", "Body And Soul", "Johnny Green", 1930, 32, "4/4", "AABA", "Ballad", "Db", 1, false),
-    StandardEntity(2, "on-green-dolphin-street", "On Green Dolphin Street", null, 1947, 32, "4/4", "ABAC", "Swing", "Eb, C", null, null),
+    StandardEntity(1, "body-and-soul", "Body And Soul", "Johnny Green", 1930, 32, "4/4", "AABA", "Ballad", "Db", 1, Tonality.MAJOR),
+    StandardEntity(2, "on-green-dolphin-street", "On Green Dolphin Street", null, 1947, 32, "4/4", "ABAC", "Swing", null, null, null),
   )
   private val exercises = listOf(
     ExerciseEntity(1, "Long tones", "Tone", "Low to mid range.", 10, 2, 60, emptyList(), false),
@@ -71,8 +72,7 @@ class BrowseScreenTest {
 
     compose.onNodeWithText("Eb").assertExists()
     compose.onNodeWithText("Concert Db").assertDoesNotExist()
-    // A key that does not parse stays visible as written rather than being transposed.
-    compose.onNodeWithText("Concert Eb, C").assertExists()
+    compose.onNodeWithText("Key unknown").assertExists()
   }
 
   @Test

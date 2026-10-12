@@ -109,7 +109,7 @@ class DiceViewModel(
     val card = practice.cardFor(r, transposition)
     val written = r.concertKey?.writtenFor(transposition)
     val key = when {
-      written == null -> r.tune.commonKeyRaw?.let { "Concert $it" } ?: "Key unknown"
+      written == null -> "Key unknown"
       transposition == Transposition.C -> "Concert ${written.displayName}"
       else -> "Written ${written.displayName}"
     }

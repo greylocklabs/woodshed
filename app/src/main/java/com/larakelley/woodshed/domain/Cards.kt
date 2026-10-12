@@ -2,9 +2,9 @@ package com.larakelley.woodshed.domain
 
 import kotlin.random.Random
 
-/** The key a tune is practiced in for one review, in concert pitch. Null when the tune's key does not parse. */
-fun concertKeyFor(rawKey: String?, policy: KeyPolicy, cyclePosition: Int): Key? {
-  val base = Key.parse(rawKey) ?: return null
+/** The key a tune is practiced in for one review, in concert pitch. Null when the tune's key is unknown. */
+fun concertKeyFor(base: Key?, policy: KeyPolicy, cyclePosition: Int): Key? {
+  if (base == null) return null
   if (policy == KeyPolicy.FIXED) return base
   val start = Key.CIRCLE_OF_FOURTHS.indexOf(base.pitchClass)
   return base.copy(pitchClass = Key.CIRCLE_OF_FOURTHS[Math.floorMod(start + cyclePosition, 12)])

@@ -1,6 +1,8 @@
 package com.larakelley.woodshed.data.seed
 
 import com.larakelley.woodshed.domain.Family
+import com.larakelley.woodshed.domain.Key
+import com.larakelley.woodshed.domain.Tonality
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
@@ -16,7 +18,10 @@ data class StandardSeed(
   @SerialName("time_signature") val timeSignature: String?,
   val form: String?,
   val style: String?,
-  @SerialName("common_key") val commonKey: String?,
+  /** Concert tonic of the key the tune is usually called in, such as "Eb" or "F#". */
+  val key: String?,
+  /** "major" or "minor". */
+  val tonality: String?,
   /** "Standards", or "Trad" for New Orleans and Dixieland repertoire. */
   val collection: String,
   /** False for rows imported in bulk whose fields have not been checked tune by tune. */
@@ -83,7 +88,9 @@ object SeedValidator {
       if (s.bars != null && s.bars <= 0) add("$at: bars must be positive")
       if (s.composer != null && s.composer.isBlank()) add("$at: blank composer, use null for unknown")
       if (s.form != null && s.form.isBlank()) add("$at: blank form, use null for unknown")
-      if (s.commonKey != null && s.commonKey.isBlank()) add("$at: blank key, use null for unknown")
+      if (s.key != null && Key.pitchClassOf(s.key) == null) add("$at: bad key ${s.key}")
+      if (s.tonality != null && Tonality.fromSeedName(s.tonality) == null) add("$at: bad tonality ${s.tonality}")
+      if (s.key != null && s.tonality == null) add("$at: key without a tonality")
     }
 
     duplicates(seed.exercises.map { it.name }).forEach { add("duplicate exercise: $it") }

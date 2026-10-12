@@ -9,8 +9,10 @@ import com.larakelley.woodshed.domain.CardState
 import com.larakelley.woodshed.domain.Comfort
 import com.larakelley.woodshed.domain.Family
 import com.larakelley.woodshed.domain.Grade
+import com.larakelley.woodshed.domain.Key
 import com.larakelley.woodshed.domain.KeyPolicy
 import com.larakelley.woodshed.domain.Lifecycle
+import com.larakelley.woodshed.domain.Tonality
 
 /**
  * Author-owned: every column comes from the seed and is refreshed on re-seed. User state for a tune
@@ -27,15 +29,19 @@ data class StandardEntity(
   val timeSignature: String?,
   val form: String?,
   val style: String?,
-  /** Exactly as written in the seed, kept even when it does not parse. */
-  val commonKeyRaw: String?,
-  val commonKeyPitchClass: Int?,
-  val commonKeyMinor: Boolean?,
+  /** The tonic as spelled in the seed, such as "Eb" or "F#". */
+  val keyName: String?,
+  val keyPitchClass: Int?,
+  val tonality: Tonality?,
   /** Set when the row disappears from the seed; history may still point at it. */
   val archivedAt: Long? = null,
   @ColumnInfo(defaultValue = "Standards") val collection: String = "Standards",
   @ColumnInfo(defaultValue = "1") val verified: Boolean = true,
 )
+
+/** The tune's usual key in concert pitch, or null when unknown. */
+val StandardEntity.homeKey: Key?
+  get() = keyPitchClass?.let { Key(it, tonality == Tonality.MINOR) }
 
 @Entity(tableName = "exercises", indices = [Index(value = ["name"], unique = true)])
 data class ExerciseEntity(
