@@ -104,6 +104,16 @@ class BrowseScreenTest {
   }
 
   @Test
+  fun anEmptyResultSaysSoAndOffersAWayOut() {
+    showWithLiveState()
+    compose.onNodeWithTag("search").performTextInput("zzzz")
+    compose.onNodeWithText("No tunes match").assertExists()
+    compose.onNodeWithTag("empty-action").performScrollTo().performClick()
+    compose.onNodeWithTag("empty-state").assertDoesNotExist()
+    compose.onNodeWithText("Body And Soul").assertExists()
+  }
+
+  @Test
   fun searchNarrowsTheTuneList() {
     showWithLiveState()
     compose.onNodeWithTag("search").performTextInput("dolphin")

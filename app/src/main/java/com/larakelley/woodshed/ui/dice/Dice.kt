@@ -32,6 +32,7 @@ import com.larakelley.woodshed.domain.Grade
 import com.larakelley.woodshed.domain.KeyMask
 import com.larakelley.woodshed.domain.Transposition
 import com.larakelley.woodshed.domain.delayLabel
+import com.larakelley.woodshed.theme.EmptyState
 import com.larakelley.woodshed.theme.StickerButton
 import com.larakelley.woodshed.ui.browse.DropdownChip
 import com.larakelley.woodshed.ui.practice.GradeButtons
@@ -152,7 +153,7 @@ fun DiceScreen(
         Text(if (ui.card == null) "🎲 Roll" else "🎲 Roll again", style = MaterialTheme.typography.titleLarge)
       }
       if (ui.nothingMatches) {
-        Text("🤷 No tunes match. Loosen the constraints, or add tunes to your list from the Tunes tab.")
+        EmptyState("🎲", "Nothing to roll", "No tunes fit these choices. Loosen them, or add tunes to your list from the Tunes tab.")
       }
       ui.card?.let { card ->
         Text(card.title, style = MaterialTheme.typography.displaySmall, modifier = Modifier.testTag("dice-title"))
