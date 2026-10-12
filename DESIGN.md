@@ -95,19 +95,21 @@ Wikipedia and allsolos.com, and confirmed errors were corrected: wrong keys (My
 Funny Valentine, Caravan, Love For Sale), chart lengths recorded as chorus
 lengths (Giant Steps, Stolen Moments), misspelled composers, and missing
 co-writers. `common_key` is the key usually called, not the published original,
-and sources still disagree on a handful of tunes.
+and sources still disagree on a handful of tunes. The 57 tunes added after the
+scrape (songbook ballads, jam-session staples, post-1967 tunes) were sourced the
+same way.
 
-Field coverage across the 201 tunes, which is the useful part to know before
+Field coverage across the 258 tunes, which is the useful part to know before
 designing around it:
 
 | Field | Distinct values | Absent |
 | --- | --- | --- |
-| form | 12 (AABA dominates at 77) | 16 |
+| form | 13 (AABA dominates at 112) | 25 |
 | style | 12 | 1 |
 | time_signature | 3 | 0 |
-| common_key | 19 | 2 |
+| common_key | 19 | 9 |
 
-**Absence is common and meaningful.** 16 tunes have no documented form. Model
+**Absence is common and meaningful.** 25 tunes have no documented form. Model
 these as nullable and keep "unknown" distinguishable from "empty", or you will
 lose the distinction permanently on first import.
 
@@ -122,12 +124,16 @@ Known quirks left as-is: `Latin/Swing` and `Swing,Ballad` are compound style
 values, minor keys use a trailing hyphen (`F-`), sharps occur (`C#-`), and Take
 Five was listed as 5/5 upstream and hand-corrected to 5/4.
 
-`data/exercises.json` is 44 self-contained exercises, no method books needed.
+`data/exercises.json` is 61 self-contained exercises, no method books needed.
 `families` scopes an exercise to instrument families; **empty means it applies to
 everything**, which is the common case. Only genuinely instrument-specific work
 is scoped: overtones and altissimo to sax, harmonics to flute, register-break
-crossings to clarinet, lip slurs and doodle tonguing to brass, and finger
-independence to the keyed families.
+crossings to clarinet, lip slurs, doodle tonguing and range building to brass,
+mouthpiece bends to the reeds, and finger independence to the keyed families.
+
+`applies_to_tune` marks exercises that are done to a tune, which is what lets
+cards be composed rather than authored. The progression drills cover the common
+blues forms: three-chord, jazz (bebop), Bird, minor and 16-bar.
 
 ## Traps that cost real time
 

@@ -1,14 +1,14 @@
 [
   {
-    "title": "A Foggy Day",
-    "slug": "a-foggy-day",
-    "composer": "George Gershwin, Ira Gershwin",
-    "year": 1937,
-    "bars": 34,
+    "title": "500 Miles High",
+    "slug": "500-miles-high",
+    "composer": "Chick Corea, Neville Potter",
+    "year": 1972,
+    "bars": 18,
     "time_signature": "4/4",
-    "form": "ABAC",
-    "style": "Swing",
-    "common_key": "F"
+    "form": null,
+    "style": "Bossa",
+    "common_key": null
   },
   {
     "title": "Afro Blue",
@@ -22,10 +22,32 @@
     "common_key": "F-"
   },
   {
+    "title": "After You've Gone",
+    "slug": "after-youve-gone",
+    "composer": "Turner Layton, Henry Creamer",
+    "year": 1918,
+    "bars": 40,
+    "time_signature": "4/4",
+    "form": "ABAC",
+    "style": "Swing",
+    "common_key": "Bb"
+  },
+  {
     "title": "Afternoon In Paris",
     "slug": "afternoon-in-paris",
     "composer": "John Lewis",
     "year": 1949,
+    "bars": 32,
+    "time_signature": "4/4",
+    "form": "AABA",
+    "style": "Swing",
+    "common_key": "C"
+  },
+  {
+    "title": "Ain't Misbehavin'",
+    "slug": "aint-misbehavin",
+    "composer": "Fats Waller, Harry Brooks, Andy Razaf",
+    "year": 1929,
     "bars": 32,
     "time_signature": "4/4",
     "form": "AABA",
@@ -151,6 +173,17 @@
     "time_signature": "4/4",
     "form": "Blues",
     "style": "Blues",
+    "common_key": "F"
+  },
+  {
+    "title": "Autumn In New York",
+    "slug": "autumn-in-new-york",
+    "composer": "Vernon Duke",
+    "year": 1934,
+    "bars": 32,
+    "time_signature": "4/4",
+    "form": "ABAC",
+    "style": "Ballad",
     "common_key": "F"
   },
   {
@@ -297,6 +330,17 @@
     "common_key": "Bb"
   },
   {
+    "title": "Blue Moon",
+    "slug": "blue-moon",
+    "composer": "Richard Rodgers, Lorenz Hart",
+    "year": 1934,
+    "bars": 32,
+    "time_signature": "4/4",
+    "form": "AABA",
+    "style": "Swing",
+    "common_key": "Eb"
+  },
+  {
     "title": "Blue Train",
     "slug": "blue-train",
     "composer": "John Coltrane",
@@ -407,6 +451,17 @@
     "common_key": "F"
   },
   {
+    "title": "C Jam Blues",
+    "slug": "c-jam-blues",
+    "composer": "Duke Ellington",
+    "year": 1942,
+    "bars": 12,
+    "time_signature": "4/4",
+    "form": "Blues",
+    "style": "Blues",
+    "common_key": "C"
+  },
+  {
     "title": "Cantaloupe Island",
     "slug": "cantaloupe-island",
     "composer": "Herbie Hancock",
@@ -440,6 +495,17 @@
     "common_key": "Ab"
   },
   {
+    "title": "Chelsea Bridge",
+    "slug": "chelsea-bridge",
+    "composer": "Billy Strayhorn",
+    "year": 1941,
+    "bars": 32,
+    "time_signature": "4/4",
+    "form": "AABA",
+    "style": "Ballad",
+    "common_key": "Db"
+  },
+  {
     "title": "Cherokee",
     "slug": "cherokee",
     "composer": "Ray Noble",
@@ -460,6 +526,28 @@
     "form": "AB",
     "style": "Swing",
     "common_key": "F"
+  },
+  {
+    "title": "Come Sunday",
+    "slug": "come-sunday",
+    "composer": "Duke Ellington",
+    "year": 1943,
+    "bars": 32,
+    "time_signature": "4/4",
+    "form": "AABA",
+    "style": "Ballad",
+    "common_key": "Bb"
+  },
+  {
+    "title": "Con Alma",
+    "slug": "con-alma",
+    "composer": "Dizzy Gillespie",
+    "year": 1954,
+    "bars": 32,
+    "time_signature": "4/4",
+    "form": "AABA",
+    "style": "Latin",
+    "common_key": null
   },
   {
     "title": "Confirmation",
@@ -484,6 +572,17 @@
     "common_key": "A-"
   },
   {
+    "title": "Cotton Tail",
+    "slug": "cotton-tail",
+    "composer": "Duke Ellington",
+    "year": 1940,
+    "bars": 32,
+    "time_signature": "4/4",
+    "form": "AABA",
+    "style": "Swing",
+    "common_key": "Bb"
+  },
+  {
     "title": "Countdown",
     "slug": "countdown",
     "composer": "John Coltrane",
@@ -493,6 +592,17 @@
     "form": null,
     "style": "Bebop",
     "common_key": "Bb"
+  },
+  {
+    "title": "Daahoud",
+    "slug": "daahoud",
+    "composer": "Clifford Brown",
+    "year": 1954,
+    "bars": 32,
+    "time_signature": "4/4",
+    "form": "AABA",
+    "style": "Swing",
+    "common_key": "Eb"
   },
   {
     "title": "Darn That Dream",
@@ -517,6 +627,17 @@
     "common_key": "F"
   },
   {
+    "title": "Dear Old Stockholm",
+    "slug": "dear-old-stockholm",
+    "composer": "Traditional, Stan Getz",
+    "year": 1951,
+    "bars": 43,
+    "time_signature": "4/4",
+    "form": "AABAC",
+    "style": "Swing",
+    "common_key": "D-"
+  },
+  {
     "title": "Desafinado",
     "slug": "desafinado",
     "composer": "Antonio Carlos Jobim, Newton Mendonca, Jon Hendricks, Jessie Cavanaugh",
@@ -526,6 +647,17 @@
     "form": "AABC",
     "style": "Bossa",
     "common_key": "F"
+  },
+  {
+    "title": "Do Nothin' Till You Hear From Me",
+    "slug": "do-nothin-till-you-hear-from-me",
+    "composer": "Duke Ellington, Bob Russell",
+    "year": 1943,
+    "bars": 32,
+    "time_signature": "4/4",
+    "form": "AABA",
+    "style": "Swing",
+    "common_key": null
   },
   {
     "title": "Dolphin Dance",
@@ -539,17 +671,6 @@
     "common_key": null
   },
   {
-    "title": "Don't Get Around Much Anymore",
-    "slug": "dont-get-around-much-anymore",
-    "composer": "Duke Ellington, Bob Russell",
-    "year": 1940,
-    "bars": 32,
-    "time_signature": "4/4",
-    "form": "AABA",
-    "style": "Swing",
-    "common_key": "C"
-  },
-  {
     "title": "Donna Lee",
     "slug": "donna-lee",
     "composer": "Miles Davis",
@@ -559,6 +680,28 @@
     "form": "AB",
     "style": "Bebop",
     "common_key": "Ab"
+  },
+  {
+    "title": "Don't Blame Me",
+    "slug": "dont-blame-me",
+    "composer": "Jimmy McHugh, Dorothy Fields",
+    "year": 1932,
+    "bars": 32,
+    "time_signature": "4/4",
+    "form": "AABA",
+    "style": "Ballad",
+    "common_key": "C"
+  },
+  {
+    "title": "Don't Get Around Much Anymore",
+    "slug": "dont-get-around-much-anymore",
+    "composer": "Duke Ellington, Bob Russell",
+    "year": 1940,
+    "bars": 32,
+    "time_signature": "4/4",
+    "form": "AABA",
+    "style": "Swing",
+    "common_key": "C"
   },
   {
     "title": "Doxy",
@@ -572,14 +715,14 @@
     "common_key": "Bb"
   },
   {
-    "title": "E.S.P.",
-    "slug": "esp",
-    "composer": "Wayne Shorter",
-    "year": 1965,
+    "title": "Easy Living",
+    "slug": "easy-living",
+    "composer": "Ralph Rainger, Leo Robin",
+    "year": 1937,
     "bars": 32,
     "time_signature": "4/4",
-    "form": "ABAC",
-    "style": "Swing",
+    "form": "AABA",
+    "style": "Ballad",
     "common_key": "F"
   },
   {
@@ -594,6 +737,17 @@
     "common_key": "G"
   },
   {
+    "title": "Epistrophy",
+    "slug": "epistrophy",
+    "composer": "Thelonious Monk, Kenny Clarke",
+    "year": 1941,
+    "bars": 32,
+    "time_signature": "4/4",
+    "form": "ABCB",
+    "style": "Swing",
+    "common_key": "Db"
+  },
+  {
     "title": "Equinox",
     "slug": "equinox",
     "composer": "John Coltrane",
@@ -603,6 +757,28 @@
     "form": "Blues",
     "style": "Blues",
     "common_key": "C#-"
+  },
+  {
+    "title": "E.S.P.",
+    "slug": "esp",
+    "composer": "Wayne Shorter",
+    "year": 1965,
+    "bars": 32,
+    "time_signature": "4/4",
+    "form": "ABAC",
+    "style": "Swing",
+    "common_key": "F"
+  },
+  {
+    "title": "Everything Happens To Me",
+    "slug": "everything-happens-to-me",
+    "composer": "Matt Dennis, Tom Adair",
+    "year": 1940,
+    "bars": 32,
+    "time_signature": "4/4",
+    "form": "AABA",
+    "style": "Ballad",
+    "common_key": "Bb"
   },
   {
     "title": "Fee Fi Fo Fum",
@@ -625,6 +801,17 @@
     "form": "ABAC",
     "style": "Swing",
     "common_key": "C"
+  },
+  {
+    "title": "A Foggy Day",
+    "slug": "a-foggy-day",
+    "composer": "George Gershwin, Ira Gershwin",
+    "year": 1937,
+    "bars": 34,
+    "time_signature": "4/4",
+    "form": "ABAC",
+    "style": "Swing",
+    "common_key": "F"
   },
   {
     "title": "Footprints",
@@ -701,6 +888,28 @@
     "time_signature": "4/4",
     "form": "AB",
     "style": "Swing",
+    "common_key": "Eb"
+  },
+  {
+    "title": "The Girl From Ipanema",
+    "slug": "the-girl-from-ipanema",
+    "composer": "Antonio Carlos Jobim, Vinicius de Moraes, Norman Gimbel",
+    "year": 1962,
+    "bars": 40,
+    "time_signature": "4/4",
+    "form": "AABA",
+    "style": "Bossa",
+    "common_key": "F"
+  },
+  {
+    "title": "God Bless The Child",
+    "slug": "god-bless-the-child",
+    "composer": "Billie Holiday, Arthur Herzog Jr.",
+    "year": 1941,
+    "bars": 38,
+    "time_signature": "4/4",
+    "form": "AABA",
+    "style": "Ballad",
     "common_key": "Eb"
   },
   {
@@ -836,6 +1045,39 @@
     "common_key": "C"
   },
   {
+    "title": "I Didn't Know What Time It Was",
+    "slug": "i-didnt-know-what-time-it-was",
+    "composer": "Richard Rodgers, Lorenz Hart",
+    "year": 1939,
+    "bars": 36,
+    "time_signature": "4/4",
+    "form": "AABA",
+    "style": "Swing",
+    "common_key": "G"
+  },
+  {
+    "title": "I Don't Stand A Ghost Of A Chance",
+    "slug": "i-dont-stand-a-ghost-of-a-chance",
+    "composer": "Victor Young, Ned Washington, Bing Crosby",
+    "year": 1932,
+    "bars": 32,
+    "time_signature": "4/4",
+    "form": "AABA",
+    "style": "Ballad",
+    "common_key": "C"
+  },
+  {
+    "title": "I Got It Bad (And That Ain't Good)",
+    "slug": "i-got-it-bad-and-that-aint-good",
+    "composer": "Duke Ellington, Paul Francis Webster",
+    "year": 1941,
+    "bars": 32,
+    "time_signature": "4/4",
+    "form": "AABA",
+    "style": "Ballad",
+    "common_key": "G"
+  },
+  {
     "title": "I Got Rhythm",
     "slug": "i-got-rhythm",
     "composer": "George Gershwin, Ira Gershwin",
@@ -878,6 +1120,17 @@
     "form": "AABA",
     "style": "Swing",
     "common_key": "F"
+  },
+  {
+    "title": "I Remember Clifford",
+    "slug": "i-remember-clifford",
+    "composer": "Benny Golson",
+    "year": 1956,
+    "bars": 32,
+    "time_signature": "4/4",
+    "form": "AABA",
+    "style": "Ballad",
+    "common_key": "Eb"
   },
   {
     "title": "I Remember You",
@@ -924,6 +1177,28 @@
     "common_key": "F"
   },
   {
+    "title": "If I Should Lose You",
+    "slug": "if-i-should-lose-you",
+    "composer": "Ralph Rainger, Leo Robin",
+    "year": 1936,
+    "bars": 32,
+    "time_signature": "4/4",
+    "form": "ABAC",
+    "style": "Swing",
+    "common_key": "G-"
+  },
+  {
+    "title": "If I Were A Bell",
+    "slug": "if-i-were-a-bell",
+    "composer": "Frank Loesser",
+    "year": 1950,
+    "bars": 32,
+    "time_signature": "4/4",
+    "form": "ABAC",
+    "style": "Swing",
+    "common_key": "F"
+  },
+  {
     "title": "I'll Remember April",
     "slug": "ill-remember-april",
     "composer": "Gene de Paul, Don Raye, Patricia Johnston",
@@ -935,13 +1210,13 @@
     "common_key": "G"
   },
   {
-    "title": "If I Were A Bell",
-    "slug": "if-i-were-a-bell",
-    "composer": "Frank Loesser",
-    "year": 1950,
-    "bars": 32,
+    "title": "I'm Old Fashioned",
+    "slug": "im-old-fashioned",
+    "composer": "Jerome Kern, Johnny Mercer",
+    "year": 1942,
+    "bars": 36,
     "time_signature": "4/4",
-    "form": "ABAC",
+    "form": null,
     "style": "Swing",
     "common_key": "F"
   },
@@ -987,6 +1262,17 @@
     "time_signature": "4/4",
     "form": "AABAC",
     "style": "Swing",
+    "common_key": "Eb"
+  },
+  {
+    "title": "Infant Eyes",
+    "slug": "infant-eyes",
+    "composer": "Wayne Shorter",
+    "year": 1964,
+    "bars": 27,
+    "time_signature": "4/4",
+    "form": "ABA",
+    "style": "Ballad",
     "common_key": "Eb"
   },
   {
@@ -1067,6 +1353,17 @@
     "common_key": "F"
   },
   {
+    "title": "Jordu",
+    "slug": "jordu",
+    "composer": "Duke Jordan",
+    "year": 1953,
+    "bars": 32,
+    "time_signature": "4/4",
+    "form": "AABA",
+    "style": "Swing",
+    "common_key": "C-"
+  },
+  {
     "title": "Joy Spring",
     "slug": "joy-spring",
     "composer": "Clifford Brown",
@@ -1078,6 +1375,17 @@
     "common_key": "F"
   },
   {
+    "title": "Juju",
+    "slug": "juju",
+    "composer": "Wayne Shorter",
+    "year": 1964,
+    "bars": 24,
+    "time_signature": "3/4",
+    "form": null,
+    "style": "Jazz Waltz",
+    "common_key": null
+  },
+  {
     "title": "Just Friends",
     "slug": "just-friends",
     "composer": "John Klenner, Sam M. Lewis",
@@ -1087,6 +1395,17 @@
     "form": "ABAC",
     "style": "Swing",
     "common_key": "G"
+  },
+  {
+    "title": "Just One Of Those Things",
+    "slug": "just-one-of-those-things",
+    "composer": "Cole Porter",
+    "year": 1935,
+    "bars": 64,
+    "time_signature": "4/4",
+    "form": "AABA",
+    "style": "Swing",
+    "common_key": "F"
   },
   {
     "title": "Killer Joe",
@@ -1166,6 +1485,17 @@
     "common_key": "Bb"
   },
   {
+    "title": "Lover, Come Back To Me",
+    "slug": "lover-come-back-to-me",
+    "composer": "Sigmund Romberg, Oscar Hammerstein II",
+    "year": 1928,
+    "bars": 64,
+    "time_signature": "4/4",
+    "form": "AABA",
+    "style": "Swing",
+    "common_key": "Eb"
+  },
+  {
     "title": "Lover Man",
     "slug": "lover-man",
     "composer": "Jimmy Davis, Roger Ramirez, Jimmy Sherman",
@@ -1188,6 +1518,17 @@
     "common_key": "Ab"
   },
   {
+    "title": "Lush Life",
+    "slug": "lush-life",
+    "composer": "Billy Strayhorn",
+    "year": 1949,
+    "bars": 26,
+    "time_signature": "4/4",
+    "form": null,
+    "style": "Ballad",
+    "common_key": "Db"
+  },
+  {
     "title": "Mack The Knife",
     "slug": "mack-the-knife",
     "composer": "Kurt Weill, Bertolt Brecht, Marc Blitzstein",
@@ -1208,6 +1549,17 @@
     "form": "AABA",
     "style": "Swing",
     "common_key": "D"
+  },
+  {
+    "title": "The Man I Love",
+    "slug": "the-man-i-love",
+    "composer": "George Gershwin, Ira Gershwin",
+    "year": 1924,
+    "bars": 32,
+    "time_signature": "4/4",
+    "form": "AABA",
+    "style": "Ballad",
+    "common_key": "Eb"
   },
   {
     "title": "Meditation",
@@ -1364,6 +1716,17 @@
     "common_key": "Eb"
   },
   {
+    "title": "My Old Flame",
+    "slug": "my-old-flame",
+    "composer": "Arthur Johnston, Sam Coslow",
+    "year": 1934,
+    "bars": 32,
+    "time_signature": "4/4",
+    "form": "AABA",
+    "style": "Ballad",
+    "common_key": null
+  },
+  {
     "title": "My One And Only Love",
     "slug": "my-one-and-only-love",
     "composer": "Guy Wood, Robert Mellin",
@@ -1397,6 +1760,17 @@
     "common_key": "Eb"
   },
   {
+    "title": "Naima",
+    "slug": "naima",
+    "composer": "John Coltrane",
+    "year": 1959,
+    "bars": 20,
+    "time_signature": "4/4",
+    "form": "AABA",
+    "style": "Ballad",
+    "common_key": "Ab"
+  },
+  {
     "title": "Nardis",
     "slug": "nardis",
     "composer": "Miles Davis",
@@ -1406,6 +1780,28 @@
     "form": "AABA",
     "style": "Swing",
     "common_key": "E-"
+  },
+  {
+    "title": "The Nearness Of You",
+    "slug": "the-nearness-of-you",
+    "composer": "Hoagy Carmichael, Ned Washington",
+    "year": 1938,
+    "bars": 36,
+    "time_signature": "4/4",
+    "form": "AABA",
+    "style": "Ballad",
+    "common_key": "F"
+  },
+  {
+    "title": "Nefertiti",
+    "slug": "nefertiti",
+    "composer": "Wayne Shorter",
+    "year": 1967,
+    "bars": 16,
+    "time_signature": "4/4",
+    "form": null,
+    "style": "Swing",
+    "common_key": "Ab"
   },
   {
     "title": "Nica's Dream",
@@ -1430,6 +1826,17 @@
     "common_key": "C"
   },
   {
+    "title": "The Night Has A Thousand Eyes",
+    "slug": "the-night-has-a-thousand-eyes",
+    "composer": "Jerry Brainin, Buddy Bernier",
+    "year": 1948,
+    "bars": 48,
+    "time_signature": "4/4",
+    "form": "AAB",
+    "style": "Latin",
+    "common_key": "G"
+  },
+  {
     "title": "A Night In Tunisia",
     "slug": "night-in-tunisia",
     "composer": "Dizzy Gillespie, Frank Paparelli",
@@ -1449,6 +1856,28 @@
     "time_signature": "4/4",
     "form": "Blues",
     "style": "Blues",
+    "common_key": "F"
+  },
+  {
+    "title": "Oh, Lady Be Good",
+    "slug": "oh-lady-be-good",
+    "composer": "George Gershwin, Ira Gershwin",
+    "year": 1924,
+    "bars": 32,
+    "time_signature": "4/4",
+    "form": "AABA",
+    "style": "Swing",
+    "common_key": "G"
+  },
+  {
+    "title": "Old Folks",
+    "slug": "old-folks",
+    "composer": "Willard Robison, Dedette Lee Hill",
+    "year": 1938,
+    "bars": 32,
+    "time_signature": "4/4",
+    "form": "AABA",
+    "style": "Ballad",
     "common_key": "F"
   },
   {
@@ -1540,6 +1969,17 @@
     "common_key": "G"
   },
   {
+    "title": "Over The Rainbow",
+    "slug": "over-the-rainbow",
+    "composer": "Harold Arlen, Yip Harburg",
+    "year": 1939,
+    "bars": 32,
+    "time_signature": "4/4",
+    "form": "AABA",
+    "style": "Ballad",
+    "common_key": "Eb"
+  },
+  {
     "title": "Peace",
     "slug": "peace",
     "composer": "Horace Silver",
@@ -1549,6 +1989,28 @@
     "form": null,
     "style": "Ballad",
     "common_key": "Bb"
+  },
+  {
+    "title": "Pennies From Heaven",
+    "slug": "pennies-from-heaven",
+    "composer": "Arthur Johnston, Johnny Burke",
+    "year": 1936,
+    "bars": 32,
+    "time_signature": "4/4",
+    "form": "ABAC",
+    "style": "Swing",
+    "common_key": "C"
+  },
+  {
+    "title": "Pent-Up House",
+    "slug": "pent-up-house",
+    "composer": "Sonny Rollins",
+    "year": 1956,
+    "bars": 16,
+    "time_signature": "4/4",
+    "form": null,
+    "style": "Swing",
+    "common_key": "G"
   },
   {
     "title": "Perdido",
@@ -1595,6 +2057,17 @@
     "common_key": "A-"
   },
   {
+    "title": "Red Clay",
+    "slug": "red-clay",
+    "composer": "Freddie Hubbard",
+    "year": 1970,
+    "bars": null,
+    "time_signature": "4/4",
+    "form": null,
+    "style": "Funk",
+    "common_key": "C#-"
+  },
+  {
     "title": "'Round Midnight",
     "slug": "round-midnight",
     "composer": "Thelonious Monk, Cootie Williams, Bernie Hanighen",
@@ -1604,6 +2077,17 @@
     "form": "AABA",
     "style": "Ballad",
     "common_key": "Eb-"
+  },
+  {
+    "title": "Ruby, My Dear",
+    "slug": "ruby-my-dear",
+    "composer": "Thelonious Monk",
+    "year": 1945,
+    "bars": 32,
+    "time_signature": "4/4",
+    "form": "AABA",
+    "style": "Ballad",
+    "common_key": null
   },
   {
     "title": "Sandu",
@@ -1639,6 +2123,17 @@
     "common_key": "F"
   },
   {
+    "title": "September Song",
+    "slug": "september-song",
+    "composer": "Kurt Weill, Maxwell Anderson",
+    "year": 1938,
+    "bars": 32,
+    "time_signature": "4/4",
+    "form": "AABA",
+    "style": "Ballad",
+    "common_key": "C"
+  },
+  {
     "title": "Seven Steps To Heaven",
     "slug": "seven-steps-to-heaven",
     "composer": "Victor Feldman, Miles Davis",
@@ -1665,6 +2160,17 @@
     "slug": "skylark",
     "composer": "Hoagy Carmichael, Johnny Mercer",
     "year": 1941,
+    "bars": 32,
+    "time_signature": "4/4",
+    "form": "AABA",
+    "style": "Ballad",
+    "common_key": "Eb"
+  },
+  {
+    "title": "Smoke Gets In Your Eyes",
+    "slug": "smoke-gets-in-your-eyes",
+    "composer": "Jerome Kern, Otto Harbach",
+    "year": 1933,
     "bars": 32,
     "time_signature": "4/4",
     "form": "AABA",
@@ -1705,6 +2211,17 @@
     "common_key": "C-"
   },
   {
+    "title": "Solitude",
+    "slug": "solitude",
+    "composer": "Duke Ellington, Eddie DeLange, Irving Mills",
+    "year": 1934,
+    "bars": 32,
+    "time_signature": "4/4",
+    "form": "AABA",
+    "style": "Ballad",
+    "common_key": "Eb"
+  },
+  {
     "title": "Someday My Prince Will Come",
     "slug": "someday-my-prince-will-come",
     "composer": "Frank Churchill, Larry Morey",
@@ -1738,6 +2255,28 @@
     "common_key": "F-"
   },
   {
+    "title": "The Song Is You",
+    "slug": "the-song-is-you",
+    "composer": "Jerome Kern, Oscar Hammerstein II",
+    "year": 1932,
+    "bars": 64,
+    "time_signature": "4/4",
+    "form": "AABA",
+    "style": "Swing",
+    "common_key": "C"
+  },
+  {
+    "title": "Sonnymoon For Two",
+    "slug": "sonnymoon-for-two",
+    "composer": "Sonny Rollins",
+    "year": 1957,
+    "bars": 12,
+    "time_signature": "4/4",
+    "form": "Blues",
+    "style": "Blues",
+    "common_key": "Bb"
+  },
+  {
     "title": "Sophisticated Lady",
     "slug": "sophisticated-lady",
     "composer": "Duke Ellington, Irving Mills, Mitchell Parish",
@@ -1747,6 +2286,17 @@
     "form": "AABA",
     "style": "Ballad",
     "common_key": "Ab"
+  },
+  {
+    "title": "Speak Like A Child",
+    "slug": "speak-like-a-child",
+    "composer": "Herbie Hancock",
+    "year": 1968,
+    "bars": null,
+    "time_signature": "4/4",
+    "form": null,
+    "style": "Bossa",
+    "common_key": "A-"
   },
   {
     "title": "Speak Low",
@@ -1780,6 +2330,17 @@
     "form": null,
     "style": "Blues",
     "common_key": "D-"
+  },
+  {
+    "title": "St. Louis Blues",
+    "slug": "st-louis-blues",
+    "composer": "W.C. Handy",
+    "year": 1914,
+    "bars": 52,
+    "time_signature": "4/4",
+    "form": "AABC",
+    "style": "Swing",
+    "common_key": "G"
   },
   {
     "title": "St. Thomas",
@@ -1892,6 +2453,17 @@
     "common_key": "Ab"
   },
   {
+    "title": "Sweet Lorraine",
+    "slug": "sweet-lorraine",
+    "composer": "Cliff Burwell, Mitchell Parish",
+    "year": 1928,
+    "bars": 32,
+    "time_signature": "4/4",
+    "form": "AABA",
+    "style": "Swing",
+    "common_key": "G"
+  },
+  {
     "title": "Take Five",
     "slug": "take-five",
     "composer": "Paul Desmond",
@@ -1912,6 +2484,17 @@
     "form": "AABA",
     "style": "Swing",
     "common_key": "C"
+  },
+  {
+    "title": "Tea For Two",
+    "slug": "tea-for-two",
+    "composer": "Vincent Youmans, Irving Caesar",
+    "year": 1924,
+    "bars": 32,
+    "time_signature": "4/4",
+    "form": "ABAC",
+    "style": "Swing",
+    "common_key": "Ab"
   },
   {
     "title": "Tenderly",
@@ -1936,50 +2519,6 @@
     "common_key": "Bb"
   },
   {
-    "title": "The Girl From Ipanema",
-    "slug": "the-girl-from-ipanema",
-    "composer": "Antonio Carlos Jobim, Vinicius de Moraes, Norman Gimbel",
-    "year": 1962,
-    "bars": 40,
-    "time_signature": "4/4",
-    "form": "AABA",
-    "style": "Bossa",
-    "common_key": "F"
-  },
-  {
-    "title": "The Nearness Of You",
-    "slug": "the-nearness-of-you",
-    "composer": "Hoagy Carmichael, Ned Washington",
-    "year": 1938,
-    "bars": 36,
-    "time_signature": "4/4",
-    "form": "AABA",
-    "style": "Ballad",
-    "common_key": "F"
-  },
-  {
-    "title": "The Night Has A Thousand Eyes",
-    "slug": "the-night-has-a-thousand-eyes",
-    "composer": "Jerry Brainin, Buddy Bernier",
-    "year": 1948,
-    "bars": 48,
-    "time_signature": "4/4",
-    "form": "AAB",
-    "style": "Latin",
-    "common_key": "G"
-  },
-  {
-    "title": "The Song Is You",
-    "slug": "the-song-is-you",
-    "composer": "Jerome Kern, Oscar Hammerstein II",
-    "year": 1932,
-    "bars": 64,
-    "time_signature": "4/4",
-    "form": "AABA",
-    "style": "Swing",
-    "common_key": "C"
-  },
-  {
     "title": "There Is No Greater Love",
     "slug": "there-is-no-greater-love",
     "composer": "Isham Jones, Marty Symes",
@@ -1998,6 +2537,28 @@
     "bars": 32,
     "time_signature": "4/4",
     "form": "ABAC",
+    "style": "Swing",
+    "common_key": "Eb"
+  },
+  {
+    "title": "These Foolish Things",
+    "slug": "these-foolish-things",
+    "composer": "Jack Strachey, Harry Link, Eric Maschwitz",
+    "year": 1935,
+    "bars": 32,
+    "time_signature": "4/4",
+    "form": "AABA",
+    "style": "Ballad",
+    "common_key": "Eb"
+  },
+  {
+    "title": "They Can't Take That Away From Me",
+    "slug": "they-cant-take-that-away-from-me",
+    "composer": "George Gershwin, Ira Gershwin",
+    "year": 1937,
+    "bars": 36,
+    "time_signature": "4/4",
+    "form": "AABA",
     "style": "Swing",
     "common_key": "Eb"
   },
@@ -2046,6 +2607,17 @@
     "common_key": "D"
   },
   {
+    "title": "Up Jumped Spring",
+    "slug": "up-jumped-spring",
+    "composer": "Freddie Hubbard",
+    "year": 1962,
+    "bars": 56,
+    "time_signature": "3/4",
+    "form": "AABA",
+    "style": "Jazz Waltz",
+    "common_key": "Bb"
+  },
+  {
     "title": "Walkin'",
     "slug": "walkin",
     "composer": "Richard Carpenter",
@@ -2054,6 +2626,17 @@
     "time_signature": "4/4",
     "form": "Blues",
     "style": "Blues",
+    "common_key": "F"
+  },
+  {
+    "title": "Waltz For Debby",
+    "slug": "waltz-for-debby",
+    "composer": "Bill Evans, Gene Lees",
+    "year": 1956,
+    "bars": 80,
+    "time_signature": "3/4",
+    "form": "ABA",
+    "style": "Jazz Waltz",
     "common_key": "F"
   },
   {
@@ -2156,6 +2739,28 @@
     "common_key": "G"
   },
   {
+    "title": "Witch Hunt",
+    "slug": "witch-hunt",
+    "composer": "Wayne Shorter",
+    "year": 1964,
+    "bars": 24,
+    "time_signature": "4/4",
+    "form": null,
+    "style": "Swing",
+    "common_key": "C-"
+  },
+  {
+    "title": "Woody'n You",
+    "slug": "woodyn-you",
+    "composer": "Dizzy Gillespie",
+    "year": 1942,
+    "bars": 32,
+    "time_signature": "4/4",
+    "form": "AABA",
+    "style": "Bebop",
+    "common_key": "Db"
+  },
+  {
     "title": "Work Song",
     "slug": "work-song",
     "composer": "Nat Adderley",
@@ -2178,6 +2783,17 @@
     "common_key": "C"
   },
   {
+    "title": "Yes And No",
+    "slug": "yes-and-no",
+    "composer": "Wayne Shorter",
+    "year": 1964,
+    "bars": 58,
+    "time_signature": "4/4",
+    "form": "AABA",
+    "style": "Swing",
+    "common_key": null
+  },
+  {
     "title": "Yesterdays",
     "slug": "yesterdays",
     "composer": "Jerome Kern, Otto Harbach",
@@ -2198,6 +2814,17 @@
     "form": "AABA",
     "style": "Ballad",
     "common_key": "F-"
+  },
+  {
+    "title": "You Go To My Head",
+    "slug": "you-go-to-my-head",
+    "composer": "J. Fred Coots, Haven Gillespie",
+    "year": 1938,
+    "bars": 40,
+    "time_signature": "4/4",
+    "form": "AABAC",
+    "style": "Ballad",
+    "common_key": "Eb"
   },
   {
     "title": "You Stepped Out Of A Dream",

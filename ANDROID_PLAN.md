@@ -11,7 +11,7 @@ Decisions already made:
 | Stack | Kotlin, Compose, Room |
 | Shape | Flash cards *and* a timed session mode |
 | Scope | Local-only, single user, offline. No account, no server, no sync |
-| Seed | `data/standards.json` (201), `data/exercises.json` (44), shipped as assets |
+| Seed | `data/standards.json` (258), `data/exercises.json` (61), shipped as assets |
 
 Kotlin over a Rust core via UniFFI: the two files worth salvaging
 (`roller.rs`, `keys.rs`) are small and well-specified, `DESIGN.md` already
@@ -39,10 +39,10 @@ the verbs, transposition supplies the key:
 All The Things You Are  ·  changes without the melody  ·  written F
 ```
 
-This needs one small authoring pass — an `applies_to_tune` flag hand-set across
-44 rows. The two `Standards` procedures obviously qualify; `Improvisation`,
-`Ear Training` and `Transcription` probably do; `Tone` and `Air & Breathing` do
-not. Half an hour of work that turns 201 rows into a few hundred distinct cards.
+`applies_to_tune` marks the 8 exercises that take a tune: the `Standards`,
+`Improvisation` and `Transcription` procedures plus one `Ear Training` drill.
+Across 258 tunes that is about two thousand distinct cards per instrument.
+`tools/cards.py` prints a random draw of them for trying the idea on paper.
 
 **The gap that stays open.** The vocabulary deck has no content and cannot be
 composed. Licks and ii-V-I lines are the one place where the card *is* the
@@ -61,10 +61,10 @@ that phase can draw.
 Minutes allocated per phase. `!` marks a phase that cannot fit even its
 shortest exercise.
 
-| Session | Warmup<br>15% · min 5m | Fundamentals<br>20% · min 6m | Vocabulary<br>25% · min 8m | Repertoire<br>30% · min 10m | Cooldown<br>10% · min 6m |
+| Session | Warmup<br>15% · min 5m | Fundamentals<br>20% · min 6m | Vocabulary<br>25% · min 8m | Repertoire<br>30% · min 8m | Cooldown<br>10% · min 6m |
 | --- | --- | --- | --- | --- | --- |
 | 20 min | 3.0 ! | 4.0 ! | 5.0 ! | 6.0 ! | 2.0 ! |
-| 30 min | 4.5 ! | 6.0 | 7.5 ! | 9.0 ! | 3.0 ! |
+| 30 min | 4.5 ! | 6.0 | 7.5 ! | 9.0 | 3.0 ! |
 | 45 min | 6.8 | 9.0 | 11.3 | 13.5 | 4.5 ! |
 | 60 min | 9.0 | 12.0 | 15.0 | 18.0 | 6.0 |
 | 90 min | 13.5 | 18.0 | 22.5 | 27.0 | 9.0 |
@@ -88,10 +88,10 @@ from keeping its cooldown after dropping its tune. That preserves the
 load-bearing property `DESIGN.md` identifies: short sessions keep warmup and
 fundamentals and drop from the end.
 
-With the shortest exercise in each phase (5, 6, 8, 10, 6 minutes), 15 minutes
+With the shortest exercise in each phase (5, 6, 8, 8, 6 minutes), 15 minutes
 gives warmup and fundamentals, 20 adds one vocabulary item, and a tune first
-fits at 30. A 20-minute session with a tune would need shorter repertoire
-exercises than the 10-minute minimum in the data.
+fits at 27. A 20-minute session with a tune would need shorter exercises or a
+planner that skips vocabulary.
 
 Below roughly 15 minutes, stop planning a session at all and hand the user card
 mode. Two products for two shapes of free time is the point of building both.
@@ -146,7 +146,7 @@ key — and how the key behaves differs by material. Putting that on a per-item
 | `CYCLE` | One card per item | Next step round the circle each rep | Scales & patterns; tunes you have promoted |
 | `PER_KEY` | Twelve independent cards | Fixed per card | Licks, ii-V-I — where key-specific fluency *is* the skill |
 
-Materialising 201 tunes × 12 keys would mean seeing a tune in all twelve before
+Materialising 258 tunes × 12 keys would mean seeing a tune in all twelve before
 any of it counted as learned. `FIXED` with a per-tune promotion to `CYCLE`
 matches how repertoire actually gets learned and keeps the row count honest.
 `PER_KEY` is affordable precisely because vocabulary is a handful of items, not
@@ -211,7 +211,7 @@ phase-to-category mapping in `DESIGN.md` is complete and exact against the data
 
 - **Planner.** Greedy weighted fill as above, seeded from the exercise pool
   filtered by the user's instrument families. Remember that empty `families`
-  means "applies to everything", which is 36 of the 44 rows — the common case,
+  means "applies to everything", which is 51 of the 61 rows — the common case,
   so make that the default in code rather than a special case.
 - **Runner.** A foreground service so the timer survives the app going to
   background mid-session, with a notification showing current exercise and
@@ -224,7 +224,7 @@ phase-to-category mapping in `DESIGN.md` is complete and exact against the data
 ## Data and seeding
 
 Both JSON files ship as assets and seed on first launch. The natural keys are
-clean — all 201 slugs are unique, all 44 exercise names are unique — so
+clean — all 258 slugs are unique, all 61 exercise names are unique — so
 upsert-by-natural-key works with no disambiguation needed.
 
 ```sql
@@ -264,7 +264,7 @@ value in every case.
 
 ## Audio: metronome and drone
 
-Not optional — 24 of the 44 exercises carry a `tempo_bpm`, and the tone
+Not optional — 36 of the 61 exercises carry a `tempo_bpm`, and the tone
 exercises explicitly call for a tuner drone. This is the one place where the
 "just use the framework" answer is wrong.
 
@@ -334,11 +334,11 @@ reps before anything is built on top of it.
 
 **M0 — Data in, and provably intact.** Room schema, seed importer from assets,
 instrument picker, transposition and key-spelling domain with the exhaustive
-test suite, browse screens for 201 tunes and 44 exercises. No practice loop yet.
+test suite, browse screens for 258 tunes and 61 exercises. No practice loop yet.
 *Proves the data survives the boundary. Ends with the re-seed-preserves-ids test
 passing.*
 
-**M1 — Repertoire cards.** The `applies_to_tune` authoring pass, composed
+**M1 — Repertoire cards.** Composed
 tune × procedure × key cards, card model with `KeyPolicy`, SM-2 behind the
 scheduler interface, the event log, tune lifecycle, daily new-card cap, review
 screen with grade buttons. *First usable app. Start logging reps — everything
@@ -382,12 +382,12 @@ are fitted to memory decay for discrete facts. Playing a tune well is not
 recall. Intervals may still be a good *surfacing* mechanism even if the
 underlying model is wrong — the event log is the hedge that lets you find out.
 
-**Is the instrument-family scoping right?** Only 8 of 44 exercises are
+**Is the instrument-family scoping right?** Only 10 of 61 exercises are
 family-scoped, and the calls were checked against published pedagogy rather than
 a teacher. Cheap to fix in data, so still worth a second opinion from someone who
 teaches.
 
-**What does the app do with 201 tunes you will never learn?** A wishlist that
+**What does the app do with 258 tunes you will never learn?** A wishlist that
 large is a browsing corpus, not a queue. Something has to help you choose —
 filter by style, form or key, or a curated starting set. Unaddressed in the old
 design and still unaddressed here.

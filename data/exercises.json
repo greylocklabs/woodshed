@@ -6,7 +6,8 @@
     "minutes": 10,
     "difficulty": 2,
     "tempo_bpm": 60,
-    "families": []
+    "families": [],
+    "applies_to_tune": false
   },
   {
     "name": "Dynamic long tones",
@@ -15,7 +16,8 @@
     "minutes": 8,
     "difficulty": 3,
     "tempo_bpm": 60,
-    "families": []
+    "families": [],
+    "applies_to_tune": false
   },
   {
     "name": "Overtone series",
@@ -26,7 +28,8 @@
     "tempo_bpm": null,
     "families": [
       "Saxophone"
-    ]
+    ],
+    "applies_to_tune": false
   },
   {
     "name": "Subtone low register",
@@ -37,7 +40,8 @@
     "tempo_bpm": null,
     "families": [
       "Saxophone"
-    ]
+    ],
+    "applies_to_tune": false
   },
   {
     "name": "Altissimo entries",
@@ -48,7 +52,8 @@
     "tempo_bpm": null,
     "families": [
       "Saxophone"
-    ]
+    ],
+    "applies_to_tune": false
   },
   {
     "name": "Harmonics",
@@ -59,7 +64,8 @@
     "tempo_bpm": null,
     "families": [
       "Flute"
-    ]
+    ],
+    "applies_to_tune": false
   },
   {
     "name": "Register break crossings",
@@ -70,7 +76,8 @@
     "tempo_bpm": null,
     "families": [
       "Clarinet"
-    ]
+    ],
+    "applies_to_tune": false
   },
   {
     "name": "Lip slurs",
@@ -81,7 +88,43 @@
     "tempo_bpm": 72,
     "families": [
       "Brass"
-    ]
+    ],
+    "applies_to_tune": false
+  },
+  {
+    "name": "Vibrato pulses",
+    "category": "Tone",
+    "description": "Even vibrato pulses against the click: two per beat, then three, then four. Then play a phrase and let it go natural.",
+    "minutes": 6,
+    "difficulty": 3,
+    "tempo_bpm": 72,
+    "families": [],
+    "applies_to_tune": false
+  },
+  {
+    "name": "Mouthpiece pitch bends",
+    "category": "Tone",
+    "description": "Mouthpiece alone, or mouthpiece and neck on sax. Hold your reference pitch, then bend down a half step and back with the voicing, not the jaw.",
+    "minutes": 5,
+    "difficulty": 2,
+    "tempo_bpm": null,
+    "families": [
+      "Saxophone",
+      "Clarinet"
+    ],
+    "applies_to_tune": false
+  },
+  {
+    "name": "Range builder",
+    "category": "Tone",
+    "description": "Slurred chromatic steps up from the middle register at 60, setting held and breathing through the nose. Stop at the first thin note and rest as long as you played.",
+    "minutes": 6,
+    "difficulty": 4,
+    "tempo_bpm": 60,
+    "families": [
+      "Brass"
+    ],
+    "applies_to_tune": false
   },
   {
     "name": "Breathing cycles",
@@ -90,7 +133,8 @@
     "minutes": 5,
     "difficulty": 1,
     "tempo_bpm": null,
-    "families": []
+    "families": [],
+    "applies_to_tune": false
   },
   {
     "name": "Air attacks",
@@ -99,7 +143,8 @@
     "minutes": 5,
     "difficulty": 3,
     "tempo_bpm": null,
-    "families": []
+    "families": [],
+    "applies_to_tune": false
   },
   {
     "name": "Long phrase builder",
@@ -108,7 +153,8 @@
     "minutes": 5,
     "difficulty": 2,
     "tempo_bpm": 60,
-    "families": []
+    "families": [],
+    "applies_to_tune": false
   },
   {
     "name": "Articulation grid",
@@ -117,7 +163,8 @@
     "minutes": 8,
     "difficulty": 2,
     "tempo_bpm": 100,
-    "families": []
+    "families": [],
+    "applies_to_tune": false
   },
   {
     "name": "Doodle tongue",
@@ -128,7 +175,8 @@
     "tempo_bpm": 100,
     "families": [
       "Brass"
-    ]
+    ],
+    "applies_to_tune": false
   },
   {
     "name": "Staccato scales",
@@ -137,7 +185,8 @@
     "minutes": 6,
     "difficulty": 3,
     "tempo_bpm": 80,
-    "families": []
+    "families": [],
+    "applies_to_tune": false
   },
   {
     "name": "Double tonguing",
@@ -146,7 +195,18 @@
     "minutes": 8,
     "difficulty": 4,
     "tempo_bpm": 80,
-    "families": []
+    "families": [],
+    "applies_to_tune": false
+  },
+  {
+    "name": "Ghost notes and upbeats",
+    "category": "Articulation",
+    "description": "Swing eighths up and down a scale: tongue and accent each upbeat, ghost the note before it. Then put it into a bebop line.",
+    "minutes": 6,
+    "difficulty": 3,
+    "tempo_bpm": 140,
+    "families": [],
+    "applies_to_tune": false
   },
   {
     "name": "Chromatic scale, full range",
@@ -155,7 +215,8 @@
     "minutes": 10,
     "difficulty": 2,
     "tempo_bpm": 80,
-    "families": []
+    "families": [],
+    "applies_to_tune": false
   },
   {
     "name": "Finger independence",
@@ -168,7 +229,8 @@
       "Saxophone",
       "Clarinet",
       "Flute"
-    ]
+    ],
+    "applies_to_tune": false
   },
   {
     "name": "Scales in fourths",
@@ -177,7 +239,8 @@
     "minutes": 8,
     "difficulty": 3,
     "tempo_bpm": 60,
-    "families": []
+    "families": [],
+    "applies_to_tune": false
   },
   {
     "name": "Speed bursts",
@@ -186,7 +249,8 @@
     "minutes": 6,
     "difficulty": 4,
     "tempo_bpm": null,
-    "families": []
+    "families": [],
+    "applies_to_tune": false
   },
   {
     "name": "Major scales around the circle",
@@ -195,7 +259,8 @@
     "minutes": 10,
     "difficulty": 2,
     "tempo_bpm": 100,
-    "families": []
+    "families": [],
+    "applies_to_tune": false
   },
   {
     "name": "Modes of the major scale",
@@ -204,7 +269,8 @@
     "minutes": 10,
     "difficulty": 3,
     "tempo_bpm": 90,
-    "families": []
+    "families": [],
+    "applies_to_tune": false
   },
   {
     "name": "Bebop scale",
@@ -213,7 +279,8 @@
     "minutes": 8,
     "difficulty": 3,
     "tempo_bpm": 90,
-    "families": []
+    "families": [],
+    "applies_to_tune": false
   },
   {
     "name": "Diminished and whole tone",
@@ -222,7 +289,8 @@
     "minutes": 8,
     "difficulty": 4,
     "tempo_bpm": 80,
-    "families": []
+    "families": [],
+    "applies_to_tune": false
   },
   {
     "name": "Digital patterns",
@@ -231,7 +299,38 @@
     "minutes": 10,
     "difficulty": 3,
     "tempo_bpm": 90,
-    "families": []
+    "families": [],
+    "applies_to_tune": false
+  },
+  {
+    "name": "Blues scales around the circle",
+    "category": "Scales & Patterns",
+    "description": "Minor blues scale in every key round the circle of fourths, then the major blues scale. Two octaves where the range allows.",
+    "minutes": 8,
+    "difficulty": 2,
+    "tempo_bpm": 100,
+    "families": [],
+    "applies_to_tune": false
+  },
+  {
+    "name": "Pentatonics around the circle",
+    "category": "Scales & Patterns",
+    "description": "Major and minor pentatonic in every key round the circle, straight up and down, then in four-note groups.",
+    "minutes": 8,
+    "difficulty": 2,
+    "tempo_bpm": 100,
+    "families": [],
+    "applies_to_tune": false
+  },
+  {
+    "name": "Seventh-chord arpeggios",
+    "category": "Scales & Patterns",
+    "description": "Maj7, 7, m7, m7b5 and dim7 from each root round the circle, up to the ninth and back.",
+    "minutes": 10,
+    "difficulty": 3,
+    "tempo_bpm": 90,
+    "families": [],
+    "applies_to_tune": false
   },
   {
     "name": "Subdivision ladder",
@@ -240,7 +339,8 @@
     "minutes": 8,
     "difficulty": 3,
     "tempo_bpm": 70,
-    "families": []
+    "families": [],
+    "applies_to_tune": false
   },
   {
     "name": "Displaced click",
@@ -249,7 +349,8 @@
     "minutes": 8,
     "difficulty": 4,
     "tempo_bpm": 80,
-    "families": []
+    "families": [],
+    "applies_to_tune": false
   },
   {
     "name": "Swing eighths at two tempos",
@@ -258,7 +359,8 @@
     "minutes": 6,
     "difficulty": 3,
     "tempo_bpm": 120,
-    "families": []
+    "families": [],
+    "applies_to_tune": false
   },
   {
     "name": "Sight-read an etude",
@@ -267,7 +369,8 @@
     "minutes": 10,
     "difficulty": 3,
     "tempo_bpm": null,
-    "families": []
+    "families": [],
+    "applies_to_tune": false
   },
   {
     "name": "Etude at half tempo",
@@ -276,7 +379,8 @@
     "minutes": 10,
     "difficulty": 3,
     "tempo_bpm": null,
-    "families": []
+    "families": [],
+    "applies_to_tune": false
   },
   {
     "name": "Lick around the circle",
@@ -285,7 +389,8 @@
     "minutes": 10,
     "difficulty": 3,
     "tempo_bpm": 80,
-    "families": []
+    "families": [],
+    "applies_to_tune": false
   },
   {
     "name": "Lick displacement",
@@ -294,7 +399,18 @@
     "minutes": 8,
     "difficulty": 4,
     "tempo_bpm": 80,
-    "families": []
+    "families": [],
+    "applies_to_tune": false
+  },
+  {
+    "name": "Enclosures",
+    "category": "Licks",
+    "description": "Approach each chord tone from a scale step above and a half step below, then the reverse, through a ii-V-I in every key.",
+    "minutes": 8,
+    "difficulty": 3,
+    "tempo_bpm": 100,
+    "families": [],
+    "applies_to_tune": false
   },
   {
     "name": "ii-V-I guide tones",
@@ -303,7 +419,8 @@
     "minutes": 8,
     "difficulty": 2,
     "tempo_bpm": 80,
-    "families": []
+    "families": [],
+    "applies_to_tune": false
   },
   {
     "name": "ii-V-I arpeggios",
@@ -312,7 +429,8 @@
     "minutes": 10,
     "difficulty": 3,
     "tempo_bpm": 90,
-    "families": []
+    "families": [],
+    "applies_to_tune": false
   },
   {
     "name": "Minor ii-V-i",
@@ -321,7 +439,8 @@
     "minutes": 10,
     "difficulty": 4,
     "tempo_bpm": 80,
-    "families": []
+    "families": [],
+    "applies_to_tune": false
   },
   {
     "name": "Rhythm changes A section",
@@ -330,7 +449,58 @@
     "minutes": 10,
     "difficulty": 4,
     "tempo_bpm": 80,
-    "families": []
+    "families": [],
+    "applies_to_tune": false
+  },
+  {
+    "name": "Basic blues in every key",
+    "category": "ii-V-I & Progressions",
+    "description": "Three-chord 12-bar blues, I7 IV7 V7. Arpeggios through the form, then guide tones, round the circle of fourths.",
+    "minutes": 10,
+    "difficulty": 2,
+    "tempo_bpm": 120,
+    "families": [],
+    "applies_to_tune": false
+  },
+  {
+    "name": "Jazz blues changes",
+    "category": "ii-V-I & Progressions",
+    "description": "Bebop blues: IV7 in bar 2, #IV dim in bar 6, VI7 in bar 8, ii-V in 9 and 10, I-VI-ii-V turnaround. Guide tones in F and Bb, then other keys.",
+    "minutes": 10,
+    "difficulty": 3,
+    "tempo_bpm": 140,
+    "families": [],
+    "applies_to_tune": false
+  },
+  {
+    "name": "Bird blues changes",
+    "category": "ii-V-I & Progressions",
+    "description": "Blues For Alice changes: descending ii-Vs from the I in bar 1 down to the IV in bar 5, more in bars 6 to 8, then the ii-V turnaround. Guide tones first, then arpeggios.",
+    "minutes": 10,
+    "difficulty": 4,
+    "tempo_bpm": 120,
+    "families": [],
+    "applies_to_tune": false
+  },
+  {
+    "name": "Minor blues changes",
+    "category": "ii-V-I & Progressions",
+    "description": "12-bar minor blues: i, iv, i, then bVI7 to V7alt in bars 9 and 10. Arpeggios, then guide tones, round the circle.",
+    "minutes": 10,
+    "difficulty": 3,
+    "tempo_bpm": 120,
+    "families": [],
+    "applies_to_tune": false
+  },
+  {
+    "name": "Sixteen-bar blues",
+    "category": "ii-V-I & Progressions",
+    "description": "Watermelon Man or Work Song form: the 12-bar shape with extra bars before the turnaround. Solo over the roots and keep your place without counting aloud.",
+    "minutes": 8,
+    "difficulty": 3,
+    "tempo_bpm": 120,
+    "families": [],
+    "applies_to_tune": false
   },
   {
     "name": "Melody from memory",
@@ -339,7 +509,8 @@
     "minutes": 10,
     "difficulty": 3,
     "tempo_bpm": null,
-    "families": []
+    "families": [],
+    "applies_to_tune": true
   },
   {
     "name": "Changes without the melody",
@@ -348,7 +519,18 @@
     "minutes": 10,
     "difficulty": 4,
     "tempo_bpm": null,
-    "families": []
+    "families": [],
+    "applies_to_tune": true
+  },
+  {
+    "name": "Play along with the recording",
+    "category": "Standards",
+    "description": "Play the head with a classic recording, matching its phrasing, articulation and where it sits on the beat.",
+    "minutes": 8,
+    "difficulty": 2,
+    "tempo_bpm": null,
+    "families": [],
+    "applies_to_tune": true
   },
   {
     "name": "One-idea solo",
@@ -357,7 +539,8 @@
     "minutes": 8,
     "difficulty": 3,
     "tempo_bpm": null,
-    "families": []
+    "families": [],
+    "applies_to_tune": true
   },
   {
     "name": "Guide-tone solo",
@@ -366,7 +549,8 @@
     "minutes": 8,
     "difficulty": 4,
     "tempo_bpm": null,
-    "families": []
+    "families": [],
+    "applies_to_tune": true
   },
   {
     "name": "Transcribe four bars",
@@ -375,7 +559,18 @@
     "minutes": 15,
     "difficulty": 4,
     "tempo_bpm": null,
-    "families": []
+    "families": [],
+    "applies_to_tune": true
+  },
+  {
+    "name": "Head by ear",
+    "category": "Transcription",
+    "description": "Learn the melody from a recording, no chart, a phrase at a time. Sing each phrase before you look for it on the horn.",
+    "minutes": 15,
+    "difficulty": 3,
+    "tempo_bpm": null,
+    "families": [],
+    "applies_to_tune": true
   },
   {
     "name": "Sing then play intervals",
@@ -384,7 +579,8 @@
     "minutes": 6,
     "difficulty": 3,
     "tempo_bpm": null,
-    "families": []
+    "families": [],
+    "applies_to_tune": false
   },
   {
     "name": "Find the interval by ear",
@@ -393,7 +589,28 @@
     "minutes": 6,
     "difficulty": 3,
     "tempo_bpm": null,
-    "families": []
+    "families": [],
+    "applies_to_tune": false
+  },
+  {
+    "name": "Chord qualities by ear",
+    "category": "Ear Training",
+    "description": "Have an app or a pianist play seventh chords. Name the quality before checking, then sing the root and the third.",
+    "minutes": 6,
+    "difficulty": 3,
+    "tempo_bpm": null,
+    "families": [],
+    "applies_to_tune": false
+  },
+  {
+    "name": "Changes by ear",
+    "category": "Ear Training",
+    "description": "Listen to a recording and write the bass roots of the first eight bars before you look at a chart.",
+    "minutes": 10,
+    "difficulty": 4,
+    "tempo_bpm": null,
+    "families": [],
+    "applies_to_tune": true
   },
   {
     "name": "Rhythm reading",
@@ -402,7 +619,8 @@
     "minutes": 6,
     "difficulty": 3,
     "tempo_bpm": null,
-    "families": []
+    "families": [],
+    "applies_to_tune": false
   },
   {
     "name": "Transposition at sight",
@@ -411,6 +629,7 @@
     "minutes": 8,
     "difficulty": 5,
     "tempo_bpm": null,
-    "families": []
+    "families": [],
+    "applies_to_tune": false
   }
 ]
