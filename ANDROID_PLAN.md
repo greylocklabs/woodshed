@@ -398,7 +398,11 @@ exercise, recording or transcription opens a new GitHub issue in the browser,
 prefilled with the item, the field in question (key, link, credit) and the app
 version. It uses GitHub's new-issue URL, so the app holds no token and sends
 nothing until the user submits. It adds no personal details to the report.
-Broken links, wrong keys and missing recordings are the expected bulk.
+Broken links, wrong keys and missing recordings are the expected bulk. Shipped
+for tunes, exercises and the app itself; recordings and transcriptions get the
+same button when they exist. Reporting needs a GitHub account for now; once the
+project has its own email address, the dialog can offer sending the report by
+email as well.
 
 **Polish, shipped.** Emoji tab names; a quieter metronome readout with common
 tempos last; an A-Z fast-scroll strip on the Tunes list; an exercise filter over
