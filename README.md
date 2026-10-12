@@ -4,8 +4,9 @@ Notes, data, and a build plan for **Woodshed**, an Android practice app for
 horn players. Carried out of an abandoned attempt to build jazz practice tools
 into [larakelley.com](https://github.com/lararosekelley/larakelley.com).
 
-No app yet. This is a design record, a plan, two data files that took real effort
-to produce, and a script for trying the card idea on paper.
+The app is at milestone M0 of `ANDROID_PLAN.md`: the seed data imports into Room
+and can be browsed with keys written for your instrument. There is no practice
+loop yet.
 
 ## What is here
 
@@ -15,6 +16,7 @@ to produce, and a script for trying the card idea on paper.
 | `ANDROID_PLAN.md` | How this becomes the app: stack, domain model, build order |
 | `data/standards.json` | 258 jazz standards with composer, year, bars, meter, form, style, key |
 | `data/exercises.json` | 61 instrument-scoped practice exercises |
+| `app/` | The Android app (Kotlin, Compose, Room); `data/` ships as its assets |
 | `tools/cards.py` | Prints random tune x exercise x written-key cards for an instrument |
 
 ## Credit
@@ -29,6 +31,16 @@ Wikipedia and the iReal Pro jazz playlist.
 
 `data/exercises.json` is original, written for this project.
 
+## Building
+
+Needs a JDK and the Android SDK (`android sdk` or Android Studio); Gradle fetches
+the rest, including a Java 21 toolchain.
+
+```
+./gradlew :app:testDebugUnitTest   # unit, Room and Robolectric UI tests
+./gradlew :app:assembleDebug       # app/build/outputs/apk/debug/app-debug.apk
+```
+
 ## Trying the cards
 
 ```
@@ -39,9 +51,9 @@ python3 -m unittest discover tools
 Instruments are named like `alto-sax`, `trumpet`, `alto-flute`; `--help` lists
 them. `--seed` repeats a draw and `--style Ballad` narrows the tunes.
 
-## Where the code is
+## The earlier web version
 
-Not here. It lives in ten closed-but-undeleted branches on the site repo,
+It lives in ten closed-but-undeleted branches on the site repo,
 `feat/practice-*`, stacked in this order:
 
 ```

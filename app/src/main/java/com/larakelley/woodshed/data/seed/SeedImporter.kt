@@ -1,0 +1,88 @@
+package com.larakelley.woodshed.data.seed
+
+import androidx.room.withTransaction
+import com.larakelley.woodshed.data.db.ExerciseEntity
+import com.larakelley.woodshed.data.db.StandardEntity
+import com.larakelley.woodshed.data.db.WoodshedDatabase
+import com.larakelley.woodshed.domain.Family
+import com.larakelley.woodshed.domain.Key
+
+/**
+ * Reconciles the database with the seed by natural key (slug, exercise name). Rows keep their ids so
+ * anything referencing them survives; rows dropped from the seed are archived, never deleted.
+ */
+class SeedImporter(private val db: WoodshedDatabase, private val now: () -> Long = System::currentTimeMillis) {
+  data class Result(val inserted: Int, val updated: Int, val archived: Int)
+
+  suspend fun import(seed: Seed): Result = db.withTransaction {
+    val timestamp = now()
+    importStandards(seed.standards, timestamp) + importExercises(seed.exercises, timestamp)
+  }
+
+  private suspend fun importStandards(seeds: List<StandardSeed>, timestamp: Long): Result {
+    val dao = db.standards()
+    val existing = dao.all().associateBy { it.slug }
+    val updates = mutableListOf<StandardEntity>()
+    var inserted = 0
+    for (s in seeds) {
+      val key = Key.parse(s.commonKey)
+      val row = StandardEntity(
+        id = existing[s.slug]?.id ?: 0,
+        slug = s.slug,
+        title = s.title,
+        composer = s.composer,
+        year = s.year,
+        bars = s.bars,
+        timeSignature = s.timeSignature,
+        form = s.form,
+        style = s.style,
+        commonKeyRaw = s.commonKey,
+        commonKeyPitchClass = key?.pitchClass,
+        commonKeyMinor = key?.minor,
+      )
+      if (row.id == 0L) {
+        dao.insert(row)
+        inserted++
+      } else {
+        updates += row
+      }
+    }
+    val seen = seeds.map { it.slug }.toSet()
+    val archived = existing.values.filter { it.slug !in seen && it.archivedAt == null }.map { it.copy(archivedAt = timestamp) }
+    dao.update(updates + archived)
+    return Result(inserted, updates.size, archived.size)
+  }
+
+  private suspend fun importExercises(seeds: List<ExerciseSeed>, timestamp: Long): Result {
+    val dao = db.exercises()
+    val existing = dao.all().associateBy { it.name }
+    val updates = mutableListOf<ExerciseEntity>()
+    var inserted = 0
+    for (e in seeds) {
+      val row = ExerciseEntity(
+        id = existing[e.name]?.id ?: 0,
+        name = e.name,
+        category = e.category,
+        description = e.description,
+        minutes = e.minutes,
+        difficulty = e.difficulty,
+        tempoBpm = e.tempoBpm,
+        families = e.families.map { requireNotNull(Family.fromSeedName(it)) },
+        appliesToTune = e.appliesToTune,
+      )
+      if (row.id == 0L) {
+        dao.insert(row)
+        inserted++
+      } else {
+        updates += row
+      }
+    }
+    val seen = seeds.map { it.name }.toSet()
+    val archived = existing.values.filter { it.name !in seen && it.archivedAt == null }.map { it.copy(archivedAt = timestamp) }
+    dao.update(updates + archived)
+    return Result(inserted, updates.size, archived.size)
+  }
+
+  private operator fun Result.plus(other: Result) =
+    Result(inserted + other.inserted, updated + other.updated, archived + other.archived)
+}
