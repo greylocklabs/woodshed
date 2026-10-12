@@ -9,14 +9,14 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 RES = ROOT / "app/src/main/res/drawable"
 
-BARK = ("#f7aed0", "#d8639c")  # matte pink, lighter at the top, as in Callie's logo
-CUT = ("#fde6f0", "#f7c3da")
-KNOB_SHADE = ("#ec92bd", "#cc5590")  # a little deeper than the bark, so the knob stands off the log
+BARK = ("#c99269", "#8c5735")  # warm brown bark, lighter at the top
+CUT = ("#f7e4cb", "#e9c9a1")  # pale sawn wood
+KNOB_SHADE = ("#b87d55", "#7b4a2c")  # a little deeper than the bark, so the knob stands off the log
 LEAF = ("#a8dd8f", "#5faa6a")
-RIM, RING, STEM = "#c24d86", "#ef9cc1", "#5faa6a"
-BACKGROUND = "#fbf0f5"
+RIM, RING, STEM = "#6e4026", "#c69a6e", "#5faa6a"
+BACKGROUND = "#fbf3ea"
 
-# A pink log lying on its side, its cut end to the right, a leaf sprouting from the top and a knob, a
+# A brown log lying on its side, its cut end to the right, a leaf sprouting from the top and a knob, a
 # sawn-off branch, on its side pointing down toward the cut end.
 LOG = "M38 48 H96 V108 H38 Q8 108 8 78 Q8 48 38 48 Z"
 END = (96, 78)
@@ -72,7 +72,7 @@ def svg():
         '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img" aria-labelledby="t">',
         '  <title id="t">Woodshed</title>',
         f'  <defs>{grad("bark", BARK, "0")}{grad("knob", KNOB_SHADE, "0")}{grad("cut", CUT, "0.4")}{grad("leaf", LEAF, "1")}</defs>',
-        "  <!-- a pink log on its side: cut end to the right, a leaf on top, a sawn-off knob on its side -->",
+        "  <!-- a brown log on its side: cut end to the right, a leaf on top, a sawn-off knob on its side -->",
         f'  <path d="{LOG}" fill="url(#bark)"/>',
         f'  <path d="{KNOB}" fill="url(#knob)"/>',
         f'  <path d="{ellipse(*KNOB_END, *KNOB_RIM, tilt=-KNOB_TILT)}" fill="{RIM}"/>',

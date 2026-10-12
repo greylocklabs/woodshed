@@ -12,6 +12,7 @@ import com.larakelley.woodshed.domain.Comfort
 import com.larakelley.woodshed.domain.Family
 import com.larakelley.woodshed.domain.Focus
 import com.larakelley.woodshed.domain.Grade
+import com.larakelley.woodshed.domain.Instrument
 import com.larakelley.woodshed.domain.KeyPolicy
 import com.larakelley.woodshed.domain.Lifecycle
 import com.larakelley.woodshed.domain.PlanBlock
@@ -67,7 +68,7 @@ class PracticeServiceTest {
   @Test
   fun planPairsEachChosenTuneWithATuneExercise() = runTest {
     val tunes = listOf(id("autumn-leaves"), id("solar"))
-    val plan = practice.plan(45, setOf(Focus.ARTICULATION), tunes, Family.SAXOPHONE)
+    val plan = practice.plan(45, setOf(Focus.ARTICULATION), tunes, Instrument.ALTO_SAX)
     assertEquals(45, plan.sumOf { it.minutes })
     val tuneBlocks = plan.filterIsInstance<PlanBlock.Tune>()
     assertEquals(tunes, tuneBlocks.map { it.tuneId })
@@ -83,10 +84,21 @@ class PracticeServiceTest {
     val byId = db.exercises().all().associateBy { it.id }
     for (seed in 0..20) {
       val service = PracticeService(db, now = { clock }, zone = ZoneOffset.UTC, random = Random(seed))
-      val plan = service.plan(120, Focus.entries.toSet(), emptyList(), Family.FLUTE)
+      val plan = service.plan(120, Focus.entries.toSet(), emptyList(), Instrument.FLUTE)
       val families = plan.filterIsInstance<PlanBlock.Exercise>().map { byId.getValue(it.exerciseId).families }
       assertTrue(families.all { it.isEmpty() || Family.FLUTE in it })
       assertTrue(plan.none { byId.getValue((it as PlanBlock.Exercise).exerciseId).name == "Mouthpiece pitch bends" })
+    }
+  }
+
+  @Test
+  fun aPianoSessionGetsOnlyGeneralWorkWithoutBreathOrTonguing() = runTest {
+    val byId = db.exercises().all().associateBy { it.id }
+    for (seed in 0..20) {
+      val service = PracticeService(db, now = { clock }, zone = ZoneOffset.UTC, random = Random(seed))
+      val drills = service.plan(120, emptySet(), emptyList(), Instrument.PIANO).filterIsInstance<PlanBlock.Exercise>().map { byId.getValue(it.exerciseId) }
+      assertTrue(drills.isNotEmpty())
+      assertTrue(drills.all { it.families.isEmpty() && it.category !in setOf("Tone", "Air & Breathing", "Articulation") })
     }
   }
 

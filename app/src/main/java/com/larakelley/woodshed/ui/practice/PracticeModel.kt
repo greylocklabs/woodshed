@@ -90,6 +90,10 @@ data class PlanItem(val block: PlanBlock, val title: String, val detail: String,
 data class SetupUi(
   /** Null until chosen; a session cannot be planned without it. */
   val instrument: Instrument? = null,
+  /** The instruments to offer: the ones the user plays, or every one until they say. */
+  val instruments: List<Instrument> = Instrument.entries,
+  /** False until the user picks their instruments in Settings. */
+  val instrumentsChosen: Boolean = false,
   val minutes: Int = 30,
   val focus: Set<Focus> = emptySet(),
   val tunes: List<SessionTune> = emptyList(),
@@ -149,7 +153,13 @@ class PracticeViewModel(
       _ui.update { ui ->
         val ids = tunes.map { it.id }.toSet()
         val selected = if (selectionTouched) ui.setup.selected intersect ids else tunes.filter { it.group == TuneGroup.DUE }.map { it.id }.toSet()
-        ui.copy(summary = summary, setup = ui.setup.copy(instrument = repository.instrument.value, tunes = tunes, selected = selected))
+        val mine = repository.myInstruments.value
+        val instrument = repository.instrument.value
+        val offered = Instrument.entries.filter { mine.isEmpty() || it in mine || it == instrument }
+        ui.copy(
+          summary = summary,
+          setup = ui.setup.copy(instrument = instrument, instruments = offered, instrumentsChosen = mine.isNotEmpty(), tunes = tunes, selected = selected),
+        )
       }
     }
   }
@@ -180,7 +190,7 @@ class PracticeViewModel(
     repository.rememberSession(setup.minutes, setup.focus)
     viewModelScope.launch {
       val tuneIds = setup.tunes.map { it.id }.filter { it in setup.selected }
-      val blocks = practice.plan(setup.minutes, setup.focus, tuneIds, instrument.family)
+      val blocks = practice.plan(setup.minutes, setup.focus, tuneIds, instrument)
       _ui.update { it.copy(setup = it.setup.copy(plan = blocks.map(::planItem))) }
     }
   }
@@ -206,10 +216,7 @@ class PracticeViewModel(
     _ui.update { it.copy(setup = it.setup.copy(plan = plan.filterIndexed { i, _ -> i != index })) }
   }
 
-  private fun fitsFamily(e: ExerciseEntity): Boolean {
-    val family = repository.family.value
-    return family == null || e.families.isEmpty() || family in e.families
-  }
+  private fun fitsFamily(e: ExerciseEntity): Boolean = _ui.value.setup.instrument?.suits(e.families, e.category) ?: true
 
   private fun planItem(block: PlanBlock): PlanItem = when (block) {
     is PlanBlock.Exercise -> exercises[block.exerciseId].let { PlanItem(block, it?.name ?: "Exercise", it?.category ?: "", it?.let(::exerciseRow)) }

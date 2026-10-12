@@ -45,6 +45,13 @@ class WoodshedRepository(
   /** What the user plays, or null until they say. Setting it also sets [transposition] and [family]. */
   val instrument: StateFlow<Instrument?> = _instrument.asStateFlow()
 
+  private val _myInstruments = MutableStateFlow(
+    prefs.getStringSet(MY_INSTRUMENTS, emptySet())!!.mapNotNull { n -> Instrument.entries.firstOrNull { it.name == n } }.toSet()
+  )
+
+  /** The instruments the user plays, offered when planning a session. Empty until they choose, which offers all. */
+  val myInstruments: StateFlow<Set<Instrument>> = _myInstruments.asStateFlow()
+
   private val _themeMode = MutableStateFlow(enumPref(THEME_MODE) ?: ThemeMode.SYSTEM)
   val themeMode: StateFlow<ThemeMode> = _themeMode.asStateFlow()
 
@@ -84,6 +91,11 @@ class WoodshedRepository(
     setFamily(instrument.family)
   }
 
+  fun setMyInstruments(instruments: Set<Instrument>) {
+    prefs.edit { putStringSet(MY_INSTRUMENTS, instruments.map { it.name }.toSet()) }
+    _myInstruments.value = instruments
+  }
+
   fun setThemeMode(mode: ThemeMode) {
     prefs.edit { putString(THEME_MODE, mode.name) }
     _themeMode.value = mode
@@ -96,6 +108,7 @@ class WoodshedRepository(
 
   fun backupSettings() = BackupSettings(
     instrument = instrument.value?.name,
+    myInstruments = myInstruments.value.map { it.name },
     transposition = transposition.value.name,
     family = family.value?.name,
     themeMode = themeMode.value.name,
@@ -106,6 +119,7 @@ class WoodshedRepository(
   /** Applies a restored backup's settings, ignoring any value this version does not know. */
   fun applyBackupSettings(s: BackupSettings) {
     Instrument.entries.firstOrNull { it.name == s.instrument }?.let(::setInstrument)
+    setMyInstruments(s.myInstruments.mapNotNull { n -> Instrument.entries.firstOrNull { it.name == n } }.toSet())
     Transposition.entries.firstOrNull { it.name == s.transposition }?.let(::setTransposition)
     setFamily(Family.entries.firstOrNull { it.name == s.family })
     ThemeMode.entries.firstOrNull { it.name == s.themeMode }?.let(::setThemeMode)
@@ -144,6 +158,7 @@ class WoodshedRepository(
     const val TRANSPOSITION = "transposition"
     const val FAMILY = "family"
     const val INSTRUMENT = "instrument"
+    const val MY_INSTRUMENTS = "my_instruments"
     const val THEME_MODE = "theme_mode"
     const val LAST_BACKUP_AT = "last_backup_at"
     const val SESSION_MINUTES = "session_minutes"

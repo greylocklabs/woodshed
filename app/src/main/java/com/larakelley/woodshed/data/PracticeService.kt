@@ -10,9 +10,9 @@ import com.larakelley.woodshed.data.db.WoodshedDatabase
 import com.larakelley.woodshed.data.db.homeKey
 import com.larakelley.woodshed.domain.CardState
 import com.larakelley.woodshed.domain.Comfort
-import com.larakelley.woodshed.domain.Family
 import com.larakelley.woodshed.domain.Focus
 import com.larakelley.woodshed.domain.Grade
+import com.larakelley.woodshed.domain.Instrument
 import com.larakelley.woodshed.domain.Key
 import com.larakelley.woodshed.domain.KeyMask
 import com.larakelley.woodshed.domain.KeyPolicy
@@ -131,9 +131,9 @@ class PracticeService(
     return null
   }
 
-  /** A session plan; see [planSession]. Exercises outside [family] are left out. */
-  suspend fun plan(minutes: Int, focus: Set<Focus>, tuneIds: List<Long>, family: Family?): List<PlanBlock> {
-    val exercises = db.exercises().all().filter { it.archivedAt == null && (family == null || it.families.isEmpty() || family in it.families) }
+  /** A session plan; see [planSession]. Exercises that don't suit [instrument] are left out; null keeps them all. */
+  suspend fun plan(minutes: Int, focus: Set<Focus>, tuneIds: List<Long>, instrument: Instrument?): List<PlanBlock> {
+    val exercises = db.exercises().all().filter { it.archivedAt == null && (instrument == null || instrument.suits(it.families, it.category)) }
     val tuneExercises = exercises.filter { it.appliesToTune }
     val history = tuneIds.associateWith { id -> db.reviewEvents().forItem(ReviewEventEntity.TUNE, id).mapNotNull { it.exerciseId }.reversed().distinct() }
     return planSession(
