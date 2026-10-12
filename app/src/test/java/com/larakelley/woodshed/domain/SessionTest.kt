@@ -7,10 +7,10 @@ import org.junit.Test
 
 class SessionTest {
   private var nextId = 0L
-  private fun ex(category: String, minutes: Int = 10, tune: Boolean = false) = PlanExercise(++nextId, category, minutes, tune)
+  private fun ex(category: String, minutes: Int = 10, tune: Boolean = false, difficulty: Int = 2) = PlanExercise(++nextId, category, minutes, tune, difficulty)
 
   private val exercises = listOf(
-    ex("Tone", 10), ex("Air & Breathing", 5),
+    ex("Tone", 10), ex("Air & Breathing", 5), ex("Tone", 6, difficulty = 5),
     ex("Articulation", 10), ex("Articulation", 8),
     ex("Technique", 10), ex("Scales & Patterns", 15), ex("Licks", 10),
     ex("ii-V-I & Progressions", 10),
@@ -39,6 +39,15 @@ class SessionTest {
       val first = plan(30, setOf(Focus.ARTICULATION), seed = seed).first() as PlanBlock.Exercise
       assertTrue(categories.getValue(first.exerciseId) in Focus.TONE.categories)
       assertEquals(5, first.minutes)
+    }
+  }
+
+  @Test
+  fun theWarmupIsNeverAHardExercise() {
+    val hard = exercises.filter { it.difficulty > MAX_WARMUP_DIFFICULTY }.map { it.id }.toSet()
+    for (seed in 0..40) {
+      val first = plan(30, setOf(Focus.SPEED), seed = seed).first() as PlanBlock.Exercise
+      assertTrue(first.exerciseId !in hard)
     }
   }
 
