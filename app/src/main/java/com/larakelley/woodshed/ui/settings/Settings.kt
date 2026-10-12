@@ -41,7 +41,7 @@ import com.larakelley.woodshed.data.BackupException
 import com.larakelley.woodshed.data.BackupService
 import com.larakelley.woodshed.data.ThemeMode
 import com.larakelley.woodshed.data.WoodshedRepository
-import com.larakelley.woodshed.domain.Family
+import com.larakelley.woodshed.domain.Instrument
 import com.larakelley.woodshed.domain.Transposition
 import com.larakelley.woodshed.theme.BackButton
 import com.larakelley.woodshed.theme.LocalCallie
@@ -60,8 +60,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 data class SettingsUi(
+  val instrument: Instrument? = null,
   val transposition: Transposition = Transposition.C,
-  val family: Family? = null,
   val themeMode: ThemeMode = ThemeMode.SYSTEM,
   val lastBackupAt: Long? = null,
   /** The outcome of the last export or restore, shown until the next one. */
@@ -78,13 +78,11 @@ class SettingsViewModel(
   private val message = MutableStateFlow<String?>(null)
 
   val ui: StateFlow<SettingsUi> =
-    combine(repository.transposition, repository.family, repository.themeMode, repository.lastBackupAt, message) { t, f, m, last, msg ->
-      SettingsUi(t, f, m, last, msg, version)
+    combine(repository.instrument, repository.transposition, repository.themeMode, repository.lastBackupAt, message) { i, t, m, last, msg ->
+      SettingsUi(i, t, m, last, msg, version)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SettingsUi(version = version))
 
-  fun setTransposition(t: Transposition) = repository.setTransposition(t)
-
-  fun setFamily(f: Family?) = repository.setFamily(f)
+  fun setInstrument(i: Instrument) = repository.setInstrument(i)
 
   fun setThemeMode(m: ThemeMode) = repository.setThemeMode(m)
 
@@ -121,8 +119,7 @@ class SettingsViewModel(
 
 /** What the settings page can do; the file pickers are handled inside it. */
 data class SettingsActions(
-  val setTransposition: (Transposition) -> Unit = {},
-  val setFamily: (Family?) -> Unit = {},
+  val setInstrument: (Instrument) -> Unit = {},
   val setThemeMode: (ThemeMode) -> Unit = {},
   val export: (Uri, ContentResolver) -> Unit = { _, _ -> },
   val restore: (Uri, ContentResolver) -> Unit = { _, _ -> },
@@ -144,25 +141,23 @@ fun SettingsScreen(ui: SettingsUi, actions: SettingsActions, onBack: () -> Unit,
     Text("Settings", style = MaterialTheme.typography.headlineMedium)
 
     Section("🎷 Instrument")
-    Text("Keys are written for this transposition.", style = MaterialTheme.typography.bodySmall)
-    Transposition.entries.forEach { t ->
+    Text("Sets the key music is written in and which exercises sessions suggest.", style = MaterialTheme.typography.bodySmall)
+    Instrument.entries.forEach { i ->
       Row(
-        Modifier.fillMaxWidth().clickable { actions.setTransposition(t) }.testTag("transposition-${t.name}"),
+        Modifier.fillMaxWidth().clickable { actions.setInstrument(i) }.testTag("instrument-${i.name.lowercase()}"),
         verticalAlignment = Alignment.CenterVertically,
       ) {
-        RadioButton(selected = ui.transposition == t, onClick = { actions.setTransposition(t) })
-        Column {
-          Text(t.name, style = MaterialTheme.typography.titleMedium)
-          Text(t.examples, style = MaterialTheme.typography.bodySmall)
-        }
+        RadioButton(selected = ui.instrument == i, onClick = { actions.setInstrument(i) })
+        Text(i.label, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+        Text("Reads in ${i.transposition.name}", style = MaterialTheme.typography.bodySmall, color = LocalCallie.current.textMuted)
       }
     }
-    Text("Show exercises for", style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 8.dp))
-    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-      FilterChip(selected = ui.family == null, onClick = { actions.setFamily(null) }, label = { Text("All horns") })
-      Family.entries.forEach { f ->
-        FilterChip(selected = ui.family == f, onClick = { actions.setFamily(f) }, label = { Text(f.displayName) }, modifier = Modifier.testTag("family-${f.name}"))
-      }
+    if (ui.instrument != null && ui.instrument.transposition != ui.transposition) {
+      Text(
+        "Keys are showing in ${ui.transposition.name} for now; the key button at the top changes that without changing your instrument.",
+        style = MaterialTheme.typography.bodySmall,
+        color = LocalCallie.current.textMuted,
+      )
     }
 
     Section("🎨 Appearance")

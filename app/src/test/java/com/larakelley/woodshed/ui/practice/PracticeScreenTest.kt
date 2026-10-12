@@ -1,6 +1,9 @@
 package com.larakelley.woodshed.ui.practice
 
 import android.app.Application
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
@@ -8,9 +11,11 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToNode
 import com.larakelley.woodshed.domain.Focus
 import com.larakelley.woodshed.domain.Grade
+import com.larakelley.woodshed.domain.Instrument
 import com.larakelley.woodshed.domain.PlanBlock
 import com.larakelley.woodshed.ui.browse.ExerciseRow
 import org.junit.Assert.assertEquals
@@ -83,8 +88,8 @@ class PracticeScreenTest {
     val actions = SetupActions(toggleTune = { toggled += it }, toggleFocus = { toggled += it }, setMinutes = { toggled += it })
     compose.setContent { PracticeHome(PracticeUi(setup = SetupUi(minutes = 30, tunes = tunes, selected = setOf(1))), actions) }
 
-    compose.onNodeWithTag("focus-speed").performClick()
-    compose.onNodeWithTag("length-45").performClick()
+    compose.onNodeWithTag("focus-speed").performScrollTo().performClick()
+    compose.onNodeWithTag("length-45").performScrollTo().performClick()
     compose.onNodeWithText("Tunes (1 picked)").assertExists()
     // The tune list sits below the fold on a test-sized screen.
     val list = compose.onNode(hasScrollAction())
@@ -93,6 +98,19 @@ class PracticeScreenTest {
     list.performScrollToNode(hasTestTag("pick-3"))
     compose.onNodeWithTag("pick-3").performClick()
     assertEquals(listOf<Any>(Focus.SPEED, 45, 3L), toggled)
+  }
+
+  @Test
+  fun planningWaitsForAnInstrument() {
+    val picked = mutableListOf<Instrument>()
+    var ui by mutableStateOf(PracticeUi(setup = SetupUi(instrument = null)))
+    compose.setContent { PracticeHome(ui, SetupActions(setInstrument = { picked += it; ui = ui.copy(setup = ui.setup.copy(instrument = it)) })) }
+
+    compose.onNodeWithTag("needs-instrument").assertExists()
+    compose.onNodeWithTag("build-plan").assertDoesNotExist()
+    compose.onNodeWithTag("instrument-flute").performClick()
+    assertEquals(listOf(Instrument.FLUTE), picked)
+    compose.onNodeWithTag("build-plan").assertExists()
   }
 
   @Test

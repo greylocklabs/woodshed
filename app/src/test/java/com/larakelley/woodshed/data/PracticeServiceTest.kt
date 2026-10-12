@@ -79,6 +79,18 @@ class PracticeServiceTest {
   }
 
   @Test
+  fun aFluteSessionNeverPlansReedOrBrassWork() = runTest {
+    val byId = db.exercises().all().associateBy { it.id }
+    for (seed in 0..20) {
+      val service = PracticeService(db, now = { clock }, zone = ZoneOffset.UTC, random = Random(seed))
+      val plan = service.plan(120, Focus.entries.toSet(), emptyList(), Family.FLUTE)
+      val families = plan.filterIsInstance<PlanBlock.Exercise>().map { byId.getValue(it.exerciseId).families }
+      assertTrue(families.all { it.isEmpty() || Family.FLUTE in it })
+      assertTrue(plan.none { byId.getValue((it as PlanBlock.Exercise).exerciseId).name == "Mouthpiece pitch bends" })
+    }
+  }
+
+  @Test
   fun aWishlistTuneInAPlanStartsLearningWhenItComesUp() = runTest {
     practice.addToWishlist(id("solar"))
     val block = practice.plan(30, emptySet(), listOf(id("solar")), null).filterIsInstance<PlanBlock.Tune>().single()

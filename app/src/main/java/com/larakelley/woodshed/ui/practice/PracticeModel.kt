@@ -12,6 +12,7 @@ import com.larakelley.woodshed.data.db.TuneStateEntity
 import com.larakelley.woodshed.domain.ClickTrack
 import com.larakelley.woodshed.domain.Focus
 import com.larakelley.woodshed.domain.Grade
+import com.larakelley.woodshed.domain.Instrument
 import com.larakelley.woodshed.domain.Lifecycle
 import com.larakelley.woodshed.domain.PlanBlock
 import com.larakelley.woodshed.domain.Transposition
@@ -87,6 +88,8 @@ fun sessionTunes(standards: List<StandardEntity>, states: List<TuneStateEntity>,
 data class PlanItem(val block: PlanBlock, val title: String, val detail: String, val exercise: ExerciseRow? = null)
 
 data class SetupUi(
+  /** Null until chosen; a session cannot be planned without it. */
+  val instrument: Instrument? = null,
   val minutes: Int = 30,
   val focus: Set<Focus> = emptySet(),
   val tunes: List<SessionTune> = emptyList(),
@@ -122,7 +125,7 @@ class PracticeViewModel(
   private val practice: PracticeService,
   private val now: () -> Long = System::currentTimeMillis,
 ) : ViewModel() {
-  private val _ui = MutableStateFlow(PracticeUi(setup = SetupUi(minutes = repository.sessionMinutes, focus = repository.sessionFocus)))
+  private val _ui = MutableStateFlow(PracticeUi(setup = SetupUi(instrument = repository.instrument.value, minutes = repository.sessionMinutes, focus = repository.sessionFocus)))
   val ui: StateFlow<PracticeUi> = _ui.asStateFlow()
 
   private var exercises: Map<Long, ExerciseEntity> = emptyMap()
@@ -146,9 +149,15 @@ class PracticeViewModel(
       _ui.update { ui ->
         val ids = tunes.map { it.id }.toSet()
         val selected = if (selectionTouched) ui.setup.selected intersect ids else tunes.filter { it.group == TuneGroup.DUE }.map { it.id }.toSet()
-        ui.copy(summary = summary, setup = ui.setup.copy(tunes = tunes, selected = selected))
+        ui.copy(summary = summary, setup = ui.setup.copy(instrument = repository.instrument.value, tunes = tunes, selected = selected))
       }
     }
+  }
+
+  /** Also sets the key the app writes in, and which exercises the plan may use. */
+  fun setInstrument(instrument: Instrument) {
+    repository.setInstrument(instrument)
+    editSetup { it.copy(instrument = instrument) }
   }
 
   fun setMinutes(minutes: Int) = editSetup { it.copy(minutes = minutes.coerceIn(SESSION_MINUTES_MIN, SESSION_MINUTES_MAX)) }
@@ -167,10 +176,11 @@ class PracticeViewModel(
 
   fun buildPlan() {
     val setup = _ui.value.setup
+    val instrument = setup.instrument ?: return
     repository.rememberSession(setup.minutes, setup.focus)
     viewModelScope.launch {
       val tuneIds = setup.tunes.map { it.id }.filter { it in setup.selected }
-      val blocks = practice.plan(setup.minutes, setup.focus, tuneIds, repository.family.value)
+      val blocks = practice.plan(setup.minutes, setup.focus, tuneIds, instrument.family)
       _ui.update { it.copy(setup = it.setup.copy(plan = blocks.map(::planItem))) }
     }
   }

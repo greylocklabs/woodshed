@@ -7,8 +7,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import com.larakelley.woodshed.data.ThemeMode
-import com.larakelley.woodshed.domain.Family
-import com.larakelley.woodshed.domain.Transposition
+import com.larakelley.woodshed.domain.Instrument
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -24,13 +23,12 @@ class SettingsScreenTest {
   @Test
   fun choicesAreReportedAndBackupStateIsShown() {
     val picked = mutableListOf<Any?>()
-    val actions = SettingsActions(setTransposition = { picked += it }, setFamily = { picked += it }, setThemeMode = { picked += it })
+    val actions = SettingsActions(setInstrument = { picked += it }, setThemeMode = { picked += it })
     compose.setContent { SettingsScreen(SettingsUi(message = "Backup saved."), actions, onBack = {}) }
 
-    compose.onNodeWithTag("transposition-Bb").performClick()
-    compose.onNodeWithTag("family-BRASS").performScrollTo().performClick()
+    compose.onNodeWithTag("instrument-trumpet").performScrollTo().performClick()
     compose.onNodeWithTag("theme-DARK").performScrollTo().performClick()
-    assertEquals(listOf<Any?>(Transposition.Bb, Family.BRASS, ThemeMode.DARK), picked)
+    assertEquals(listOf<Any?>(Instrument.TRUMPET, ThemeMode.DARK), picked)
     compose.onNodeWithText("Not backed up from this phone yet").performScrollTo().assertExists()
     compose.onNodeWithTag("backup-message").assertExists()
   }
