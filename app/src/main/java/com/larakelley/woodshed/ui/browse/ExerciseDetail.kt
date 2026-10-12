@@ -15,7 +15,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import com.larakelley.woodshed.domain.ReportSubject
 import com.larakelley.woodshed.theme.BackButton
+import com.larakelley.woodshed.ui.report.ReportButton
 
 /** Full page for one exercise, opened from the Exercises tab. */
 @Composable
@@ -24,6 +26,16 @@ fun ExerciseDetail(exercise: ExerciseRow, onBack: () -> Unit, modifier: Modifier
     BackButton("Back to exercises", onBack)
     Text(exercise.name, style = MaterialTheme.typography.headlineMedium)
     ExerciseFacts(exercise)
+    ReportButton(
+      ReportSubject.EXERCISE,
+      item = exercise.name,
+      details = listOfNotNull(
+        "For" to exercise.instruments,
+        "Category" to exercise.category,
+        "Time" to "${exercise.minutes} min",
+        exercise.tempoBpm?.let { "Tempo" to "$it bpm" },
+      ),
+    )
   }
 }
 

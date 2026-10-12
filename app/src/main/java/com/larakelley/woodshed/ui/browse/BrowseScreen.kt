@@ -55,6 +55,7 @@ import com.larakelley.woodshed.domain.Key
 import com.larakelley.woodshed.domain.KeyMask
 import com.larakelley.woodshed.domain.KeyPolicy
 import com.larakelley.woodshed.domain.Lifecycle
+import com.larakelley.woodshed.domain.ReportSubject
 import com.larakelley.woodshed.domain.Tonality
 import com.larakelley.woodshed.domain.Transposition
 import com.larakelley.woodshed.domain.delayLabel
@@ -62,6 +63,7 @@ import com.larakelley.woodshed.domain.titleSortKey
 import com.larakelley.woodshed.theme.BackButton
 import com.larakelley.woodshed.theme.CallieChip
 import com.larakelley.woodshed.theme.StickerButton
+import com.larakelley.woodshed.ui.report.ReportButton
 
 /** Shown before each tab name in the main navigation. */
 private val TAB_EMOJI = mapOf(
@@ -361,6 +363,20 @@ private fun TuneDetail(tune: TuneRow, actions: TuneActions, now: () -> Long, onB
       }
     }
     KnownKeys(tune, onToggle = { pc -> actions.toggleKnownKey(id, pc) })
+    HorizontalDivider()
+    ReportButton(
+      ReportSubject.TUNE,
+      item = tune.title,
+      id = tune.slug,
+      details = listOfNotNull(
+        // Data is kept in concert pitch, so the report names the concert key whatever the user reads in.
+        "Key" to (tune.homeKey?.let { "concert ${it.displayName}" + if (tune.transposition != Transposition.C) ", shown as ${tune.key} for ${tune.transposition.name}" else "" } ?: "unknown"),
+        tune.credit.takeIf { it.isNotEmpty() }?.let { "Credit" to it },
+        tune.shape.takeIf { it.isNotEmpty() }?.let { "Form" to it },
+        "Collection" to tune.collection,
+        "Checked" to if (tune.verified) "yes" else "no, bulk import",
+      ),
+    )
   }
 
   if (confirmRemove) {
