@@ -43,6 +43,10 @@ interface ExerciseDao {
 
   @Query("SELECT * FROM exercises WHERE name = :name") suspend fun byName(name: String): ExerciseEntity?
 
+  @Query("SELECT * FROM exercises WHERE id = :id") suspend fun byId(id: Long): ExerciseEntity?
+
+  @Query("SELECT * FROM exercises WHERE userCreated = 1") suspend fun userCreated(): List<ExerciseEntity>
+
   @Insert suspend fun insert(exercise: ExerciseEntity): Long
 
   @Update suspend fun update(exercises: List<ExerciseEntity>)
@@ -127,6 +131,21 @@ interface PlaylistDao {
 }
 
 @Dao
+interface ExerciseOverrideDao {
+  @Query("SELECT * FROM exercise_overrides") fun observeAll(): Flow<List<ExerciseOverrideEntity>>
+
+  @Query("SELECT * FROM exercise_overrides") suspend fun all(): List<ExerciseOverrideEntity>
+
+  @Query("SELECT * FROM exercise_overrides WHERE exerciseId = :exerciseId") suspend fun get(exerciseId: Long): ExerciseOverrideEntity?
+
+  @Upsert suspend fun upsert(override: ExerciseOverrideEntity)
+
+  @Query("DELETE FROM exercise_overrides WHERE exerciseId = :exerciseId") suspend fun delete(exerciseId: Long)
+
+  @Query("DELETE FROM exercise_overrides") suspend fun deleteAll()
+}
+
+@Dao
 interface ReviewEventDao {
   @Insert suspend fun insert(event: ReviewEventEntity): Long
 
@@ -141,6 +160,10 @@ interface ReviewEventDao {
 }
 
 class Converters {
+  @TypeConverter fun familiesToNullableString(families: List<Family>?): String? = families?.let(::familiesToString)
+
+  @TypeConverter fun nullableStringToFamilies(value: String?): List<Family>? = value?.let(::stringToFamilies)
+
   @TypeConverter fun familiesToString(families: List<Family>): String = families.joinToString(",") { it.name }
 
   @TypeConverter
@@ -149,8 +172,8 @@ class Converters {
 }
 
 @Database(
-  entities = [StandardEntity::class, ExerciseEntity::class, TuneStateEntity::class, ReviewEventEntity::class, TuneKnowledgeEntity::class, TuneOverrideEntity::class, PlaylistEntity::class, PlaylistTuneEntity::class],
-  version = 8,
+  entities = [StandardEntity::class, ExerciseEntity::class, TuneStateEntity::class, ReviewEventEntity::class, TuneKnowledgeEntity::class, TuneOverrideEntity::class, PlaylistEntity::class, PlaylistTuneEntity::class, ExerciseOverrideEntity::class],
+  version = 9,
   autoMigrations = [
     AutoMigration(from = 1, to = 2),
     AutoMigration(from = 2, to = 3),
@@ -159,6 +182,7 @@ class Converters {
     AutoMigration(from = 5, to = 6, spec = WoodshedDatabase.SplitKey::class),
     AutoMigration(from = 6, to = 7),
     AutoMigration(from = 7, to = 8),
+    AutoMigration(from = 8, to = 9),
   ],
 )
 @TypeConverters(Converters::class)
@@ -176,6 +200,8 @@ abstract class WoodshedDatabase : RoomDatabase() {
   abstract fun tuneOverrides(): TuneOverrideDao
 
   abstract fun playlists(): PlaylistDao
+
+  abstract fun exerciseOverrides(): ExerciseOverrideDao
 
   /** Version 4 listed every fake book a tune is printed in; version 5 keeps only its collection. */
   @DeleteColumn(tableName = "standards", columnName = "books")

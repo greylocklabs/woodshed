@@ -4,6 +4,7 @@ import android.content.SharedPreferences
 import android.content.res.AssetManager
 import androidx.core.content.edit
 import com.larakelley.woodshed.data.db.ExerciseEntity
+import com.larakelley.woodshed.data.db.ExerciseOverrideEntity
 import com.larakelley.woodshed.data.db.StandardEntity
 import com.larakelley.woodshed.data.db.TuneKnowledgeEntity
 import com.larakelley.woodshed.data.db.TuneOverrideEntity
@@ -79,7 +80,14 @@ class WoodshedRepository(
     val byId = overrides.associateBy { it.standardId }
     standards.map { it.withOverride(byId[it.id]) }
   }
-  val exercises: Flow<List<ExerciseEntity>> = db.exercises().observeActive()
+  /** The user's edits to seeded exercises. */
+  val exerciseOverrides: Flow<List<ExerciseOverrideEntity>> = db.exerciseOverrides().observeAll()
+
+  /** Active exercises as the user sees them, with their edits applied. */
+  val exercises: Flow<List<ExerciseEntity>> = combine(db.exercises().observeActive(), exerciseOverrides) { exercises, overrides ->
+    val byId = overrides.associateBy { it.exerciseId }
+    exercises.map { it.withOverride(byId[it.id]) }
+  }
   val tuneStates: Flow<List<TuneStateEntity>> = db.tuneStates().observeAll()
   val tuneKnowledge: Flow<List<TuneKnowledgeEntity>> = db.tuneKnowledge().observeAll()
 

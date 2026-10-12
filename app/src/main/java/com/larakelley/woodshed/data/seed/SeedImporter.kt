@@ -58,7 +58,10 @@ class SeedImporter(private val db: WoodshedDatabase, private val now: () -> Long
 
   private suspend fun importExercises(seeds: List<ExerciseSeed>, timestamp: Long): Result {
     val dao = db.exercises()
-    val existing = dao.all().associateBy { it.name }
+    // A user's exercise that shares a name with a new seed one keeps its content and gives up the name.
+    val seedNames = seeds.map { it.name }.toSet()
+    for (mine in dao.all().filter { it.userCreated && it.name in seedNames }) dao.update(listOf(mine.copy(name = "${mine.name} (yours)")))
+    val existing = dao.all().filterNot { it.userCreated }.associateBy { it.name }
     val updates = mutableListOf<ExerciseEntity>()
     var inserted = 0
     for (e in seeds) {

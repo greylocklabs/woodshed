@@ -55,6 +55,8 @@ class BrowseScreenTest {
         BrowseState(
           transposition, filterTunes(rows, filter), rows.size, exerciseRows(exercises, exerciseFilter), exercises.size, tuneFilter = filter,
           exerciseFilter = exerciseFilter,
+          allExercises = exerciseRows(exercises),
+          allTunes = rows,
         ),
         onSelectTransposition = { transposition = it },
         onTuneFilter = { filter = it(filter) },
