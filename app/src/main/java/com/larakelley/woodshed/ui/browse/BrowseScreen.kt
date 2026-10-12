@@ -107,6 +107,7 @@ fun BrowseScreen(
   actions: TuneActions = TuneActions(),
   playlistActions: PlaylistActions = PlaylistActions(),
   exerciseActions: ExerciseActions = ExerciseActions(),
+  mediaActions: MediaActions = MediaActions(),
   onTuneFilter: ((TuneFilter) -> TuneFilter) -> Unit = {},
   onExerciseFilter: ((ExerciseFilter) -> ExerciseFilter) -> Unit = {},
   now: () -> Long = System::currentTimeMillis,
@@ -166,6 +167,7 @@ fun BrowseScreen(
       BackHandler { openSlug = null }
       TuneDetail(open, actions, now, onBack = { openSlug = null }, onEdit = { editing = open.slug }, modifier = Modifier.padding(padding)) {
         PlaylistButton(open, state.playlists, playlistActions)
+        MediaSection(open.id, state.media[open.id].orEmpty(), mediaActions)
       }
       return@Scaffold
     }

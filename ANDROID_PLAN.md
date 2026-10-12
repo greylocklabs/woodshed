@@ -396,8 +396,10 @@ re-seeding, and included in the backup file:
   users add their own. Transcriptions are scheduled and graded like tunes. An
   active transcription takes priority in session plans and in the Random tab.
 
-**M7 — Recordings.** Each standard links to a classic recording or a short set
-of them: artist, album, year and a listening link. Finding these takes a large
+**M7 — Recordings.** Users can already attach their own links to any tune:
+YouTube and Vimeo play in place (after a tap, so nothing loads until then) and
+anything else opens outside the app. Still to do: seeded classic recordings for
+each standard: artist, album, year and a listening link. Finding these takes a large
 research pass, run like the key research: sourced, in batches, never guessed.
 Links rot, so each one carries the date it was last checked.
 

@@ -222,3 +222,19 @@ data class PlaylistEntity(
   indices = [Index(value = ["standardId"])],
 )
 data class PlaylistTuneEntity(val playlistId: Long, val standardId: Long, val position: Int)
+
+/** A recording or video the user attached to a tune. */
+@Entity(
+  tableName = "tune_media",
+  foreignKeys = [ForeignKey(entity = StandardEntity::class, parentColumns = ["id"], childColumns = ["standardId"])],
+  indices = [Index(value = ["standardId"])],
+)
+data class TuneMediaEntity(
+  @PrimaryKey(autoGenerate = true) val id: Long = 0,
+  val standardId: Long,
+  val url: String,
+  /** What the user called it, such as "Miles, Kind of Blue"; null shows the site instead. */
+  val title: String? = null,
+  val position: Int = 0,
+  val createdAt: Long = 0,
+)

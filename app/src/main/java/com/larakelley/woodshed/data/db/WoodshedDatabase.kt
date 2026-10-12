@@ -146,6 +146,21 @@ interface ExerciseOverrideDao {
 }
 
 @Dao
+interface TuneMediaDao {
+  @Query("SELECT * FROM tune_media ORDER BY standardId, position, id") fun observeAll(): Flow<List<TuneMediaEntity>>
+
+  @Query("SELECT * FROM tune_media ORDER BY standardId, position, id") suspend fun all(): List<TuneMediaEntity>
+
+  @Query("SELECT * FROM tune_media WHERE standardId = :standardId ORDER BY position, id") suspend fun forTune(standardId: Long): List<TuneMediaEntity>
+
+  @Insert suspend fun insert(media: TuneMediaEntity): Long
+
+  @Query("DELETE FROM tune_media WHERE id = :id") suspend fun delete(id: Long)
+
+  @Query("DELETE FROM tune_media") suspend fun deleteAll()
+}
+
+@Dao
 interface ReviewEventDao {
   @Insert suspend fun insert(event: ReviewEventEntity): Long
 
@@ -172,8 +187,8 @@ class Converters {
 }
 
 @Database(
-  entities = [StandardEntity::class, ExerciseEntity::class, TuneStateEntity::class, ReviewEventEntity::class, TuneKnowledgeEntity::class, TuneOverrideEntity::class, PlaylistEntity::class, PlaylistTuneEntity::class, ExerciseOverrideEntity::class],
-  version = 9,
+  entities = [StandardEntity::class, ExerciseEntity::class, TuneStateEntity::class, ReviewEventEntity::class, TuneKnowledgeEntity::class, TuneOverrideEntity::class, PlaylistEntity::class, PlaylistTuneEntity::class, ExerciseOverrideEntity::class, TuneMediaEntity::class],
+  version = 10,
   autoMigrations = [
     AutoMigration(from = 1, to = 2),
     AutoMigration(from = 2, to = 3),
@@ -183,6 +198,7 @@ class Converters {
     AutoMigration(from = 6, to = 7),
     AutoMigration(from = 7, to = 8),
     AutoMigration(from = 8, to = 9),
+    AutoMigration(from = 9, to = 10),
   ],
 )
 @TypeConverters(Converters::class)
@@ -202,6 +218,8 @@ abstract class WoodshedDatabase : RoomDatabase() {
   abstract fun playlists(): PlaylistDao
 
   abstract fun exerciseOverrides(): ExerciseOverrideDao
+
+  abstract fun tuneMedia(): TuneMediaDao
 
   /** Version 4 listed every fake book a tune is printed in; version 5 keeps only its collection. */
   @DeleteColumn(tableName = "standards", columnName = "books")

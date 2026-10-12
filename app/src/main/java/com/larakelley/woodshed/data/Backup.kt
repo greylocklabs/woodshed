@@ -8,6 +8,7 @@ import com.larakelley.woodshed.data.db.PlaylistTuneEntity
 import com.larakelley.woodshed.data.db.ReviewEventEntity
 import com.larakelley.woodshed.data.db.StandardEntity
 import com.larakelley.woodshed.data.db.TuneKnowledgeEntity
+import com.larakelley.woodshed.data.db.TuneMediaEntity
 import com.larakelley.woodshed.data.db.TuneOverrideEntity
 import com.larakelley.woodshed.data.db.TuneStateEntity
 import com.larakelley.woodshed.data.db.WoodshedDatabase
@@ -43,6 +44,8 @@ data class Backup(
   @SerialName("my_exercises") val myExercises: List<BackupExercise> = emptyList(),
   /** The user's edits to seeded exercises, keyed by the seed's name. */
   @SerialName("exercise_edits") val exerciseEdits: List<BackupExerciseEdit> = emptyList(),
+  /** Recording and video links on tunes, named by slug. */
+  val media: List<BackupMedia> = emptyList(),
   /** Playlists, with tunes named by slug in order. */
   val playlists: List<BackupPlaylist> = emptyList(),
   val tunes: List<BackupTune>,
@@ -105,6 +108,9 @@ data class BackupExerciseEdit(
   @SerialName("applies_to_tune") val appliesToTune: Boolean? = null,
   @SerialName("updated_at") val updatedAt: Long = 0,
 )
+
+@Serializable
+data class BackupMedia(val slug: String, val url: String, val title: String? = null, val position: Int = 0, @SerialName("created_at") val createdAt: Long = 0)
 
 @Serializable
 data class BackupPlaylist(val name: String, val tunes: List<String>, @SerialName("created_at") val createdAt: Long = 0)
@@ -209,6 +215,7 @@ class BackupService(
         val name = exercises[o.exerciseId] ?: return@mapNotNull null
         BackupExerciseEdit(name, o.name, o.category, o.description, o.minutes, o.difficulty, o.tempoBpm, o.families, o.appliesToTune, o.updatedAt)
       },
+      media = db.tuneMedia().all().mapNotNull { m -> slugs[m.standardId]?.let { BackupMedia(it, m.url, m.title, m.position, m.createdAt) } },
       playlists = db.playlists().all().let { lists ->
         val created = lists.associate { it.id to it.createdAt }
         playlists(lists, db.playlists().entries()).map { p -> BackupPlaylist(p.name, p.tuneIds.mapNotNull { slugs[it] }, created.getValue(p.id)) }
@@ -338,6 +345,11 @@ class BackupService(
           )
         )
         reviews++
+      }
+      db.tuneMedia().deleteAll()
+      for (m in backup.media) {
+        val id = ids[m.slug] ?: continue
+        db.tuneMedia().insert(TuneMediaEntity(standardId = id, url = m.url, title = m.title, position = m.position, createdAt = m.createdAt))
       }
       db.playlists().deleteAll()
       for (p in backup.playlists) {
