@@ -11,7 +11,7 @@ android {
     compileSdk = 36
     defaultConfig {
         applicationId = "com.larakelley.woodshed"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
@@ -37,6 +37,8 @@ android {
     // The seed JSON lives in the repo's data/ directory and ships as assets unchanged.
     sourceSets {
       getByName("main") { assets.srcDir(rootProject.file("data")) }
+      // Migration tests read the exported schemas; Robolectric only sees app assets, so debug builds carry them.
+      getByName("debug") { assets.srcDir("$projectDir/schemas") }
     }
 
     testOptions {
@@ -101,6 +103,7 @@ dependencies {
   ksp(libs.androidx.room.compiler)
   implementation(libs.kotlinx.serialization.json)
   testImplementation(libs.robolectric)
+  testImplementation(libs.androidx.room.testing)
   testImplementation(libs.androidx.test.core)
   testImplementation(composeBom)
   testImplementation(libs.androidx.compose.ui.test.junit4)

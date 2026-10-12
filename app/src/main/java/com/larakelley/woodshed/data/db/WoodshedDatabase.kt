@@ -1,6 +1,7 @@
 package com.larakelley.woodshed.data.db
 
 import android.content.Context
+import androidx.room.AutoMigration
 import androidx.room.Dao
 import androidx.room.Database
 import androidx.room.Insert
@@ -10,6 +11,7 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverter
 import androidx.room.TypeConverters
 import androidx.room.Update
+import androidx.room.Upsert
 import com.larakelley.woodshed.domain.Family
 import kotlinx.coroutines.flow.Flow
 
@@ -20,6 +22,8 @@ interface StandardDao {
   @Query("SELECT * FROM standards WHERE archivedAt IS NULL") fun observeActive(): Flow<List<StandardEntity>>
 
   @Query("SELECT * FROM standards WHERE slug = :slug") suspend fun bySlug(slug: String): StandardEntity?
+
+  @Query("SELECT * FROM standards WHERE id = :id") suspend fun byId(id: Long): StandardEntity?
 
   @Insert suspend fun insert(standard: StandardEntity): Long
 
@@ -39,6 +43,39 @@ interface ExerciseDao {
   @Update suspend fun update(exercises: List<ExerciseEntity>)
 }
 
+@Dao
+interface TuneStateDao {
+  @Query("SELECT * FROM tune_state") fun observeAll(): Flow<List<TuneStateEntity>>
+
+  @Query("SELECT * FROM tune_state") suspend fun all(): List<TuneStateEntity>
+
+  @Query("SELECT * FROM tune_state WHERE standardId = :standardId") suspend fun get(standardId: Long): TuneStateEntity?
+
+  @Upsert suspend fun upsert(state: TuneStateEntity)
+
+  @Query("DELETE FROM tune_state WHERE standardId = :standardId") suspend fun delete(standardId: Long)
+
+  @Query(
+    "SELECT * FROM tune_state WHERE lifecycle IN ('LEARNING', 'REPERTOIRE') AND dueAt IS NOT NULL AND dueAt <= :now ORDER BY dueAt"
+  )
+  suspend fun due(now: Long): List<TuneStateEntity>
+
+  @Query("SELECT * FROM tune_state WHERE lifecycle = 'WISHLIST' ORDER BY wishlistedAt, standardId")
+  suspend fun wishlist(): List<TuneStateEntity>
+
+  @Query("SELECT COUNT(*) FROM tune_state WHERE introducedAt >= :since") suspend fun introducedSince(since: Long): Int
+}
+
+@Dao
+interface ReviewEventDao {
+  @Insert suspend fun insert(event: ReviewEventEntity): Long
+
+  @Query("SELECT * FROM review_events WHERE itemKind = :kind AND itemId = :itemId ORDER BY reviewedAt, id")
+  suspend fun forItem(kind: String, itemId: Long): List<ReviewEventEntity>
+
+  @Query("SELECT COUNT(*) FROM review_events WHERE reviewedAt >= :since") suspend fun countSince(since: Long): Int
+}
+
 class Converters {
   @TypeConverter fun familiesToString(families: List<Family>): String = families.joinToString(",") { it.name }
 
@@ -47,12 +84,20 @@ class Converters {
     if (value.isEmpty()) emptyList() else value.split(",").map { Family.valueOf(it) }
 }
 
-@Database(entities = [StandardEntity::class, ExerciseEntity::class], version = 1)
+@Database(
+  entities = [StandardEntity::class, ExerciseEntity::class, TuneStateEntity::class, ReviewEventEntity::class],
+  version = 2,
+  autoMigrations = [AutoMigration(from = 1, to = 2)],
+)
 @TypeConverters(Converters::class)
 abstract class WoodshedDatabase : RoomDatabase() {
   abstract fun standards(): StandardDao
 
   abstract fun exercises(): ExerciseDao
+
+  abstract fun tuneStates(): TuneStateDao
+
+  abstract fun reviewEvents(): ReviewEventDao
 
   companion object {
     fun create(context: Context): WoodshedDatabase =

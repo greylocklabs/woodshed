@@ -166,10 +166,18 @@ a separate, rate-limited new-card queue: due cards are served first, and at most
 have encoded "learn a tune before starting another" as a dial you can tune
 against logged reps, rather than a probability you have to guess.
 
-Give each tune an explicit lifecycle — `wishlist → learning → repertoire →
-retired`. Only `learning` and `repertoire` enter the review queue; `wishlist`
-**is** the new-card pool. That maps the old "in progress" idea onto SRS
-vocabulary with no fudge factor left over.
+Give each tune an explicit lifecycle: library (no state at all), then
+`wishlist`, `learning`, `repertoire`, `retired`. The wishlist is the tunes you
+chose to learn next, and it is the new-card pool: the daily cap moves the oldest
+of them into `learning`. Only `learning` and `repertoire` enter the review queue.
+A tune moves to `repertoire` once its interval reaches 21 days and back to
+`learning` on a lapse. That maps the old "in progress" idea onto SRS vocabulary
+with no fudge factor left over, and keeps the other 250-odd tunes out of the
+queue until you pick them.
+
+The scheduled item is the tune as a whole. Each time it comes up the card pairs
+it with the tune exercise used longest ago on it, in the key its `KeyPolicy`
+gives, so exercises vary without multiplying the cards.
 
 ### Keep the scheduler swappable
 

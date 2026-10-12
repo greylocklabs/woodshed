@@ -1,9 +1,14 @@
 package com.larakelley.woodshed.data.db
 
 import androidx.room.Entity
+import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.larakelley.woodshed.domain.CardState
 import com.larakelley.woodshed.domain.Family
+import com.larakelley.woodshed.domain.Grade
+import com.larakelley.woodshed.domain.KeyPolicy
+import com.larakelley.woodshed.domain.Lifecycle
 
 /**
  * Author-owned: every column comes from the seed and is refreshed on re-seed. User state for a tune
@@ -42,3 +47,58 @@ data class ExerciseEntity(
   val appliesToTune: Boolean,
   val archivedAt: Long? = null,
 )
+
+/**
+ * User-owned state for a tune; re-seeding never touches it. The scheduling columns are a cache that can be
+ * rebuilt from review_events.
+ */
+@Entity(
+  tableName = "tune_state",
+  foreignKeys = [ForeignKey(entity = StandardEntity::class, parentColumns = ["id"], childColumns = ["standardId"])],
+)
+data class TuneStateEntity(
+  @PrimaryKey val standardId: Long,
+  val lifecycle: Lifecycle,
+  val keyPolicy: KeyPolicy = KeyPolicy.FIXED,
+  val cyclePosition: Int = 0,
+  val notes: String? = null,
+  val wishlistedAt: Long? = null,
+  val introducedAt: Long? = null,
+  val reps: Int = 0,
+  val lapses: Int = 0,
+  val intervalDays: Double = 0.0,
+  val ease: Double = 2.5,
+  val dueAt: Long? = null,
+  val lastReviewedAt: Long? = null,
+) {
+  val cardState: CardState
+    get() = CardState(reps, lapses, intervalDays, ease, dueAt)
+
+  fun withCardState(s: CardState) = copy(reps = s.reps, lapses = s.lapses, intervalDays = s.intervalDays, ease = s.ease, dueAt = s.dueAt)
+}
+
+/** One graded rep. The scheduler's inputs and outputs are kept so history can be replayed under another scheduler. */
+@Entity(tableName = "review_events", indices = [Index(value = ["itemKind", "itemId"])])
+data class ReviewEventEntity(
+  @PrimaryKey(autoGenerate = true) val id: Long = 0,
+  val itemKind: String,
+  val itemId: Long,
+  val exerciseId: Long?,
+  val transposition: String,
+  /** Null when the tune's key does not parse. */
+  val keyWrittenPitchClass: Int?,
+  val keyWrittenMinor: Boolean?,
+  val grade: Grade,
+  val reviewedAt: Long,
+  val elapsedMs: Long,
+  val schedulerId: String,
+  val schedulerVersion: Int,
+  val intervalBefore: Double,
+  val intervalAfter: Double,
+  val easeBefore: Double,
+  val easeAfter: Double,
+) {
+  companion object {
+    const val TUNE = "TUNE"
+  }
+}
