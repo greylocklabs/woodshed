@@ -8,7 +8,8 @@ import com.larakelley.woodshed.data.db.StandardEntity
 import com.larakelley.woodshed.data.db.WoodshedDatabase
 import com.larakelley.woodshed.data.seed.Seed
 import com.larakelley.woodshed.data.seed.SeedImporter
-import com.larakelley.woodshed.domain.Instrument
+import com.larakelley.woodshed.domain.Family
+import com.larakelley.woodshed.domain.Transposition
 import java.security.MessageDigest
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,10 +21,13 @@ class WoodshedRepository(
   private val prefs: SharedPreferences,
   private val assets: AssetManager,
 ) {
-  private val _instrument = MutableStateFlow(prefs.getString(INSTRUMENT, null)?.let { runCatching { Instrument.valueOf(it) }.getOrNull() })
+  private val _transposition = MutableStateFlow(enumPref(TRANSPOSITION) ?: Transposition.C)
+  val transposition: StateFlow<Transposition> = _transposition.asStateFlow()
 
-  /** Null until the user picks one; keys then show in concert pitch. */
-  val instrument: StateFlow<Instrument?> = _instrument.asStateFlow()
+  private val _family = MutableStateFlow(enumPref<Family>(FAMILY))
+
+  /** Null shows exercises for every family. */
+  val family: StateFlow<Family?> = _family.asStateFlow()
 
   private val _seedError = MutableStateFlow<String?>(null)
   val seedError: StateFlow<String?> = _seedError.asStateFlow()
@@ -31,9 +35,14 @@ class WoodshedRepository(
   val standards: Flow<List<StandardEntity>> = db.standards().observeActive()
   val exercises: Flow<List<ExerciseEntity>> = db.exercises().observeActive()
 
-  fun setInstrument(instrument: Instrument?) {
-    prefs.edit { putString(INSTRUMENT, instrument?.name) }
-    _instrument.value = instrument
+  fun setTransposition(transposition: Transposition) {
+    prefs.edit { putString(TRANSPOSITION, transposition.name) }
+    _transposition.value = transposition
+  }
+
+  fun setFamily(family: Family?) {
+    prefs.edit { putString(FAMILY, family?.name) }
+    _family.value = family
   }
 
   /** Imports the bundled seed when it differs from the last one imported. */
@@ -51,11 +60,15 @@ class WoodshedRepository(
     }
   }
 
+  private inline fun <reified T : Enum<T>> enumPref(key: String): T? =
+    prefs.getString(key, null)?.let { name -> enumValues<T>().firstOrNull { it.name == name } }
+
   private fun sha256(text: String): String =
     MessageDigest.getInstance("SHA-256").digest(text.toByteArray()).joinToString("") { "%02x".format(it) }
 
   private companion object {
-    const val INSTRUMENT = "instrument"
+    const val TRANSPOSITION = "transposition"
+    const val FAMILY = "family"
     const val SEED_HASH = "seed_hash"
   }
 }

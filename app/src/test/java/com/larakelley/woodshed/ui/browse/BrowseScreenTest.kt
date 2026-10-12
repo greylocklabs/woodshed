@@ -12,7 +12,7 @@ import androidx.compose.ui.test.performClick
 import com.larakelley.woodshed.data.db.ExerciseEntity
 import com.larakelley.woodshed.data.db.StandardEntity
 import com.larakelley.woodshed.domain.Family
-import com.larakelley.woodshed.domain.Instrument
+import com.larakelley.woodshed.domain.Transposition
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -35,21 +35,23 @@ class BrowseScreenTest {
 
   private fun showWithLiveState() {
     compose.setContent {
-      var instrument by remember { mutableStateOf<Instrument?>(null) }
+      var transposition by remember { mutableStateOf(Transposition.C) }
+      var family by remember { mutableStateOf<Family?>(null) }
       BrowseScreen(
-        BrowseState(instrument, tuneRows(standards, instrument), exerciseRows(exercises, instrument)),
-        onSelectInstrument = { instrument = it },
+        BrowseState(transposition, family, tuneRows(standards, transposition), exerciseRows(exercises, family)),
+        onSelectTransposition = { transposition = it },
+        onSelectFamily = { family = it },
       )
     }
   }
 
   @Test
-  fun pickingAnInstrumentRewritesTheKeys() {
+  fun pickingATranspositionRewritesTheKeys() {
     showWithLiveState()
     compose.onNodeWithText("Concert Db").assertExists()
 
-    compose.onNodeWithTag("instrument-picker").performClick()
-    compose.onNodeWithText("Tenor sax").performClick()
+    compose.onNodeWithTag("transposition-picker").performClick()
+    compose.onNodeWithText("Bb").performClick()
 
     compose.onNodeWithText("Eb").assertExists()
     compose.onNodeWithText("Concert Db").assertDoesNotExist()
@@ -58,19 +60,21 @@ class BrowseScreenTest {
   }
 
   @Test
-  fun exercisesTabHidesOtherFamiliesWork() {
+  fun familyFilterHidesOtherFamiliesWork() {
     showWithLiveState()
-    compose.onNodeWithTag("instrument-picker").performClick()
-    compose.onNodeWithText("Alto sax").performClick()
-    compose.onNodeWithText("Exercises (1)").performClick()
+    compose.onNodeWithText("Exercises (2)").performClick()
+    compose.onNodeWithText("Lip slurs").assertExists()
 
+    compose.onNodeWithText("Sax").performClick()
+
+    compose.onNodeWithText("Exercises (1)").assertExists()
     compose.onNodeWithText("Long tones").assertExists()
     compose.onNodeWithText("Lip slurs").assertDoesNotExist()
   }
 
   @Test
   fun seedErrorIsShownNotSwallowed() {
-    compose.setContent { BrowseScreen(BrowseState(seedError = "duplicate slug: x"), onSelectInstrument = {}) }
+    compose.setContent { BrowseScreen(BrowseState(seedError = "duplicate slug: x"), onSelectTransposition = {}, onSelectFamily = {}) }
     compose.onNodeWithText("Could not load the bundled data: duplicate slug: x").assertExists()
   }
 }

@@ -105,9 +105,10 @@ mode that is invisible until you are on the stand.
 
 ### Instruments and transposition
 
-Eleven instruments across four families, each with a semitone offset from
-concert to written pitch. `written = (concert + offset) mod 12`. C is 0, Bb is
-+2, G is +5, Eb is +9.
+Keys are written for a transposition rather than a named instrument: C, Bb,
+Eb, F and G cover the horns in scope. `written = (concert + offset) mod 12`. C is
+0, Bb is +2, G is +5, F is +7, Eb is +9. Exercise scoping is separate, by family
+(sax, clarinet, flute, brass), because one transposition spans several.
 
 **Keep the test that asserts each offset agrees with the pitch name the
 instrument is built in.** A wrong offset makes every displayed key silently
@@ -319,9 +320,9 @@ analogue that produces a green suite proving nothing.
 | Verify the fix, not the intent — Chromium ignores `line-height` on a `<select>` | Compose has the same class of silent no-op: a modifier order that discards a constraint, a recomposition that never fires. **Assert the resulting state** in UI tests; don't assume the call had its effect. |
 | Seed reconciliation must preserve ids | Covered by the schema above — but test it. Seed, record a review event, re-seed, assert the event still resolves. |
 
-Plus one this app adds: **transposition gets exhaustive property tests.** All 11
-instruments × 12 concert keys × both spelling tables is 264 assertions and runs
-instantly. The cheapest possible insurance against every key in the app being
+Plus one this app adds: **transposition gets exhaustive property tests.** All 5
+transpositions × 12 concert keys × both spelling tables is 120 assertions and
+runs instantly. The cheapest possible insurance against every key in the app being
 silently a tone out.
 
 ---
@@ -333,7 +334,7 @@ that the phase model matches how you actually practice — gets tested with real
 reps before anything is built on top of it.
 
 **M0 — Data in, and provably intact.** Room schema, seed importer from assets,
-instrument picker, transposition and key-spelling domain with the exhaustive
+transposition picker and family filter, transposition and key-spelling domain with the exhaustive
 test suite, browse screens for 258 tunes and 61 exercises. No practice loop yet.
 *Proves the data survives the boundary. Ends with the re-seed-preserves-ids test
 passing.*

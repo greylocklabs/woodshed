@@ -8,8 +8,8 @@ data class Key(val pitchClass: Int, val minor: Boolean) {
 
   fun transpose(semitones: Int): Key = copy(pitchClass = Math.floorMod(pitchClass + semitones, 12))
 
-  /** The key as read on [instrument], given this key in concert pitch. */
-  fun writtenFor(instrument: Instrument): Key = transpose(instrument.offset)
+  /** The key as read on a horn in [transposition], given this key in concert pitch. */
+  fun writtenFor(transposition: Transposition): Key = transpose(transposition.offset)
 
   /** Major keys spell with flats, minor keys with sharps, so names match what musicians write. */
   val displayName: String

@@ -21,7 +21,7 @@ class MainActivity : ComponentActivity() {
       WoodshedTheme {
         val viewModel: BrowseViewModel = viewModel { BrowseViewModel(repository) }
         val state by viewModel.state.collectAsStateWithLifecycle()
-        BrowseScreen(state, viewModel::selectInstrument)
+        BrowseScreen(state, viewModel::selectTransposition, viewModel::selectFamily)
       }
     }
   }

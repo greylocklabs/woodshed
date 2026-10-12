@@ -1,5 +1,7 @@
 package com.larakelley.woodshed.ui.browse
 
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -7,9 +9,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PrimaryTabRow
@@ -28,15 +32,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
-import com.larakelley.woodshed.domain.Instrument
+import com.larakelley.woodshed.domain.Family
+import com.larakelley.woodshed.domain.Transposition
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BrowseScreen(state: BrowseState, onSelectInstrument: (Instrument?) -> Unit, modifier: Modifier = Modifier) {
+fun BrowseScreen(
+  state: BrowseState,
+  onSelectTransposition: (Transposition) -> Unit,
+  onSelectFamily: (Family?) -> Unit,
+  modifier: Modifier = Modifier,
+) {
   var tab by rememberSaveable { mutableIntStateOf(0) }
   Scaffold(
     modifier = modifier,
-    topBar = { TopAppBar(title = { Text("Woodshed") }, actions = { InstrumentPicker(state.instrument, onSelectInstrument) }) },
+    topBar = { TopAppBar(title = { Text("Woodshed") }, actions = { TranspositionPicker(state.transposition, onSelectTransposition) }) },
   ) { padding ->
     Column(Modifier.padding(padding).fillMaxSize()) {
       state.seedError?.let {
@@ -48,24 +58,47 @@ fun BrowseScreen(state: BrowseState, onSelectInstrument: (Instrument?) -> Unit, 
       }
       when (tab) {
         0 -> TuneList(state.tunes)
-        else -> ExerciseList(state.exercises)
+        else -> {
+          FamilyFilter(state.family, onSelectFamily)
+          ExerciseList(state.exercises)
+        }
       }
     }
   }
 }
 
 @Composable
-private fun InstrumentPicker(selected: Instrument?, onSelect: (Instrument?) -> Unit) {
+private fun TranspositionPicker(selected: Transposition, onSelect: (Transposition) -> Unit) {
   var open by rememberSaveable { mutableStateOf(false) }
   Box {
-    TextButton(onClick = { open = true }, modifier = Modifier.testTag("instrument-picker")) {
-      Text(selected?.displayName ?: "Concert pitch")
+    TextButton(onClick = { open = true }, modifier = Modifier.testTag("transposition-picker")) {
+      Text(if (selected == Transposition.C) "Concert" else "${selected.name} horn")
     }
     DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
-      DropdownMenuItem(text = { Text("Concert pitch") }, onClick = { onSelect(null); open = false })
-      Instrument.entries.forEach { instrument ->
-        DropdownMenuItem(text = { Text(instrument.displayName) }, onClick = { onSelect(instrument); open = false })
+      Transposition.entries.forEach { transposition ->
+        DropdownMenuItem(
+          text = {
+            Column {
+              Text(transposition.name, style = MaterialTheme.typography.titleMedium)
+              Text(transposition.examples, style = MaterialTheme.typography.bodySmall)
+            }
+          },
+          onClick = { onSelect(transposition); open = false },
+        )
       }
+    }
+  }
+}
+
+@Composable
+private fun FamilyFilter(selected: Family?, onSelect: (Family?) -> Unit) {
+  Row(
+    Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp),
+    horizontalArrangement = Arrangement.spacedBy(8.dp),
+  ) {
+    FilterChip(selected = selected == null, onClick = { onSelect(null) }, label = { Text("All") })
+    Family.entries.forEach { family ->
+      FilterChip(selected = selected == family, onClick = { onSelect(family) }, label = { Text(family.displayName) })
     }
   }
 }
