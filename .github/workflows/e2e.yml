@@ -1,0 +1,62 @@
+name: E2E
+
+# End-to-end tests on an emulator take several minutes, so they run on PRs into main, nightly and on demand,
+# rather than on every stacked PR.
+on:
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "0 7 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      # The Android app arrives partway up the first stack; branches before it have nothing to run.
+      - name: Setup Java
+        if: hashFiles('gradlew') != ''
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Setup Android SDK
+        if: hashFiles('gradlew') != ''
+        uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools
+
+      - name: Setup Gradle
+        if: hashFiles('gradlew') != ''
+        uses: gradle/actions/setup-gradle@v4
+
+      # Hardware acceleration for the emulator.
+      - name: Enable KVM
+        if: hashFiles('gradlew') != ''
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: End-to-end tests
+        if: hashFiles('gradlew') != ''
+        run: ./gradlew pixel6api34DebugAndroidTest -Pandroid.testoptions.manageddevices.emulator.gpu=swiftshader_indirect
+
+      - name: Upload test reports
+        if: failure() && hashFiles('gradlew') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-reports
+          path: app/build/reports/androidTests

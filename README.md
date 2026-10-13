@@ -52,9 +52,21 @@ Needs a JDK and the Android SDK (`android sdk` or Android Studio); Gradle fetche
 the rest, including a Java 21 toolchain.
 
 ```
-./gradlew :app:testDebugUnitTest   # unit, Room and Robolectric UI tests
-./gradlew :app:assembleDebug       # app/build/outputs/apk/debug/app-debug.apk
+./gradlew :app:testDebugUnitTest            # unit, Room and Robolectric UI tests
+./gradlew :app:verifyRoborazziDebug         # the same, comparing screenshots with app/src/test/screenshots
+./gradlew :app:recordRoborazziDebug         # rewrites the screenshots after a deliberate design change
+./gradlew :app:pixel6api34DebugAndroidTest  # end-to-end tests on an emulator Gradle downloads (*)
+./gradlew spotlessApply                     # formats Kotlin with ktlint
+./gradlew :app:lintDebug                    # Android lint; any warning fails
+./gradlew :app:assembleDebug                # app/build/outputs/apk/debug/app-debug.apk
 ```
+
+(*) If the emulator crashes on start, as it does on some Linux hosts with its default software renderer, add
+`-Pandroid.testoptions.manageddevices.emulator.gpu=host`. Never run `connectedAndroidTest` against a phone with
+real practice data: it reinstalls the app.
+
+CI runs formatting, lint, the unit and screenshot tests, and commitlint on every PR. The end-to-end tests run
+on PRs into main, nightly and on demand. Dependabot opens weekly update PRs.
 
 ## Trying the cards
 

@@ -16,6 +16,7 @@ android {
     targetSdk = 36
     versionCode = 1
     versionName = "1.0"
+    testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
 
   buildTypes {
@@ -46,6 +47,17 @@ android {
     unitTests.isIncludeAndroidResources = true
     // Robolectric's SDK 36 environment setup uses JDK internals.
     unitTests.all { it.jvmArgs("--add-exports=java.base/jdk.internal.access=ALL-UNNAMED") }
+    // End-to-end tests run on an emulator Gradle downloads and manages: `./gradlew pixel6api34DebugAndroidTest`.
+    // Never on a phone with real practice data, since a connected test run reinstalls the app.
+    managedDevices {
+      localDevices {
+        create("pixel6api34") {
+          device = "Pixel 6"
+          apiLevel = 34
+          systemImageSource = "aosp-atd"
+        }
+      }
+    }
   }
 
   lint {
@@ -109,6 +121,7 @@ dependencies {
   androidTestImplementation(libs.androidx.test.ext.junit)
   androidTestImplementation(libs.androidx.test.runner)
   androidTestImplementation(libs.androidx.test.espresso.core)
+  androidTestImplementation(libs.androidx.test.rules)
 
   // Data
   implementation(libs.androidx.room.runtime)
