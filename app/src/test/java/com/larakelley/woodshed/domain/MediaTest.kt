@@ -28,6 +28,9 @@ class MediaTest {
     assertEquals(90, parse("https://youtu.be/jNQXAC9IVRw?t=90").startSeconds)
     assertEquals(90, parse("https://www.youtube.com/watch?v=jNQXAC9IVRw&t=1m30s").startSeconds)
     assertEquals("https://www.youtube-nocookie.com/embed/jNQXAC9IVRw?playsinline=1&start=90", parse("https://youtu.be/jNQXAC9IVRw?t=90s").embedUrl)
+    assertEquals("https://www.youtube.com/watch?v=jNQXAC9IVRw&t=115s", parse("https://youtu.be/jNQXAC9IVRw?t=90").watch(115))
+    assertEquals("https://vimeo.com/76979871#t=115s", parse("https://vimeo.com/76979871").watch(115))
+    assertEquals("https://youtu.be/jNQXAC9IVRw", parse("https://youtu.be/jNQXAC9IVRw").watch(null))
     assertEquals(3723, MediaLink.parseTime("1h2m3s"))
     assertNull(MediaLink.parseTime("soon"))
   }
