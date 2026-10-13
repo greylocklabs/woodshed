@@ -29,6 +29,14 @@ data class MediaLink(val url: String, val kind: MediaKind, val videoId: String? 
     else -> null
   }
 
+  /** The link on its own site, starting at [start] seconds where the service supports it. */
+  fun watch(start: Int?): String = when {
+    start == null -> url
+    kind == MediaKind.YOUTUBE -> "https://www.youtube.com/watch?v=$videoId&t=${start}s"
+    kind == MediaKind.VIMEO -> "https://vimeo.com/$videoId#t=${start}s"
+    else -> url
+  }
+
   /** The site's name, such as "open.spotify.com", for links shown as a row to open. */
   val host: String
     get() = runCatching { URI(url).host?.removePrefix("www.") }.getOrNull() ?: url

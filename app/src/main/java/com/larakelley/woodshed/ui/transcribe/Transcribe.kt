@@ -201,8 +201,12 @@ private fun SoloDetail(row: SoloRow, transposition: Transposition, actions: Solo
 
     val pad = TranscriptionService.PADDING_SECONDS
     val embed = link?.embed(solo.startSeconds?.let { (it - pad).coerceAtLeast(0) }, solo.endSeconds?.let { it + pad })
-    if (embed != null) {
+    if (link != null && embed != null) {
       PracticePlayer(embed, solo.startSeconds)
+      // WebView audio can crackle on some phones; the service's own app plays it cleanly, without the loop.
+      TextButton(onClick = { uris.openUri(link.watch(solo.startSeconds?.let { (it - pad).coerceAtLeast(0) })) }, modifier = Modifier.testTag("open-solo-app")) {
+        Text("Open in ${link.kind.label} ↗")
+      }
     } else {
       OutlinedButton(onClick = { uris.openUri(solo.url) }, modifier = Modifier.testTag("open-solo")) { Text("Open the recording ↗") }
     }
