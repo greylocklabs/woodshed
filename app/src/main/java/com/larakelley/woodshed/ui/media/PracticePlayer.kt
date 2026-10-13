@@ -1,9 +1,10 @@
 package com.larakelley.woodshed.ui.media
 
 import android.annotation.SuppressLint
+import android.view.ViewGroup
 import android.webkit.WebChromeClient
 import android.webkit.WebView
-import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -11,9 +12,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -25,14 +24,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.larakelley.woodshed.data.clock
 import com.larakelley.woodshed.theme.Helper
-import com.larakelley.woodshed.theme.LocalCallie
 import com.larakelley.woodshed.theme.PillChoice
 import com.larakelley.woodshed.theme.StickerButton
 import com.larakelley.woodshed.theme.neutralSticker
@@ -76,15 +73,11 @@ class PlayerControl(private val web: WebView) {
   fun time(onTime: (Float?) -> Unit) = run("window.__ws.time();") { onTime(it.toFloatOrNull()?.takeIf { t -> t >= 0 }) }
 }
 
-/**
- * A player with transcribing controls: slower speeds, five seconds back, back to the solo's start, and an A-B loop.
- * [embedUrl] already starts at the padded start; [soloStart] is where "Solo start" jumps.
- */
+/** A WebView showing [embedUrl] as its page, destroyed when it leaves the composition. */
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
-fun PracticePlayer(embedUrl: String, soloStart: Int?, modifier: Modifier = Modifier) {
+fun rememberPlayerView(embedUrl: String): WebView {
   val context = LocalContext.current
-  val callie = LocalCallie.current
   val web = remember(embedUrl) {
     WebView(context).apply {
       settings.javaScriptEnabled = true
@@ -92,11 +85,23 @@ fun PracticePlayer(embedUrl: String, soloStart: Int?, modifier: Modifier = Modif
       settings.mediaPlaybackRequiresUserGesture = false
       webChromeClient = WebChromeClient()
       setBackgroundColor(android.graphics.Color.BLACK)
+      // With the default wrap_content height, WebView gives the page a zero-height viewport and the video collapses.
+      layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
       // The player page fills the view; the Referer header satisfies YouTube's check for an embedding page.
       loadUrl(embedUrl, mapOf("Referer" to PLAYER_ORIGIN))
     }
   }
   DisposableEffect(web) { onDispose { web.destroy() } }
+  return web
+}
+
+/**
+ * A player with transcribing controls: slower speeds, five seconds back, back to the solo's start, and an A-B loop.
+ * [embedUrl] already starts at the padded start; [soloStart] is where "Solo start" jumps.
+ */
+@Composable
+fun PracticePlayer(embedUrl: String, soloStart: Int?, modifier: Modifier = Modifier) {
+  val web = rememberPlayerView(embedUrl)
   val control = remember(web) { PlayerControl(web) }
   var rate by remember { mutableFloatStateOf(1f) }
   var loopA by remember { mutableStateOf<Float?>(null) }
@@ -105,7 +110,9 @@ fun PracticePlayer(embedUrl: String, soloStart: Int?, modifier: Modifier = Modif
   Column(modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
     AndroidView(
       factory = { web },
-      modifier = Modifier.fillMaxWidth().aspectRatio(16f / 9f).clip(RoundedCornerShape(14.dp)).background(callie.surfaceAlt).testTag("player"),
+      // No clip or background here: either one makes Compose draw the view offscreen, which leaves out WebView's
+      // separate video surface and shows a blank frame while playing.
+      modifier = Modifier.fillMaxWidth().aspectRatio(16f / 9f).testTag("player"),
     )
     Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
       SmallSticker("⏪ 5s", "back-5") { control.nudge(-5) }

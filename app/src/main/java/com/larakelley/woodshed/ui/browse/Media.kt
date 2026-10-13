@@ -1,9 +1,5 @@
 package com.larakelley.woodshed.ui.browse
 
-import android.annotation.SuppressLint
-import android.webkit.WebChromeClient
-import android.webkit.WebView
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -13,14 +9,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -28,8 +22,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
@@ -41,6 +33,7 @@ import com.larakelley.woodshed.theme.LocalCallie
 import com.larakelley.woodshed.theme.SectionLabel
 import com.larakelley.woodshed.theme.StickerButton
 import com.larakelley.woodshed.theme.neutralSticker
+import com.larakelley.woodshed.ui.media.rememberPlayerView
 
 /** What the tune page's listening section can do. */
 data class MediaActions(
@@ -102,28 +95,13 @@ private fun MediaItem(m: TuneMediaEntity, onRemove: () -> Unit) {
   }
 }
 
-/** The page the embedded player is served from. YouTube refuses embeds that arrive with no referring page. */
-private const val PLAYER_ORIGIN = "https://larakelley.com/"
-
-@SuppressLint("SetJavaScriptEnabled")
 @Composable
 private fun InlinePlayer(embedUrl: String) {
-  val context = LocalContext.current
-  val webView = remember(embedUrl) {
-    WebView(context).apply {
-      settings.javaScriptEnabled = true
-      settings.domStorageEnabled = true
-      settings.mediaPlaybackRequiresUserGesture = false
-      webChromeClient = WebChromeClient()
-      setBackgroundColor(android.graphics.Color.BLACK)
-      // The player page fills the view; the Referer header satisfies YouTube's check for an embedding page.
-      loadUrl(embedUrl, mapOf("Referer" to PLAYER_ORIGIN))
-    }
-  }
-  DisposableEffect(webView) { onDispose { webView.destroy() } }
+  val webView = rememberPlayerView(embedUrl)
   AndroidView(
     factory = { webView },
-    modifier = Modifier.fillMaxWidth().aspectRatio(16f / 9f).clip(RoundedCornerShape(14.dp)).background(LocalCallie.current.surfaceAlt).testTag("player"),
+    // No clip or background: see PracticePlayer.
+    modifier = Modifier.fillMaxWidth().aspectRatio(16f / 9f).testTag("player"),
   )
 }
 
