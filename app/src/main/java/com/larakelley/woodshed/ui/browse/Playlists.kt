@@ -150,8 +150,8 @@ fun PlaylistScreen(
             Text(tune.title, style = MaterialTheme.typography.titleMedium)
             Text(tune.key, style = MaterialTheme.typography.bodySmall, color = callie.textMuted)
           }
-          TextButton(onClick = { actions.move(playlist.id, i, i - 1) }, enabled = i > 0, modifier = Modifier.size(44.dp).testTag("up-$i"), contentPadding = PaddingValues(0.dp)) { Text("▲") }
-          TextButton(onClick = { actions.move(playlist.id, i, i + 1) }, enabled = i < rows.lastIndex, modifier = Modifier.size(44.dp).testTag("down-$i"), contentPadding = PaddingValues(0.dp)) { Text("▼") }
+          TextButton(onClick = { actions.move(playlist.id, tune.id, rows[i - 1].id) }, enabled = i > 0, modifier = Modifier.size(44.dp).testTag("up-$i"), contentPadding = PaddingValues(0.dp)) { Text("▲") }
+          TextButton(onClick = { actions.move(playlist.id, tune.id, rows[i + 1].id) }, enabled = i < rows.lastIndex, modifier = Modifier.size(44.dp).testTag("down-$i"), contentPadding = PaddingValues(0.dp)) { Text("▼") }
           TextButton(onClick = { actions.remove(playlist.id, tune.id) }, modifier = Modifier.size(44.dp).testTag("remove-$i"), contentPadding = PaddingValues(0.dp)) { Text("✕") }
         }
         HorizontalDivider()

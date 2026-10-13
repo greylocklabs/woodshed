@@ -73,8 +73,9 @@ fun ReportDialog(subject: ReportSubject, item: String?, id: String?, details: Li
         }
         OutlinedTextField(
           value = note,
-          onValueChange = { note = it },
+          onValueChange = { note = it.take(Report.MAX_NOTE) },
           label = { Text("What should it be? (optional)") },
+          supportingText = { if (note.length > Report.MAX_NOTE * 3 / 4) Text("${note.length} / ${Report.MAX_NOTE}") },
           modifier = Modifier.fillMaxWidth().padding(top = 8.dp).testTag("report-note"),
         )
         Helper(

@@ -39,6 +39,7 @@ import com.larakelley.woodshed.theme.PillChoice
 import com.larakelley.woodshed.theme.SectionLabel
 import com.larakelley.woodshed.theme.StickerButton
 import com.larakelley.woodshed.theme.SwitchRow
+import com.larakelley.woodshed.ui.jsonSaver
 
 /**
  * Adds an exercise, or edits one: in place for the user's own, as edits laid over the original for seeded ones.
@@ -57,7 +58,7 @@ fun ExerciseEditor(
   modifier: Modifier = Modifier,
 ) {
   BackHandler(onBack = onBack)
-  var draft by remember(exercise?.id) { mutableStateOf(exercise?.draft ?: ExerciseDraft()) }
+  var draft by rememberSaveable(exercise?.id, stateSaver = jsonSaver()) { mutableStateOf(exercise?.draft ?: ExerciseDraft()) }
   var tried by remember { mutableStateOf(false) }
   var confirm by rememberSaveable { mutableStateOf<String?>(null) }
   val others = takenNames - setOfNotNull(exercise?.name?.lowercase())

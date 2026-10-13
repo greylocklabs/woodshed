@@ -21,8 +21,10 @@ import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 import java.util.Locale
+import kotlinx.serialization.Serializable
 
 /** A solo as the editor fills it in. Times are "m:ss" or seconds; blank means unknown. */
+@Serializable
 data class TranscriptionDraft(
   val title: String = "",
   val soloist: String = "",
@@ -100,7 +102,8 @@ fun recordedLabel(recorded: String): String = when (recorded.length) {
 /** "2:00", "1:02:03" or "120" as seconds. */
 fun parseClock(text: String): Int? {
   val parts = text.trim().split(':')
-  if (parts.isEmpty() || parts.size > 3 || parts.any { it.isEmpty() || it.any { c -> !c.isDigit() } }) return null
+  // Six digits per part is far past any recording's length and keeps the total inside an Int.
+  if (parts.isEmpty() || parts.size > 3 || parts.any { it.isEmpty() || it.length > 6 || it.any { c -> !c.isDigit() } }) return null
   val numbers = parts.map { it.toInt() }
   if (numbers.drop(1).any { it >= 60 }) return null
   return numbers.fold(0) { acc, n -> acc * 60 + n }
@@ -138,8 +141,9 @@ class TranscriptionService(
   /** Back to an untouched solo: progress goes, review history stays. */
   suspend fun clear(id: Long) = dao.deleteState(id)
 
+  /** Notes live with progress, so a solo not on the user's list has none and this does nothing. */
   suspend fun setNotes(id: Long, notes: String) = db.withTransaction {
-    val current = dao.state(id) ?: TranscriptionStateEntity(id, TranscriptionStatus.WISHLIST)
+    val current = dao.state(id) ?: return@withTransaction
     dao.upsertState(current.copy(notes = notes.ifBlank { null }))
   }
 

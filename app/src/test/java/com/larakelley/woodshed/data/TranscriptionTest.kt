@@ -4,6 +4,7 @@ import android.app.Application
 import android.content.Context
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
+import com.larakelley.woodshed.data.db.ReviewEventEntity
 import com.larakelley.woodshed.data.db.TranscriptionStatus
 import com.larakelley.woodshed.data.db.WoodshedDatabase
 import com.larakelley.woodshed.data.seed.Seed
@@ -104,6 +105,8 @@ class TranscriptionTest {
   fun yourOwnSolosAndProgressAreBackedUp() = runTest {
     val mine = service.add(TranscriptionDraft(title = "Donna Lee", soloist = "Charlie Parker", instrument = "Alto sax", url = "https://youtu.be/jNQXAC9IVRw", start = "0:10", end = "1:00", recorded = "1947"))
     service.start(mine)
+    service.grade(mine, Grade.GOOD)
+    service.wishlist(bartley().id)
     service.setNotes(bartley().id, "First chorus done")
     val repository = WoodshedRepository(db, context.getSharedPreferences("solo-test", Context.MODE_PRIVATE).also { it.edit().clear().commit() }, context.assets)
     val backups = BackupService(db, repository)
@@ -117,6 +120,7 @@ class TranscriptionTest {
     assertEquals("1947", restored.recorded)
     assertEquals(TranscriptionStatus.ACTIVE, db.transcriptions().state(restored.id)!!.status)
     assertEquals("First chorus done", db.transcriptions().state(bartley().id)!!.notes)
+    assertEquals(listOf(restored.id), db.reviewEvents().all().filter { it.itemKind == ReviewEventEntity.TRANSCRIPTION }.map { it.itemId })
   }
 
   @Test
@@ -127,6 +131,7 @@ class TranscriptionTest {
     assertEquals(90, parseClock("90"))
     assertNull(parseClock("2:75"))
     assertNull(parseClock("soon"))
+    assertNull(parseClock("99999999999"))
     assertEquals("5:29", clock(329))
     assertEquals("1:02:03", clock(3723))
   }
@@ -150,5 +155,23 @@ class TranscriptionTest {
       listOf("The solo should end after it starts."),
       TranscriptionDraft(title = "X", soloist = "Y", instrument = "Z", url = "https://youtu.be/jNQXAC9IVRw", start = "3:00", end = "2:00").problems(),
     )
+  }
+
+  @Test
+  fun reseedingLeavesYourSolosAndProgressAlone() = runTest {
+    val mine = service.add(TranscriptionDraft(title = "Donna Lee", soloist = "Charlie Parker", instrument = "Alto sax", url = "https://youtu.be/jNQXAC9IVRw"))
+    service.start(mine)
+    service.wishlist(bartley().id)
+    service.setNotes(bartley().id, "Bars 1-8")
+    SeedImporter(db).import(Seed.parse(read("standards.json"), read("exercises.json"), read("transcriptions.json")))
+    assertNull(db.transcriptions().byId(mine)!!.archivedAt)
+    assertEquals(TranscriptionStatus.ACTIVE, db.transcriptions().state(mine)!!.status)
+    assertEquals("Bars 1-8", db.transcriptions().state(bartley().id)!!.notes)
+  }
+
+  @Test
+  fun notesNeedTheSoloOnYourList() = runTest {
+    service.setNotes(bartley().id, "Bars 1-8")
+    assertNull(db.transcriptions().state(bartley().id))
   }
 }

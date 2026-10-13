@@ -64,22 +64,29 @@ data class TuneOverrideEntity(
   val tonality: Tonality? = null,
   val collection: String? = null,
   val updatedAt: Long = 0,
+  /** Fields the user blanked, which a null alone cannot say; see [clearedFields]. */
+  @ColumnInfo(defaultValue = "") val cleared: String = "",
 )
+
+/** Field names stored in an override's `cleared` column. */
+fun clearedFields(names: Collection<String>): String = names.sorted().joinToString(",")
+
+private fun String.clears(field: String) = field in split(',')
 
 /** This tune as the user sees it, with their edits laid over the seed's values. */
 fun StandardEntity.withOverride(o: TuneOverrideEntity?): StandardEntity =
   if (o == null) this
   else copy(
     title = o.title ?: title,
-    composer = o.composer ?: composer,
-    year = o.year ?: year,
-    bars = o.bars ?: bars,
-    timeSignature = o.timeSignature ?: timeSignature,
-    form = o.form ?: form,
-    style = o.style ?: style,
-    keyName = o.keyName ?: keyName,
-    keyPitchClass = o.keyPitchClass ?: keyPitchClass,
-    tonality = o.tonality ?: tonality,
+    composer = if (o.cleared.clears("composer")) null else o.composer ?: composer,
+    year = if (o.cleared.clears("year")) null else o.year ?: year,
+    bars = if (o.cleared.clears("bars")) null else o.bars ?: bars,
+    timeSignature = if (o.cleared.clears("timeSignature")) null else o.timeSignature ?: timeSignature,
+    form = if (o.cleared.clears("form")) null else o.form ?: form,
+    style = if (o.cleared.clears("style")) null else o.style ?: style,
+    keyName = if (o.cleared.clears("key")) null else o.keyName ?: keyName,
+    keyPitchClass = if (o.cleared.clears("key")) null else o.keyPitchClass ?: keyPitchClass,
+    tonality = if (o.cleared.clears("tonality")) null else o.tonality ?: tonality,
     collection = o.collection ?: collection,
   )
 
@@ -120,6 +127,8 @@ data class ExerciseOverrideEntity(
   val families: List<Family>? = null,
   val appliesToTune: Boolean? = null,
   val updatedAt: Long = 0,
+  /** Fields the user blanked; see [clearedFields]. */
+  @ColumnInfo(defaultValue = "") val cleared: String = "",
 )
 
 /** This exercise as the user sees it, with their edits laid over the seed's values. */
@@ -131,7 +140,7 @@ fun ExerciseEntity.withOverride(o: ExerciseOverrideEntity?): ExerciseEntity =
     description = o.description ?: description,
     minutes = o.minutes ?: minutes,
     difficulty = o.difficulty ?: difficulty,
-    tempoBpm = o.tempoBpm ?: tempoBpm,
+    tempoBpm = if (o.cleared.clears("tempoBpm")) null else o.tempoBpm ?: tempoBpm,
     families = o.families ?: families,
     appliesToTune = o.appliesToTune ?: appliesToTune,
   )

@@ -16,12 +16,15 @@ import com.larakelley.woodshed.data.db.TuneMediaEntity
 import com.larakelley.woodshed.data.db.TuneOverrideEntity
 import com.larakelley.woodshed.data.db.TuneStateEntity
 import com.larakelley.woodshed.data.db.WoodshedDatabase
+import com.larakelley.woodshed.data.db.clearedFields
+import com.larakelley.woodshed.data.seed.SeedValidator
 import com.larakelley.woodshed.domain.Comfort
 import com.larakelley.woodshed.domain.Family
 import com.larakelley.woodshed.domain.Grade
 import com.larakelley.woodshed.domain.Key
 import com.larakelley.woodshed.domain.KeyPolicy
 import com.larakelley.woodshed.domain.Lifecycle
+import com.larakelley.woodshed.domain.MediaLink
 import com.larakelley.woodshed.domain.Tonality
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -115,6 +118,7 @@ data class BackupExerciseEdit(
   val families: List<Family>? = null,
   @SerialName("applies_to_tune") val appliesToTune: Boolean? = null,
   @SerialName("updated_at") val updatedAt: Long = 0,
+  val cleared: List<String> = emptyList(),
 )
 
 @Serializable
@@ -169,6 +173,8 @@ data class BackupEdit(
   val tonality: Tonality? = null,
   val collection: String? = null,
   @SerialName("updated_at") val updatedAt: Long = 0,
+  /** Fields the user blanked. */
+  val cleared: List<String> = emptyList(),
 )
 
 @Serializable
@@ -199,6 +205,8 @@ data class BackupKnowledge(
 @Serializable
 data class BackupReview(
   val slug: String,
+  /** What [slug] names: [KIND_TUNE] or [KIND_SOLO]. */
+  val kind: String = KIND_TUNE,
   val exercise: String? = null,
   val transposition: String,
   @SerialName("key_written_pitch_class") val keyWrittenPitchClass: Int? = null,
@@ -212,7 +220,12 @@ data class BackupReview(
   @SerialName("interval_after") val intervalAfter: Double,
   @SerialName("ease_before") val easeBefore: Double,
   @SerialName("ease_after") val easeAfter: Double,
-)
+) {
+  companion object {
+    const val KIND_TUNE = "tune"
+    const val KIND_SOLO = "solo"
+  }
+}
 
 /** What a restore brought back, and how many rows named tunes this install does not have. */
 data class RestoreResult(
@@ -253,7 +266,7 @@ class BackupService(
       },
       exerciseEdits = db.exerciseOverrides().all().mapNotNull { o ->
         val name = exercises[o.exerciseId] ?: return@mapNotNull null
-        BackupExerciseEdit(name, o.name, o.category, o.description, o.minutes, o.difficulty, o.tempoBpm, o.families, o.appliesToTune, o.updatedAt)
+        BackupExerciseEdit(name, o.name, o.category, o.description, o.minutes, o.difficulty, o.tempoBpm, o.families, o.appliesToTune, o.updatedAt, o.cleared.splitFields())
       },
       mySolos = db.transcriptions().all().filter { it.userCreated && it.archivedAt == null }.map {
         BackupSolo(it.slug, it.standardId?.let { s -> slugs[s] }, it.title, it.soloist, it.instrument, it.context, it.recorded, it.url, it.startSeconds, it.endSeconds, it.keyName, it.tonality, it.performers)
@@ -270,7 +283,7 @@ class BackupService(
       },
       edits = db.tuneOverrides().all().mapNotNull { o ->
         val slug = slugs[o.standardId] ?: return@mapNotNull null
-        BackupEdit(slug, o.title, o.composer, o.year, o.bars, o.timeSignature, o.form, o.style, o.keyName, o.tonality, o.collection, o.updatedAt)
+        BackupEdit(slug, o.title, o.composer, o.year, o.bars, o.timeSignature, o.form, o.style, o.keyName, o.tonality, o.collection, o.updatedAt, o.cleared.splitFields())
       },
       tunes = db.tuneStates().all().mapNotNull { s ->
         val slug = slugs[s.standardId] ?: return@mapNotNull null
@@ -279,12 +292,19 @@ class BackupService(
       knowledge = db.tuneKnowledge().all().mapNotNull { k ->
         slugs[k.standardId]?.let { BackupKnowledge(it, k.comfort, k.knownKeys, k.updatedAt) }
       },
-      reviews = db.reviewEvents().all().filter { it.itemKind == ReviewEventEntity.TUNE }.mapNotNull { e ->
-        val slug = slugs[e.itemId] ?: return@mapNotNull null
-        BackupReview(
-          slug, e.exerciseId?.let { exercises[it] }, e.transposition, e.keyWrittenPitchClass, e.keyWrittenMinor, e.grade, e.reviewedAt,
-          e.elapsedMs, e.schedulerId, e.schedulerVersion, e.intervalBefore, e.intervalAfter, e.easeBefore, e.easeAfter,
-        )
+      reviews = db.transcriptions().all().associate { it.id to it.slug }.let { soloSlugs ->
+        db.reviewEvents().all().mapNotNull { e ->
+          val (slug, kind) = when (e.itemKind) {
+            ReviewEventEntity.TUNE -> slugs[e.itemId] to BackupReview.KIND_TUNE
+            ReviewEventEntity.TRANSCRIPTION -> soloSlugs[e.itemId] to BackupReview.KIND_SOLO
+            else -> null to ""
+          }
+          if (slug == null) return@mapNotNull null
+          BackupReview(
+            slug, kind, e.exerciseId?.let { exercises[it] }, e.transposition, e.keyWrittenPitchClass, e.keyWrittenMinor, e.grade, e.reviewedAt,
+            e.elapsedMs, e.schedulerId, e.schedulerVersion, e.intervalBefore, e.intervalAfter, e.easeBefore, e.easeAfter,
+          )
+        }
       },
     )
     return json.encodeToString(Backup.serializer(), backup)
@@ -307,13 +327,14 @@ class BackupService(
       for (old in db.standards().userCreated()) {
         if (old.slug !in keep && old.archivedAt == null) db.standards().update(listOf(old.copy(archivedAt = now())))
       }
-      for (t in backup.myTunes) {
+      // Only the user's own slugs: anything else would take over a seeded tune that re-seeding then never updates.
+      for (t in backup.myTunes.filter { it.slug.startsWith(SeedValidator.USER_SLUG_PREFIX) }) {
         val row = StandardEntity(
           slug = t.slug, title = t.title, composer = t.composer, year = t.year, bars = t.bars, timeSignature = t.timeSignature, form = t.form,
           style = t.style, keyName = t.key, keyPitchClass = Key.pitchClassOf(t.key), tonality = t.tonality, collection = t.collection, userCreated = true,
         )
         val existing = db.standards().bySlug(t.slug)
-        if (existing == null) db.standards().insert(row) else db.standards().update(listOf(row.copy(id = existing.id)))
+        if (existing == null) db.standards().insert(row) else if (existing.userCreated) db.standards().update(listOf(row.copy(id = existing.id)))
       }
       val keepExercises = backup.myExercises.map { it.name }.toSet()
       for (old in db.exercises().userCreated()) {
@@ -329,7 +350,12 @@ class BackupService(
         when {
           existing == null -> db.exercises().insert(row)
           existing.userCreated -> db.exercises().update(listOf(row.copy(id = existing.id)))
-          else -> db.exercises().insert(row.copy(name = "${e.name} (yours)"))
+          else -> {
+            // Restoring the same file again finds the copy made last time rather than making another.
+            val earlier = db.exercises().byName("${e.name} (yours)")?.takeIf { it.userCreated }
+            if (earlier != null) db.exercises().update(listOf(row.copy(id = earlier.id, name = earlier.name)))
+            else db.exercises().insert(row.copy(name = freeExerciseName(e.name, db.exercises().all().map { it.name }.toSet())))
+          }
         }
       }
       db.exerciseOverrides().deleteAll()
@@ -337,7 +363,7 @@ class BackupService(
       for (e in backup.exerciseEdits) {
         val id = exerciseIds[e.exercise] ?: continue
         db.exerciseOverrides().upsert(
-          ExerciseOverrideEntity(id, e.name, e.category, e.description, e.minutes, e.difficulty, e.tempoBpm, e.families, e.appliesToTune, e.updatedAt)
+          ExerciseOverrideEntity(id, e.name, e.category, e.description, e.minutes, e.difficulty, e.tempoBpm, e.families, e.appliesToTune, e.updatedAt, clearedFields(e.cleared))
         )
       }
       val ids = db.standards().all().associate { it.slug to it.id }
@@ -346,7 +372,7 @@ class BackupService(
       for (e in backup.edits) {
         val id = ids[e.slug] ?: continue
         db.tuneOverrides().upsert(
-          TuneOverrideEntity(id, e.title, e.composer, e.year, e.bars, e.timeSignature, e.form, e.style, e.key, Key.pitchClassOf(e.key), e.tonality, e.collection, e.updatedAt)
+          TuneOverrideEntity(id, e.title, e.composer, e.year, e.bars, e.timeSignature, e.form, e.style, e.key, Key.pitchClassOf(e.key), e.tonality, e.collection, e.updatedAt, clearedFields(e.cleared))
         )
         edits++
       }
@@ -378,7 +404,7 @@ class BackupService(
         knowledge++
       }
       var reviews = 0
-      for (r in backup.reviews) {
+      for (r in backup.reviews.filter { it.kind == BackupReview.KIND_TUNE }) {
         val id = ids[r.slug]
         if (id == null) {
           skipped++
@@ -399,14 +425,14 @@ class BackupService(
       for (old in db.transcriptions().all().filter { it.userCreated && it.slug !in keepSolos && it.archivedAt == null }) {
         db.transcriptions().update(listOf(old.copy(archivedAt = now())))
       }
-      for (s in backup.mySolos) {
+      for (s in backup.mySolos.filter { it.slug.startsWith(SeedValidator.USER_SLUG_PREFIX) }) {
         val row = TranscriptionEntity(
           slug = s.slug, standardId = s.tune?.let { ids[it] }, title = s.title, soloist = s.soloist, instrument = s.instrument, context = s.context, recorded = s.recorded, url = s.url,
           startSeconds = s.startSeconds, endSeconds = s.endSeconds, keyName = s.key, keyPitchClass = Key.pitchClassOf(s.key), tonality = s.tonality,
           performers = s.performers, userCreated = true,
         )
         val existing = db.transcriptions().bySlug(s.slug)
-        if (existing == null) db.transcriptions().insert(row) else db.transcriptions().update(listOf(row.copy(id = existing.id)))
+        if (existing == null) db.transcriptions().insert(row) else if (existing.userCreated) db.transcriptions().update(listOf(row.copy(id = existing.id)))
       }
       db.transcriptions().deleteAllStates()
       val soloIds = db.transcriptions().all().associate { it.slug to it.id }
@@ -416,9 +442,23 @@ class BackupService(
           TranscriptionStateEntity(id, p.status, p.notes, p.startedAt, p.doneAt, p.reps, p.lapses, p.intervalDays, p.ease, p.dueAt, p.lastReviewedAt)
         )
       }
+      for (r in backup.reviews.filter { it.kind == BackupReview.KIND_SOLO }) {
+        val id = soloIds[r.slug] ?: continue
+        db.reviewEvents().insert(
+          ReviewEventEntity(
+            itemKind = ReviewEventEntity.TRANSCRIPTION, itemId = id, exerciseId = null, transposition = r.transposition,
+            keyWrittenPitchClass = r.keyWrittenPitchClass, keyWrittenMinor = r.keyWrittenMinor, grade = r.grade, reviewedAt = r.reviewedAt,
+            elapsedMs = r.elapsedMs, schedulerId = r.schedulerId, schedulerVersion = r.schedulerVersion, intervalBefore = r.intervalBefore,
+            intervalAfter = r.intervalAfter, easeBefore = r.easeBefore, easeAfter = r.easeAfter,
+          )
+        )
+        reviews++
+      }
       db.tuneMedia().deleteAll()
       for (m in backup.media) {
         val id = ids[m.slug] ?: continue
+        // Opening a link that is not a web address would crash, so the restore drops it as adding it would.
+        if (MediaLink.parse(m.url) == null) continue
         db.tuneMedia().insert(TuneMediaEntity(standardId = id, url = m.url, title = m.title, position = m.position, createdAt = m.createdAt))
       }
       db.playlists().deleteAll()
@@ -433,3 +473,5 @@ class BackupService(
     return result
   }
 }
+
+private fun String.splitFields(): List<String> = split(',').filter { it.isNotEmpty() }

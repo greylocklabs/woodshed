@@ -84,6 +84,8 @@ class DiceViewModel(
   private val _ui = MutableStateFlow(DiceUi())
   val ui: StateFlow<DiceUi> = _ui.asStateFlow()
   private var roll: Roll? = null
+  /** When the current roll was shown, so a grade logs how long it was worked on. */
+  private var rolledAt = 0L
 
   init {
     viewModelScope.launch {
@@ -99,13 +101,23 @@ class DiceViewModel(
 
   fun setOptions(styles: List<String>, exercises: List<String>) = _ui.update { it.copy(styles = styles, exercises = exercises) }
 
-  fun constrain(change: (DiceConstraints) -> DiceConstraints) = _ui.update { it.copy(constraints = change(it.constraints)) }
+  fun constrain(change: (DiceConstraints) -> DiceConstraints) = _ui.update { ui ->
+    val next = change(ui.constraints)
+    // A result from the other kind of roll would show under the wrong heading.
+    if (next.kind != ui.constraints.kind) {
+      roll = null
+      ui.copy(constraints = next, card = null, solo = null, nothingMatches = false, graded = null)
+    } else {
+      ui.copy(constraints = next)
+    }
+  }
 
   fun roll() {
     if (_ui.value.constraints.kind == RollKind.SOLO) return rollSolo()
     viewModelScope.launch {
       val r = practice.roll(_ui.value.constraints)
       roll = r
+      rolledAt = now()
       val card = r?.let { present(it) }
       _ui.update { it.copy(card = card, solo = null, nothingMatches = r == null, graded = null) }
     }
@@ -124,7 +136,10 @@ class DiceViewModel(
   }
 
   fun grade(grade: Grade) {
-    val card = roll?.let { practice.cardFor(it, repository.transposition.value) } ?: return
+    // The buttons go as soon as one is tapped, so a second tap before the write lands is ignored.
+    if (_ui.value.card?.buttons == null) return
+    val card = roll?.let { practice.cardFor(it, repository.transposition.value, shownAt = rolledAt) } ?: return
+    _ui.update { it.copy(card = it.card?.copy(buttons = null)) }
     viewModelScope.launch {
       practice.grade(card, grade)
       _ui.update { it.copy(graded = grade, card = it.card?.copy(buttons = null)) }

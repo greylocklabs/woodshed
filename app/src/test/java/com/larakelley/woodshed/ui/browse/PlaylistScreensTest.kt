@@ -50,7 +50,7 @@ class PlaylistScreensTest {
     compose.onNodeWithTag("remove-1").performClick()
     compose.onNodeWithTag("delete-playlist").performClick()
     compose.onNodeWithTag("confirm-delete-playlist").performClick()
-    assertEquals(listOf("move 1 0 1", "remove 1 6", "delete 1"), calls)
+    assertEquals(listOf("move 1 5 6", "remove 1 6", "delete 1"), calls)
     assertEquals(1, back)
   }
 

@@ -4,12 +4,15 @@ import androidx.room.withTransaction
 import com.larakelley.woodshed.data.db.StandardEntity
 import com.larakelley.woodshed.data.db.TuneOverrideEntity
 import com.larakelley.woodshed.data.db.WoodshedDatabase
+import com.larakelley.woodshed.data.db.clearedFields
 import com.larakelley.woodshed.data.seed.SeedValidator
 import com.larakelley.woodshed.domain.Key
 import com.larakelley.woodshed.domain.Tonality
 import java.text.Normalizer
+import kotlinx.serialization.Serializable
 
 /** A tune as the editor fills it in. Blank text means unknown. */
+@Serializable
 data class TuneDraft(
   val title: String = "",
   val composer: String = "",
@@ -70,6 +73,16 @@ class TuneLibrary(private val db: WoodshedDatabase, private val now: () -> Long 
     // Only fields that differ from the seed are stored, so a later seed correction still shows through the rest.
     val wanted = entity(draft, current.slug)
     fun <T> diff(mine: T?, seed: T?): T? = mine?.takeIf { it != seed }
+    val blanked = mapOf(
+      "composer" to (wanted.composer to current.composer),
+      "year" to (wanted.year to current.year),
+      "bars" to (wanted.bars to current.bars),
+      "timeSignature" to (wanted.timeSignature to current.timeSignature),
+      "form" to (wanted.form to current.form),
+      "style" to (wanted.style to current.style),
+      "key" to (wanted.keyName to current.keyName),
+      "tonality" to (wanted.tonality to current.tonality),
+    ).filterValues { (mine, seed) -> mine == null && seed != null }.keys
     val override = TuneOverrideEntity(
       standardId = id,
       title = diff(wanted.title, current.title),
@@ -84,6 +97,7 @@ class TuneLibrary(private val db: WoodshedDatabase, private val now: () -> Long 
       tonality = diff(wanted.tonality, current.tonality),
       collection = diff(wanted.collection, current.collection),
       updatedAt = now(),
+      cleared = clearedFields(blanked),
     )
     if (override == TuneOverrideEntity(id, updatedAt = override.updatedAt)) db.tuneOverrides().delete(id) else db.tuneOverrides().upsert(override)
   }

@@ -41,10 +41,10 @@ import com.larakelley.woodshed.data.TranscriptionDraft
 import com.larakelley.woodshed.data.TranscriptionService
 import com.larakelley.woodshed.data.WoodshedRepository
 import com.larakelley.woodshed.data.clock
-import com.larakelley.woodshed.data.recordedLabel
 import com.larakelley.woodshed.data.db.TranscriptionEntity
 import com.larakelley.woodshed.data.db.TranscriptionStateEntity
 import com.larakelley.woodshed.data.db.TranscriptionStatus
+import com.larakelley.woodshed.data.recordedLabel
 import com.larakelley.woodshed.domain.Key
 import com.larakelley.woodshed.domain.MediaLink
 import com.larakelley.woodshed.domain.ReportSubject
@@ -60,6 +60,7 @@ import com.larakelley.woodshed.theme.StickerButton
 import com.larakelley.woodshed.theme.neutralSticker
 import com.larakelley.woodshed.ui.AppNavigation
 import com.larakelley.woodshed.ui.Destination
+import com.larakelley.woodshed.ui.jsonSaver
 import com.larakelley.woodshed.ui.media.PracticePlayer
 import com.larakelley.woodshed.ui.report.ReportButton
 import kotlinx.coroutines.flow.SharingStarted
@@ -248,16 +249,18 @@ private fun SoloDetail(row: SoloRow, transposition: Transposition, actions: Solo
     }
     if (row.status != null) TextButton(onClick = { actions.clear(id) }, modifier = Modifier.testTag("clear-solo")) { Text("Remove from my list", color = callie.textMuted) }
 
-    SectionLabel("Notes")
-    OutlinedTextField(
-      value = notes,
-      onValueChange = { notes = it },
-      placeholder = { Text("Phrases done, tricky bars, fingerings...") },
-      minLines = 3,
-      modifier = Modifier.fillMaxWidth().testTag("solo-notes"),
-    )
-    if (notes != row.state?.notes.orEmpty()) {
-      StickerButton(onClick = { actions.setNotes(id, notes) }, sticker = neutralSticker, modifier = Modifier.height(40.dp).testTag("save-notes")) { Text("Save notes") }
+    if (row.status != null) {
+      SectionLabel("Notes")
+      OutlinedTextField(
+        value = notes,
+        onValueChange = { notes = it },
+        placeholder = { Text("Phrases done, tricky bars, fingerings...") },
+        minLines = 3,
+        modifier = Modifier.fillMaxWidth().testTag("solo-notes"),
+      )
+      if (notes != row.state?.notes.orEmpty()) {
+        StickerButton(onClick = { actions.setNotes(id, notes) }, sticker = neutralSticker, modifier = Modifier.height(40.dp).testTag("save-notes")) { Text("Save notes") }
+      }
     }
 
     if (solo.performers.isNotEmpty()) {
@@ -282,7 +285,7 @@ private fun SoloDetail(row: SoloRow, transposition: Transposition, actions: Solo
 @Composable
 private fun SoloEditor(solo: TranscriptionEntity?, onSave: (TranscriptionDraft) -> Unit, onDelete: () -> Unit, onBack: () -> Unit) {
   BackHandler(onBack = onBack)
-  var draft by remember(solo?.id) { mutableStateOf(solo?.let(TranscriptionDraft::of) ?: TranscriptionDraft()) }
+  var draft by rememberSaveable(solo?.id, stateSaver = jsonSaver()) { mutableStateOf(solo?.let(TranscriptionDraft::of) ?: TranscriptionDraft()) }
   var tried by remember { mutableStateOf(false) }
   var confirm by rememberSaveable { mutableStateOf(false) }
   val callie = LocalCallie.current

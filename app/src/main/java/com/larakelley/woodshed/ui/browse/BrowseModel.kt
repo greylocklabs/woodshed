@@ -323,7 +323,8 @@ data class PlaylistActions(
   val delete: (Long) -> Unit = {},
   val add: (Long, Long) -> Unit = { _, _ -> },
   val remove: (Long, Long) -> Unit = { _, _ -> },
-  val move: (Long, Int, Int) -> Unit = { _, _, _ -> },
+  /** Moves a tune to where another tune is, by playlist and tune ids. */
+  val move: (Long, Long, Long) -> Unit = { _, _, _ -> },
 )
 
 class BrowseViewModel(
@@ -358,7 +359,10 @@ class BrowseViewModel(
     val allRows: List<ExerciseRow>,
   )
 
-  private val tunePart = combine(library, tuneFilter, repository.playlists, repository.media) { rows, filter, playlists, media ->
+  private val tunePart = combine(library, tuneFilter, repository.playlists, repository.media) { rows, filter, stored, media ->
+    // Archived tunes stay in the stored order but are not shown or counted.
+    val live = rows.map { it.id }.toSet()
+    val playlists = stored.map { p -> p.copy(tuneIds = p.tuneIds.filter { it in live }) }
     // A deleted playlist drops out of the filter rather than leaving an empty list.
     val chosen = playlists.firstOrNull { it.id == filter.playlistId }
     val shown = if (chosen == null) filter.copy(playlistId = null) else filter
@@ -446,7 +450,7 @@ class BrowseViewModel(
     delete = { launch { lists.delete(it) } },
     add = { id, tune -> launch { lists.add(id, tune) } },
     remove = { id, tune -> launch { lists.remove(id, tune) } },
-    move = { id, from, to -> launch { lists.move(id, from, to) } },
+    move = { id, tune, onto -> launch { lists.move(id, tune, onto) } },
   )
 
   fun updateTuneFilter(change: (TuneFilter) -> TuneFilter) = tuneFilter.update(change)

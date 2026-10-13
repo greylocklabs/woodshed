@@ -58,6 +58,9 @@ data class Report(
   companion object {
     const val REPO = "lararosekelley/woodshed"
 
+    /** Notes ride in the issue page's address, which browsers and GitHub cut off past several thousand characters. */
+    const val MAX_NOTE = 1500
+
     private fun enc(s: String) = URLEncoder.encode(s, "UTF-8").replace("+", "%20")
   }
 }

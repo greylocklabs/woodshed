@@ -194,9 +194,9 @@ class PracticeService(
     rollSolo(db.transcriptions().all(), db.transcriptions().states().associateBy { it.transcriptionId }, constraints.soloPool, random)
 
   /** A rolled tune that is in the practice queue can be graded like any other card. */
-  fun cardFor(roll: Roll, transposition: Transposition): Card? {
+  fun cardFor(roll: Roll, transposition: Transposition, shownAt: Long = now()): Card? {
     val state = roll.state?.takeIf { it.lifecycle == Lifecycle.LEARNING || it.lifecycle == Lifecycle.REPERTOIRE } ?: return null
-    return Card(roll.tune, state, roll.exercise, roll.concertKey, transposition, now())
+    return Card(roll.tune, state, roll.exercise, roll.concertKey, transposition, shownAt)
   }
 
   /** What each grade would schedule, for labelling the buttons. */

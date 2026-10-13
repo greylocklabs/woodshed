@@ -22,6 +22,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -61,10 +64,15 @@ const val IN_TUNE_CENTS = 5
 fun TunerScreen(state: TunerState, transposition: Transposition, actions: TunerActions) {
   val callie = LocalCallie.current
   val context = LocalContext.current
-  val askMic = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted -> if (granted) actions.start() }
+  var denied by rememberSaveable { mutableStateOf(false) }
+  val askMic = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted -> denied = !granted; if (granted) actions.start() }
   val listen = {
-    if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) actions.start()
-    else askMic.launch(Manifest.permission.RECORD_AUDIO)
+    if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
+      denied = false
+      actions.start()
+    } else {
+      askMic.launch(Manifest.permission.RECORD_AUDIO)
+    }
   }
   val reading = state.reading
   val written = reading?.writtenFor(transposition)
@@ -95,6 +103,18 @@ fun TunerScreen(state: TunerState, transposition: Transposition, actions: TunerA
     Spacer(Modifier.height(16.dp))
     StickerButton(onClick = { if (state.listening) actions.stop() else listen() }, modifier = Modifier.fillMaxWidth().height(60.dp).testTag("tuner-toggle")) {
       Text(if (state.listening) "◼ Stop" else "🎤 Listen", style = MaterialTheme.typography.titleLarge)
+    }
+    when {
+      denied -> Text(
+        "The tuner needs the microphone. Allow it for Woodshed in your phone's settings, then tap Listen.",
+        color = callie.danger,
+        modifier = Modifier.padding(top = 8.dp).testTag("mic-denied"),
+      )
+      state.failed -> Text(
+        "The microphone isn't available. Another app may be using it.",
+        color = callie.danger,
+        modifier = Modifier.padding(top = 8.dp).testTag("mic-failed"),
+      )
     }
     SectionLabel("Reference pitch", Modifier.align(Alignment.Start))
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {

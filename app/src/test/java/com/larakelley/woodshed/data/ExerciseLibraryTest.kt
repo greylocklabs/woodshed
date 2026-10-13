@@ -128,4 +128,20 @@ class ExerciseLibraryTest {
     assertNull(db.exercises().byName("Tongue twisters")!!.archivedAt)
     assertEquals(5, db.exerciseOverrides().get(longTones.id)!!.minutes)
   }
+
+  @Test
+  fun clearingASeededTempoStaysCleared() = runTest {
+    val seeded = repository.exercises.first().first { !it.userCreated && it.tempoBpm != null }
+    library.edit(seeded.id, ExerciseDraft.of(seeded).copy(tempoBpm = ""))
+    assertNull(repository.exercises.first().single { it.id == seeded.id }.tempoBpm)
+  }
+
+  @Test
+  fun aNameARenamedSeedExerciseGaveUpCanBeUsedAgain() = runTest {
+    val seeded = repository.exercises.first().first { !it.userCreated }
+    library.edit(seeded.id, ExerciseDraft.of(seeded).copy(name = "${seeded.name} 2"))
+    // The seed row still holds the name underneath, so the user's exercise steps aside rather than crashing.
+    val id = library.add(mine.copy(name = seeded.name))
+    assertEquals("${seeded.name} (yours)", db.exercises().byId(id)!!.name)
+  }
 }
