@@ -3,10 +3,14 @@ package com.larakelley.woodshed.data
 import androidx.room.withTransaction
 import com.larakelley.woodshed.data.db.ExerciseEntity
 import com.larakelley.woodshed.data.db.ExerciseOverrideEntity
+import com.larakelley.woodshed.data.db.Performer
 import com.larakelley.woodshed.data.db.PlaylistEntity
 import com.larakelley.woodshed.data.db.PlaylistTuneEntity
 import com.larakelley.woodshed.data.db.ReviewEventEntity
 import com.larakelley.woodshed.data.db.StandardEntity
+import com.larakelley.woodshed.data.db.TranscriptionEntity
+import com.larakelley.woodshed.data.db.TranscriptionStateEntity
+import com.larakelley.woodshed.data.db.TranscriptionStatus
 import com.larakelley.woodshed.data.db.TuneKnowledgeEntity
 import com.larakelley.woodshed.data.db.TuneMediaEntity
 import com.larakelley.woodshed.data.db.TuneOverrideEntity
@@ -44,6 +48,10 @@ data class Backup(
   @SerialName("my_exercises") val myExercises: List<BackupExercise> = emptyList(),
   /** The user's edits to seeded exercises, keyed by the seed's name. */
   @SerialName("exercise_edits") val exerciseEdits: List<BackupExerciseEdit> = emptyList(),
+  /** Solos the user added, by slug; their progress is in [soloProgress] with everyone else's. */
+  @SerialName("my_solos") val mySolos: List<BackupSolo> = emptyList(),
+  /** Progress, notes and scheduling on solos, by the solo's slug. */
+  @SerialName("solo_progress") val soloProgress: List<BackupSoloProgress> = emptyList(),
   /** Recording and video links on tunes, named by slug. */
   val media: List<BackupMedia> = emptyList(),
   /** Playlists, with tunes named by slug in order. */
@@ -107,6 +115,37 @@ data class BackupExerciseEdit(
   val families: List<Family>? = null,
   @SerialName("applies_to_tune") val appliesToTune: Boolean? = null,
   @SerialName("updated_at") val updatedAt: Long = 0,
+)
+
+@Serializable
+data class BackupSolo(
+  val slug: String,
+  val tune: String? = null,
+  val title: String,
+  val soloist: String,
+  val instrument: String,
+  val context: String? = null,
+  val url: String,
+  @SerialName("start_seconds") val startSeconds: Int? = null,
+  @SerialName("end_seconds") val endSeconds: Int? = null,
+  val key: String? = null,
+  val tonality: Tonality? = null,
+  val performers: List<Performer> = emptyList(),
+)
+
+@Serializable
+data class BackupSoloProgress(
+  val slug: String,
+  val status: TranscriptionStatus,
+  val notes: String? = null,
+  @SerialName("started_at") val startedAt: Long? = null,
+  @SerialName("done_at") val doneAt: Long? = null,
+  val reps: Int = 0,
+  val lapses: Int = 0,
+  @SerialName("interval_days") val intervalDays: Double = 0.0,
+  val ease: Double = 2.5,
+  @SerialName("due_at") val dueAt: Long? = null,
+  @SerialName("last_reviewed_at") val lastReviewedAt: Long? = null,
 )
 
 @Serializable
@@ -214,6 +253,14 @@ class BackupService(
       exerciseEdits = db.exerciseOverrides().all().mapNotNull { o ->
         val name = exercises[o.exerciseId] ?: return@mapNotNull null
         BackupExerciseEdit(name, o.name, o.category, o.description, o.minutes, o.difficulty, o.tempoBpm, o.families, o.appliesToTune, o.updatedAt)
+      },
+      mySolos = db.transcriptions().all().filter { it.userCreated && it.archivedAt == null }.map {
+        BackupSolo(it.slug, it.standardId?.let { s -> slugs[s] }, it.title, it.soloist, it.instrument, it.context, it.url, it.startSeconds, it.endSeconds, it.keyName, it.tonality, it.performers)
+      },
+      soloProgress = db.transcriptions().all().associate { it.id to it.slug }.let { soloSlugs ->
+        db.transcriptions().states().mapNotNull { s ->
+          soloSlugs[s.transcriptionId]?.let { BackupSoloProgress(it, s.status, s.notes, s.startedAt, s.doneAt, s.reps, s.lapses, s.intervalDays, s.ease, s.dueAt, s.lastReviewedAt) }
+        }
       },
       media = db.tuneMedia().all().mapNotNull { m -> slugs[m.standardId]?.let { BackupMedia(it, m.url, m.title, m.position, m.createdAt) } },
       playlists = db.playlists().all().let { lists ->
@@ -345,6 +392,28 @@ class BackupService(
           )
         )
         reviews++
+      }
+      // Solos: the user's own first, then progress on any solo, matched by slug.
+      val keepSolos = backup.mySolos.map { it.slug }.toSet()
+      for (old in db.transcriptions().all().filter { it.userCreated && it.slug !in keepSolos && it.archivedAt == null }) {
+        db.transcriptions().update(listOf(old.copy(archivedAt = now())))
+      }
+      for (s in backup.mySolos) {
+        val row = TranscriptionEntity(
+          slug = s.slug, standardId = s.tune?.let { ids[it] }, title = s.title, soloist = s.soloist, instrument = s.instrument, context = s.context, url = s.url,
+          startSeconds = s.startSeconds, endSeconds = s.endSeconds, keyName = s.key, keyPitchClass = Key.pitchClassOf(s.key), tonality = s.tonality,
+          performers = s.performers, userCreated = true,
+        )
+        val existing = db.transcriptions().bySlug(s.slug)
+        if (existing == null) db.transcriptions().insert(row) else db.transcriptions().update(listOf(row.copy(id = existing.id)))
+      }
+      db.transcriptions().deleteAllStates()
+      val soloIds = db.transcriptions().all().associate { it.slug to it.id }
+      for (p in backup.soloProgress) {
+        val id = soloIds[p.slug] ?: continue
+        db.transcriptions().upsertState(
+          TranscriptionStateEntity(id, p.status, p.notes, p.startedAt, p.doneAt, p.reps, p.lapses, p.intervalDays, p.ease, p.dueAt, p.lastReviewedAt)
+        )
       }
       db.tuneMedia().deleteAll()
       for (m in backup.media) {

@@ -11,6 +11,7 @@ enum class ReportSubject(val label: String, val problems: List<String>) {
       "Something else",
     ),
   ),
+  SOLO("Solo", listOf("Wrong solo times", "Wrong key", "Wrong performers or details", "Broken or wrong link", "Something else")),
   EXERCISE("Exercise", listOf("Wrong instruments", "Unclear instructions", "Wrong tempo or time", "Something else")),
   APP("App", listOf("Something is broken", "Something looks wrong", "An idea", "Something else")),
 }

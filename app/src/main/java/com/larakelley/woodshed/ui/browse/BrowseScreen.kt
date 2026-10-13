@@ -92,6 +92,7 @@ private const val NEW_TUNE = "+new"
 private val TAB_EMOJI = mapOf(
   "Practice" to "🎷",
   "Random" to "🎲",
+  "Transcribe" to "🎧",
   "Metronome" to "⏱️",
   "Tuner" to "🎯",
   "Tunes" to "🎵",
@@ -113,6 +114,7 @@ fun BrowseScreen(
   now: () -> Long = System::currentTimeMillis,
   practiceTab: (@Composable () -> Unit)? = null,
   diceTab: (@Composable () -> Unit)? = null,
+  transcribeTab: (@Composable () -> Unit)? = null,
   metronomeTab: (@Composable () -> Unit)? = null,
   tunerTab: (@Composable () -> Unit)? = null,
   settings: (@Composable (onBack: () -> Unit, modifier: Modifier) -> Unit)? = null,
@@ -130,6 +132,7 @@ fun BrowseScreen(
   val tabs = buildList {
     if (practiceTab != null) add("Practice")
     if (diceTab != null) add("Random")
+    if (transcribeTab != null) add("Transcribe")
     if (metronomeTab != null) add("Metronome")
     if (tunerTab != null) add("Tuner")
     add("Tunes")
@@ -219,6 +222,7 @@ fun BrowseScreen(
       when (tabs[tab]) {
         "Practice" -> practiceTab?.invoke()
         "Random" -> diceTab?.invoke()
+        "Transcribe" -> transcribeTab?.invoke()
         "Metronome" -> metronomeTab?.invoke()
         "Tuner" -> tunerTab?.invoke()
         "Tunes" -> {

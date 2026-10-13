@@ -25,12 +25,24 @@ sealed interface PlanBlock {
 
   /** A tune worked through one tune exercise. */
   data class Tune(val tuneId: Long, val exerciseId: Long, override val minutes: Int) : PlanBlock
+
+  /** Time on the solo being transcribed. */
+  data class Solo(val transcriptionId: Long, override val minutes: Int) : PlanBlock
 }
 
 const val MIN_BLOCK_MINUTES = 3
 
 /** Warm-ups stay easy; harder tone work belongs with the Tone focus. */
 const val MAX_WARMUP_DIFFICULTY = 2
+
+/** A quarter of the session for the solo being transcribed, from 5 to 15 minutes; none in sessions under 15. */
+fun soloMinutes(total: Int): Int = if (total < 15) 0 else (total / 4).coerceIn(5, 15)
+
+/** Puts the solo block just before the tunes, or at the end when there are none. */
+fun withSolo(blocks: List<PlanBlock>, solo: PlanBlock.Solo): List<PlanBlock> {
+  val at = blocks.indexOfFirst { it is PlanBlock.Tune }.let { if (it < 0) blocks.size else it }
+  return blocks.take(at) + solo + blocks.drop(at)
+}
 
 /** Five minutes of warm-up per half hour, at least three. */
 private fun warmupMinutes(total: Int) = (total / 6).coerceIn(MIN_BLOCK_MINUTES, 10)
@@ -96,6 +108,7 @@ fun planSession(
     blocks[blocks.lastIndex] = when (val last = blocks.last()) {
       is PlanBlock.Exercise -> last.copy(minutes = last.minutes + left)
       is PlanBlock.Tune -> last.copy(minutes = last.minutes + left)
+      is PlanBlock.Solo -> last.copy(minutes = last.minutes + left)
     }
   }
   return blocks

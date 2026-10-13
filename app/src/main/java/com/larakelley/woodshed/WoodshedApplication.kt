@@ -9,6 +9,7 @@ import com.larakelley.woodshed.data.ExerciseLibrary
 import com.larakelley.woodshed.data.MediaService
 import com.larakelley.woodshed.data.PlaylistService
 import com.larakelley.woodshed.data.PracticeService
+import com.larakelley.woodshed.data.TranscriptionService
 import com.larakelley.woodshed.data.TuneLibrary
 import com.larakelley.woodshed.data.WoodshedRepository
 import com.larakelley.woodshed.data.db.WoodshedDatabase
@@ -38,6 +39,8 @@ class WoodshedApplication : Application() {
   val exercises: ExerciseLibrary by lazy { ExerciseLibrary(database) }
 
   val media: MediaService by lazy { MediaService(database) }
+
+  val transcriptions: TranscriptionService by lazy { TranscriptionService(database) }
 
   private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 

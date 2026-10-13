@@ -13,6 +13,7 @@ import com.larakelley.woodshed.domain.Key
 import com.larakelley.woodshed.domain.KeyPolicy
 import com.larakelley.woodshed.domain.Lifecycle
 import com.larakelley.woodshed.domain.Tonality
+import kotlinx.serialization.Serializable
 
 /**
  * Author-owned: every column comes from the seed and is refreshed on re-seed. User state for a tune
@@ -187,6 +188,7 @@ data class ReviewEventEntity(
 ) {
   companion object {
     const val TUNE = "TUNE"
+    const val TRANSCRIPTION = "TRANSCRIPTION"
   }
 }
 
@@ -238,3 +240,67 @@ data class TuneMediaEntity(
   val position: Int = 0,
   val createdAt: Long = 0,
 )
+
+/** One player on a recording. */
+@Serializable
+data class Performer(val name: String, val instrument: String)
+
+/** Where a solo sits in the user's work on it. */
+enum class TranscriptionStatus(val label: String) {
+  WISHLIST("Wishlist"),
+  ACTIVE("Transcribing"),
+  DONE("Done"),
+}
+
+/**
+ * A solo to transcribe. Seeded rows are refreshed on re-seed; [userCreated] rows are the user's and never touched.
+ * [startSeconds] and [endSeconds] bound the solo itself; playback pads them.
+ */
+@Entity(
+  tableName = "transcriptions",
+  indices = [Index(value = ["slug"], unique = true), Index(value = ["standardId"])],
+  foreignKeys = [ForeignKey(entity = StandardEntity::class, parentColumns = ["id"], childColumns = ["standardId"])],
+)
+data class TranscriptionEntity(
+  @PrimaryKey(autoGenerate = true) val id: Long = 0,
+  val slug: String,
+  /** The tune in the library, when it is there. */
+  val standardId: Long? = null,
+  val title: String,
+  val soloist: String,
+  val instrument: String,
+  val context: String? = null,
+  val url: String,
+  val startSeconds: Int? = null,
+  val endSeconds: Int? = null,
+  val keyName: String? = null,
+  val keyPitchClass: Int? = null,
+  val tonality: Tonality? = null,
+  val performers: List<Performer> = emptyList(),
+  val archivedAt: Long? = null,
+  val userCreated: Boolean = false,
+)
+
+/** The user's progress on a solo; re-seeding never touches it. Scheduling works as it does for tunes. */
+@Entity(
+  tableName = "transcription_state",
+  foreignKeys = [ForeignKey(entity = TranscriptionEntity::class, parentColumns = ["id"], childColumns = ["transcriptionId"])],
+)
+data class TranscriptionStateEntity(
+  @PrimaryKey val transcriptionId: Long,
+  val status: TranscriptionStatus,
+  val notes: String? = null,
+  val startedAt: Long? = null,
+  val doneAt: Long? = null,
+  val reps: Int = 0,
+  val lapses: Int = 0,
+  val intervalDays: Double = 0.0,
+  val ease: Double = 2.5,
+  val dueAt: Long? = null,
+  val lastReviewedAt: Long? = null,
+) {
+  val cardState: CardState
+    get() = CardState(reps, lapses, intervalDays, ease, dueAt)
+
+  fun withCardState(s: CardState) = copy(reps = s.reps, lapses = s.lapses, intervalDays = s.intervalDays, ease = s.ease, dueAt = s.dueAt)
+}

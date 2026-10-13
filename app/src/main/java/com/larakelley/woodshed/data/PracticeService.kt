@@ -4,6 +4,7 @@ import androidx.room.withTransaction
 import com.larakelley.woodshed.data.db.ExerciseEntity
 import com.larakelley.woodshed.data.db.ReviewEventEntity
 import com.larakelley.woodshed.data.db.StandardEntity
+import com.larakelley.woodshed.data.db.TranscriptionStatus
 import com.larakelley.woodshed.data.db.TuneKnowledgeEntity
 import com.larakelley.woodshed.data.db.TuneStateEntity
 import com.larakelley.woodshed.data.db.WoodshedDatabase
@@ -26,6 +27,8 @@ import com.larakelley.woodshed.domain.Transposition
 import com.larakelley.woodshed.domain.concertKeyFor
 import com.larakelley.woodshed.domain.pickExercise
 import com.larakelley.woodshed.domain.planSession
+import com.larakelley.woodshed.domain.soloMinutes
+import com.larakelley.woodshed.domain.withSolo
 import java.time.Instant
 import java.time.ZoneId
 import kotlin.random.Random
@@ -137,14 +140,19 @@ class PracticeService(
     val exercises = allExercises().filter { it.archivedAt == null && (instrument == null || instrument.suits(it.families, it.category)) }
     val tuneExercises = exercises.filter { it.appliesToTune }
     val history = tuneIds.associateWith { id -> db.reviewEvents().forItem(ReviewEventEntity.TUNE, id).mapNotNull { it.exerciseId }.reversed().distinct() }
-    return planSession(
-      totalMinutes = minutes,
+    // The solo being transcribed comes first among priorities: it takes its share before the rest is planned.
+    val solos = db.transcriptions().all().filter { it.archivedAt == null }.associateBy { it.id }
+    val active = db.transcriptions().states().filter { it.status == TranscriptionStatus.ACTIVE && it.transcriptionId in solos }.minByOrNull { it.dueAt ?: Long.MAX_VALUE }
+    val forSolo = if (active == null) 0 else soloMinutes(minutes)
+    val blocks = planSession(
+      totalMinutes = minutes - forSolo,
       focus = focus,
       tuneIds = tuneIds,
       exercises = exercises.map { PlanExercise(it.id, it.category, it.minutes, it.appliesToTune, it.difficulty) },
       tuneExercise = { id -> tuneExercises.takeIf { it.isNotEmpty() }?.let { pickExercise(it, { e -> e.id }, history.getValue(id), random).id } },
       random = random,
     )
+    return if (active != null && forSolo > 0) withSolo(blocks, PlanBlock.Solo(active.transcriptionId, forSolo)) else blocks
   }
 
   /** The card for a tune block, moving the tune into learning first if it is not already being practiced. */

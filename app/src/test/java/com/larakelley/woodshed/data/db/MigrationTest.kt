@@ -190,4 +190,19 @@ class MigrationTest {
       db.query("SELECT COUNT(*) FROM tune_media").use { it.moveToFirst(); assertEquals(1, it.getInt(0)) }
     }
   }
+
+  @Test
+  fun version10To11AddsTranscriptions() {
+    helper.createDatabase("migration-test-10", 10).use { db ->
+      db.execSQL(
+        "INSERT INTO standards (id, slug, title, composer, year, bars, timeSignature, form, style, keyName, keyPitchClass, tonality, archivedAt, collection, verified, userCreated) " +
+          "VALUES (7, 'solar', 'Solar', 'Miles Davis', 1954, 12, '4/4', NULL, 'Swing', 'C', 0, 'MINOR', NULL, 'Standards', 1, 0)"
+      )
+    }
+    helper.runMigrationsAndValidate("migration-test-10", 11, true).use { db ->
+      db.execSQL("INSERT INTO transcriptions (id, slug, standardId, title, soloist, instrument, url, performers, userCreated) VALUES (1, 's', 7, 'Solar', 'Miles', 'Trumpet', 'https://youtu.be/x', '[]', 0)")
+      db.execSQL("INSERT INTO transcription_state (transcriptionId, status, reps, lapses, intervalDays, ease) VALUES (1, 'ACTIVE', 0, 0, 0.0, 2.5)")
+      db.query("SELECT COUNT(*) FROM transcription_state").use { it.moveToFirst(); assertEquals(1, it.getInt(0)) }
+    }
+  }
 }

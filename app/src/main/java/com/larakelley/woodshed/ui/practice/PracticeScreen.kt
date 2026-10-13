@@ -38,6 +38,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
@@ -54,6 +55,7 @@ import com.larakelley.woodshed.theme.neutralSticker
 import com.larakelley.woodshed.ui.browse.DropdownChip
 import com.larakelley.woodshed.ui.browse.ExerciseFacts
 import com.larakelley.woodshed.ui.browse.ExerciseRow
+import com.larakelley.woodshed.ui.media.PracticePlayer
 import kotlinx.coroutines.delay
 
 /** What the setup and plan screens can do. */
@@ -225,6 +227,7 @@ fun SessionScreen(
   onUseTempo: (Int) -> Unit = {},
 ) {
   val view = LocalView.current
+  val uris = LocalUriHandler.current
   DisposableEffect(Unit) {
     view.keepScreenOn = true
     onDispose { view.keepScreenOn = false }
@@ -261,6 +264,13 @@ fun SessionScreen(
             }
           }
         }
+        is StepView.Solo -> {
+          Text("🎧 ${step.title}", style = MaterialTheme.typography.displaySmall, modifier = Modifier.testTag("solo-title"))
+          Text("Transcribe ${step.soloist}", style = MaterialTheme.typography.titleMedium)
+          step.notes?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+          if (step.embedUrl != null) PracticePlayer(step.embedUrl, step.soloStart)
+          else OutlinedButton(onClick = { uris.openUri(step.url) }) { Text("Open the recording ↗") }
+        }
         is StepView.Tune -> {
           val card = step.card
           Text(card.title, style = MaterialTheme.typography.displaySmall, modifier = Modifier.testTag("card-title"))
@@ -280,6 +290,10 @@ fun SessionScreen(
       is StepView.Tune -> {
         TextButton(onClick = onNext, modifier = Modifier.align(Alignment.End).testTag("step-skip")) { Text("Skip without grading") }
         GradeButtons(step.card.buttons, onGrade, Modifier.fillMaxHeight(0.3f))
+      }
+      is StepView.Solo -> {
+        TextButton(onClick = onNext, modifier = Modifier.align(Alignment.End).testTag("step-skip")) { Text("Skip without grading") }
+        GradeButtons(step.buttons, onGrade, Modifier.fillMaxHeight(0.22f))
       }
     }
   }

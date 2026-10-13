@@ -5,15 +5,18 @@ import androidx.lifecycle.viewModelScope
 import com.larakelley.woodshed.data.Card
 import com.larakelley.woodshed.data.PracticeService
 import com.larakelley.woodshed.data.PracticeSummary
+import com.larakelley.woodshed.data.TranscriptionService
 import com.larakelley.woodshed.data.WoodshedRepository
 import com.larakelley.woodshed.data.db.ExerciseEntity
 import com.larakelley.woodshed.data.db.StandardEntity
+import com.larakelley.woodshed.data.db.TranscriptionEntity
 import com.larakelley.woodshed.data.db.TuneStateEntity
 import com.larakelley.woodshed.domain.ClickTrack
 import com.larakelley.woodshed.domain.Focus
 import com.larakelley.woodshed.domain.Grade
 import com.larakelley.woodshed.domain.Instrument
 import com.larakelley.woodshed.domain.Lifecycle
+import com.larakelley.woodshed.domain.MediaLink
 import com.larakelley.woodshed.domain.PlanBlock
 import com.larakelley.woodshed.domain.Transposition
 import com.larakelley.woodshed.domain.delayLabel
@@ -115,6 +118,18 @@ sealed interface StepView {
   data class Exercise(val name: String, val category: String, val description: String, val tempoBpm: Int?, override val minutes: Int) : StepView
 
   data class Tune(val card: CardView, override val minutes: Int) : StepView
+
+  /** The solo being transcribed, with its padded player address and where the solo itself starts. */
+  data class Solo(
+    val title: String,
+    val soloist: String,
+    val notes: String?,
+    val embedUrl: String?,
+    val url: String,
+    val soloStart: Int?,
+    val buttons: List<Pair<Grade, String>>,
+    override val minutes: Int,
+  ) : StepView
 }
 
 data class PracticeUi(
@@ -135,6 +150,7 @@ const val SESSION_MINUTES_MAX = 180
 class PracticeViewModel(
   private val repository: WoodshedRepository,
   private val practice: PracticeService,
+  private val transcriptions: TranscriptionService? = null,
   private val now: () -> Long = System::currentTimeMillis,
 ) : ViewModel() {
   private val _ui = MutableStateFlow(PracticeUi(setup = SetupUi(instrument = repository.instrument.value, minutes = repository.sessionMinutes, focus = repository.sessionFocus)))
@@ -142,6 +158,8 @@ class PracticeViewModel(
 
   private var exercises: Map<Long, ExerciseEntity> = emptyMap()
   private var titles: Map<Long, String> = emptyMap()
+  private var solos: Map<Long, TranscriptionEntity> = emptyMap()
+  private var currentSolo: Long? = null
   private var steps: List<PlanBlock> = emptyList()
   private var current: Card? = null
   private var selectionTouched = false
@@ -156,6 +174,7 @@ class PracticeViewModel(
       val standards = repository.standards.first()
       titles = standards.associate { it.id to it.title }
       exercises = repository.exercises.first().associateBy { it.id }
+      solos = repository.transcriptions.first().associateBy { it.id }
       val lists = repository.playlists.first()
       val chosen = lists.firstOrNull { it.id == _ui.value.setup.playlistId }
       val own = sessionTunes(standards, repository.tuneStates.first(), now())
@@ -240,6 +259,7 @@ class PracticeViewModel(
         usable.filter { it.category == category && !it.appliesToTune && it.id !in inPlan }.randomOrNull()?.let { block.copy(exerciseId = it.id) }
       }
       is PlanBlock.Tune -> usable.filter { it.appliesToTune && it.id != block.exerciseId }.randomOrNull()?.let { block.copy(exerciseId = it.id) }
+      is PlanBlock.Solo -> null
     } ?: return
     _ui.update { it.copy(setup = it.setup.copy(plan = plan.toMutableList().also { p -> p[index] = planItem(swapped) })) }
   }
@@ -254,6 +274,7 @@ class PracticeViewModel(
   private fun planItem(block: PlanBlock): PlanItem = when (block) {
     is PlanBlock.Exercise -> exercises[block.exerciseId].let { PlanItem(block, it?.name ?: "Exercise", it?.category ?: "", it?.let(::exerciseRow)) }
     is PlanBlock.Tune -> exercises[block.exerciseId].let { PlanItem(block, titles[block.tuneId] ?: "Tune", it?.name ?: "", it?.let(::exerciseRow)) }
+    is PlanBlock.Solo -> solos[block.transcriptionId].let { PlanItem(block, "🎧 ${it?.title ?: "Solo"}", "Transcribe ${it?.soloist ?: ""}".trim()) }
   }
 
   fun start() {
@@ -266,10 +287,20 @@ class PracticeViewModel(
   /** Finishes an exercise block, or moves past a tune block without grading it. */
   fun next() {
     current = null
+    currentSolo = null
     viewModelScope.launch { show(_ui.value.stepIndex + 1) }
   }
 
   fun grade(grade: Grade) {
+    currentSolo?.let { solo ->
+      currentSolo = null
+      viewModelScope.launch {
+        transcriptions?.grade(solo, grade)
+        _ui.update { it.copy(reviewedThisSession = it.reviewedThisSession + 1) }
+        show(_ui.value.stepIndex + 1)
+      }
+      return
+    }
     val card = current ?: return
     current = null
     viewModelScope.launch {
@@ -281,6 +312,7 @@ class PracticeViewModel(
 
   fun stop() {
     current = null
+    currentSolo = null
     steps = emptyList()
     _ui.update { it.copy(running = false, step = null, setup = it.setup.copy(plan = null)) }
     refresh()
@@ -295,6 +327,17 @@ class PracticeViewModel(
         current = card
         val preview = practice.preview(card).mapValues { it.value.dueAt ?: now() }
         StepView.Tune(cardView(card, preview, now()), block.minutes)
+      }
+      is PlanBlock.Solo -> solos[block.transcriptionId]?.let { solo ->
+        currentSolo = solo.id
+        val state = repository.transcriptionStates.first().firstOrNull { it.transcriptionId == solo.id }
+        val pad = TranscriptionService.PADDING_SECONDS
+        val embed = MediaLink.parse(solo.url)?.embed(solo.startSeconds?.let { (it - pad).coerceAtLeast(0) }, solo.endSeconds?.let { it + pad })
+        val preview = transcriptions?.preview(solo.id).orEmpty()
+        StepView.Solo(
+          solo.title, "${solo.soloist}, ${solo.instrument.lowercase()}", state?.notes, embed, solo.url, solo.startSeconds,
+          Grade.entries.map { g -> g to delayLabel(now(), preview[g] ?: now()) }, block.minutes,
+        )
       }
     }
     if (block != null && step == null) return show(index + 1)
