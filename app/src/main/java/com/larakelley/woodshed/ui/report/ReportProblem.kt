@@ -38,11 +38,11 @@ val LocalAppVersion = compositionLocalOf { "" }
 @Composable
 fun ReportButton(
   subject: ReportSubject,
+  modifier: Modifier = Modifier,
   item: String? = null,
   id: String? = null,
   details: List<Pair<String, String>> = emptyList(),
   label: String = "🚩 Report a problem",
-  modifier: Modifier = Modifier,
 ) {
   var open by rememberSaveable { mutableStateOf(false) }
   TextButton(onClick = { open = true }, modifier = modifier.testTag("report")) { Text(label, color = LocalCallie.current.textMuted) }

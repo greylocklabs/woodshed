@@ -145,7 +145,7 @@ private fun Field(
   label: String,
   value: String,
   tag: String,
-  modifier: Modifier = Modifier.fillMaxWidth(),
+  modifier: Modifier = Modifier,
   number: Boolean = false,
   capitalize: Boolean = false,
   onChange: (String) -> Unit,
@@ -159,6 +159,7 @@ private fun Field(
       keyboardType = if (number) KeyboardType.Number else KeyboardType.Text,
       capitalization = if (capitalize) KeyboardCapitalization.Words else KeyboardCapitalization.None,
     ),
-    modifier = modifier.testTag(tag),
+    // Fills its row, or the share of it a weight gives.
+    modifier = modifier.fillMaxWidth().testTag(tag),
   )
 }
