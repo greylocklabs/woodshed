@@ -47,6 +47,13 @@ android {
     unitTests.all { it.jvmArgs("--add-exports=java.base/jdk.internal.access=ALL-UNNAMED") }
   }
 
+  lint {
+    // Any warning fails the build, so new ones get fixed instead of piling up. Newer versions are Dependabot's job.
+    warningsAsErrors = true
+    abortOnError = true
+    disable += setOf("GradleDependency", "AndroidGradlePluginVersion", "NewerVersionAvailable")
+  }
+
   packaging {
     resources {
       excludes += "/META-INF/{AL2.0,LGPL2.1}"

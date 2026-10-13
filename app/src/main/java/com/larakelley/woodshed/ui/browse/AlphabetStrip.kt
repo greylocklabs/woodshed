@@ -18,6 +18,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -60,7 +61,7 @@ fun AlphabetStrip(listState: LazyListState, sortKeys: List<String>, modifier: Mo
   val callie = LocalCallie.current
   val scope = rememberCoroutineScope()
   var active by remember { mutableStateOf<Char?>(null) }
-  var stripHeight by remember { mutableStateOf(1) }
+  var stripHeight by remember { mutableIntStateOf(1) }
 
   fun jumpTo(y: Float) {
     val letter = ALPHABET[letterIndexAt(y, stripHeight.toFloat())]

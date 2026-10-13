@@ -419,20 +419,14 @@ private fun SoloEditor(solo: TranscriptionEntity?, onSave: (TranscriptionDraft) 
 }
 
 @Composable
-private fun Field(
-  label: String,
-  value: String,
-  tag: String,
-  capitalize: Boolean = true,
-  modifier: Modifier = Modifier.fillMaxWidth(),
-  onChange: (String) -> Unit,
-) {
+private fun Field(label: String, value: String, tag: String, modifier: Modifier = Modifier, capitalize: Boolean = true, onChange: (String) -> Unit) {
   OutlinedTextField(
     value = value,
     onValueChange = onChange,
     label = { Text(label) },
     singleLine = true,
     keyboardOptions = KeyboardOptions(capitalization = if (capitalize) KeyboardCapitalization.Words else KeyboardCapitalization.None),
-    modifier = modifier.testTag(tag),
+    // Fills its row, or the share of it a weight gives.
+    modifier = modifier.fillMaxWidth().testTag(tag),
   )
 }
