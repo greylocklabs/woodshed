@@ -101,6 +101,7 @@ private val TAB_EMOJI = mapOf(
   "Random" to "🎲",
   "Transcribe" to "🎧",
   "Metronome" to "⏱️",
+  "Drone" to "🔊",
   "Tuner" to "🎯",
   "Tunes" to "🎵",
   "Exercises" to "💪",
@@ -123,6 +124,7 @@ fun BrowseScreen(
   diceTab: (@Composable () -> Unit)? = null,
   transcribeTab: (@Composable () -> Unit)? = null,
   metronomeTab: (@Composable () -> Unit)? = null,
+  droneTab: (@Composable () -> Unit)? = null,
   tunerTab: (@Composable () -> Unit)? = null,
   settings: (@Composable (onBack: () -> Unit, modifier: Modifier) -> Unit)? = null,
   /** Solos on each tune, by tune id. */
@@ -144,6 +146,7 @@ fun BrowseScreen(
     if (diceTab != null) add("Random")
     if (transcribeTab != null) add("Transcribe")
     if (metronomeTab != null) add("Metronome")
+    if (droneTab != null) add("Drone")
     if (tunerTab != null) add("Tuner")
     add("Tunes")
     add("Exercises")
@@ -255,6 +258,7 @@ fun BrowseScreen(
         "Random" -> diceTab?.invoke()
         "Transcribe" -> transcribeTab?.invoke()
         "Metronome" -> metronomeTab?.invoke()
+        "Drone" -> droneTab?.invoke()
         "Tuner" -> tunerTab?.invoke()
         "Tunes" -> {
           TuneFilters(state, onTuneFilter, onAdd = { editing = NEW_TUNE }, onPlaylists = { playlistsOpen = true })

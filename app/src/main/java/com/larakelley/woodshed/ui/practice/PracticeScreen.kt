@@ -265,7 +265,19 @@ fun SessionScreen(
   onUseTempo: (Int) -> Unit = {},
   onPause: () -> Unit = {},
   onResume: () -> Unit = {},
+  dronePlaying: Boolean = false,
+  /** Starts the drone, on a concert pitch class when given and on its last note otherwise. */
+  onDrone: (Int?) -> Unit = {},
+  onStopDrone: () -> Unit = {},
 ) {
+  @Composable
+  fun DroneButton(label: String, pitchClass: Int?) {
+    StickerButton(
+      onClick = { if (dronePlaying) onStopDrone() else onDrone(pitchClass) },
+      sticker = neutralSticker,
+      modifier = Modifier.height(44.dp).testTag("use-drone"),
+    ) { Text(if (dronePlaying) "◼ Stop the drone" else label, style = MaterialTheme.typography.labelLarge) }
+  }
   val view = LocalView.current
   val uris = LocalUriHandler.current
   var confirmEnd by rememberSaveable { mutableStateOf(false) }
@@ -319,6 +331,7 @@ fun SessionScreen(
               Text("⏱️ Metronome at $bpm bpm", style = MaterialTheme.typography.labelLarge)
             }
           }
+          if (step.description.contains("drone", ignoreCase = true)) DroneButton("🔊 Drone", null)
         }
         is StepView.Solo -> {
           Text("🎧 ${step.title}", style = MaterialTheme.typography.displaySmall, modifier = Modifier.testTag("solo-title"))
@@ -335,6 +348,7 @@ fun SessionScreen(
           Spacer(Modifier.height(8.dp))
           Text(card.exercise, style = MaterialTheme.typography.headlineSmall)
           Text(card.instructions, style = MaterialTheme.typography.titleMedium)
+          card.concertPitchClass?.let { DroneButton("🔊 Drone on the key", it) }
         }
       }
     }

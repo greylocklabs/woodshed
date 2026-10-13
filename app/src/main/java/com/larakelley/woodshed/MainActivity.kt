@@ -32,6 +32,8 @@ import com.larakelley.woodshed.ui.report.LocalAppVersion
 import com.larakelley.woodshed.ui.settings.SettingsActions
 import com.larakelley.woodshed.ui.settings.SettingsScreen
 import com.larakelley.woodshed.ui.settings.SettingsViewModel
+import com.larakelley.woodshed.ui.tools.DroneActions
+import com.larakelley.woodshed.ui.tools.DroneScreen
 import com.larakelley.woodshed.ui.tools.MetronomeActions
 import com.larakelley.woodshed.ui.tools.MetronomeScreen
 import com.larakelley.woodshed.ui.tools.TunerActions
@@ -76,6 +78,7 @@ class MainActivity : ComponentActivity() {
           val diceUi by dice.ui.collectAsStateWithLifecycle()
           val click by metronome.state.collectAsStateWithLifecycle()
           val tuning by app.tuner.state.collectAsStateWithLifecycle()
+          val droning by app.drone.state.collectAsStateWithLifecycle()
 
           LaunchedEffect(browseState.styles) {
             val tuneExercises = app.repository.exercises.first().filter { it.appliesToTune }.map { it.name }
@@ -111,6 +114,9 @@ class MainActivity : ComponentActivity() {
                   SessionScreen(
                     practiceUi, practice::grade, practice::next, onStop = practice::stop, onUseTempo = { metronome.setBpm(it); metronome.start() },
                     onPause = practice::pause, onResume = practice::resume,
+                    dronePlaying = droning.playing,
+                    onDrone = { pc -> pc?.let(app.drone::setPitchClass); app.drone.start() },
+                    onStopDrone = app.drone::stop,
                   )
                 } else {
                   LaunchedEffect(Unit) { practice.refresh() }
@@ -123,6 +129,13 @@ class MainActivity : ComponentActivity() {
               },
               tuneSolos = tuneSolos,
               navigation = navigation,
+              droneTab = {
+                val drone = app.drone
+                DroneScreen(
+                  droning, browseState.transposition, tuning.a4,
+                  DroneActions(drone::toggle, drone::setPitchClass, drone::setOctave, drone::setFifth, drone::setVolume),
+                )
+              },
               tunerTab = {
                 // The microphone is only on while this tab is showing.
                 DisposableEffect(Unit) { onDispose { app.tuner.stop() } }
@@ -148,9 +161,12 @@ class MainActivity : ComponentActivity() {
 
   override fun onStop() {
     super.onStop()
-    // The tuner only listens while the app is on screen. The metronome may keep time for a running session,
-    // whose service keeps the app alive; otherwise it stops too.
-    if (!app.sessions.state.value.running) app.metronome.stop()
+    // The tuner only listens while the app is on screen. The metronome and drone may keep playing for a running
+    // session, whose service keeps the app alive; otherwise they stop too.
+    if (!app.sessions.state.value.running) {
+      app.metronome.stop()
+      app.drone.stop()
+    }
     app.tuner.stop()
   }
 }

@@ -364,10 +364,12 @@ mid-phrase. The session is saved as it goes, so one cut short by the system
 picks up where it was. The screen stays on during a session, and back asks
 before ending it.
 
-**M3 — Audio.** Drone at arbitrary pitch. Shipped early: the sample-accurate
-metronome on a streaming `AudioTrack`, now its own tab with tap tempo, jazz
-tempo presets, meters and 2-and-4 clicks, and a microphone tuner tab using YIN
-pitch detection. Measure latency before considering Oboe. *Session mode stops
+**M3 — Audio.** Shipped: the sample-accurate metronome on a streaming
+`AudioTrack`, its own tab with tap tempo, jazz tempo presets, meters and 2-and-4
+clicks; a microphone tuner tab using YIN pitch detection; and a drone tab, a
+sustained note named for the user's instrument with an optional fifth, three
+ranges and a volume, tuned to the tuner's reference pitch. Session blocks offer
+the drone, on the tune's key for tune blocks. Measure latency before considering Oboe. *Session mode stops
 needing a second device on the stand.*
 
 **M4 — Vocabulary deck.** Lick capture — title, notes, optional photo of
