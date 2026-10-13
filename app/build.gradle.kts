@@ -7,56 +7,56 @@ plugins {
 }
 
 android {
-    namespace = "com.larakelley.woodshed"
-    compileSdk = 36
-    defaultConfig {
-        applicationId = "com.larakelley.woodshed"
-        minSdk = 26
-        targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
-    }
+  namespace = "com.larakelley.woodshed"
+  compileSdk = 36
+  defaultConfig {
+    applicationId = "com.larakelley.woodshed"
+    minSdk = 26
+    targetSdk = 36
+    versionCode = 1
+    versionName = "1.0"
+  }
 
-    buildTypes {
-        release {
-            isMinifyEnabled = false
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-        }
+  buildTypes {
+    release {
+      isMinifyEnabled = false
+      proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
     }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
-    }
-    buildFeatures {
-      compose = true
-      aidl = false
-      buildConfig = false
-      shaders = false
-    }
+  }
+  compileOptions {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+  }
+  buildFeatures {
+    compose = true
+    aidl = false
+    buildConfig = false
+    shaders = false
+  }
 
-    // The seed JSON lives in the repo's data/ directory and ships as assets unchanged.
-    sourceSets {
-      getByName("main") { assets.srcDir(rootProject.file("data")) }
-      // Migration tests read the exported schemas; Robolectric only sees app assets, so debug builds carry them.
-      getByName("debug") { assets.srcDir("$projectDir/schemas") }
-    }
+  // The seed JSON lives in the repo's data/ directory and ships as assets unchanged.
+  sourceSets {
+    getByName("main") { assets.srcDir(rootProject.file("data")) }
+    // Migration tests read the exported schemas; Robolectric only sees app assets, so debug builds carry them.
+    getByName("debug") { assets.srcDir("$projectDir/schemas") }
+  }
 
-    testOptions {
-      unitTests.isIncludeAndroidResources = true
-      // Robolectric's SDK 36 environment setup uses JDK internals.
-      unitTests.all { it.jvmArgs("--add-exports=java.base/jdk.internal.access=ALL-UNNAMED") }
-    }
+  testOptions {
+    unitTests.isIncludeAndroidResources = true
+    // Robolectric's SDK 36 environment setup uses JDK internals.
+    unitTests.all { it.jvmArgs("--add-exports=java.base/jdk.internal.access=ALL-UNNAMED") }
+  }
 
-    packaging {
-      resources {
-        excludes += "/META-INF/{AL2.0,LGPL2.1}"
-      }
+  packaging {
+    resources {
+      excludes += "/META-INF/{AL2.0,LGPL2.1}"
     }
+  }
 }
 
 kotlin {
-    // Robolectric needs Java 21 to run SDK 36 tests.
-    jvmToolchain(21)
+  // Robolectric needs Java 21 to run SDK 36 tests.
+  jvmToolchain(21)
 }
 
 room {
