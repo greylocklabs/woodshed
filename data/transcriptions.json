@@ -1,0 +1,21 @@
+[
+  {
+    "slug": "singin-in-the-rain-patrick-bartley",
+    "tune": "singin-in-the-rain",
+    "title": "Singin' In The Rain",
+    "soloist": "Patrick Bartley",
+    "instrument": "Alto sax",
+    "context": "Emmet's Place",
+    "url": "https://www.youtube.com/watch?v=rNKbrPRlcso",
+    "start_seconds": 120,
+    "end_seconds": 329,
+    "key": "Db",
+    "tonality": "major",
+    "performers": [
+      { "name": "Emmet Cohen", "instrument": "Piano" },
+      { "name": "Patrick Bartley", "instrument": "Alto sax" },
+      { "name": "Yasushi Nakamura", "instrument": "Bass" },
+      { "name": "Kyle Poole", "instrument": "Drums" }
+    ]
+  }
+]

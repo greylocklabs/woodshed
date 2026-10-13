@@ -31,6 +31,8 @@ import com.larakelley.woodshed.ui.tools.MetronomeActions
 import com.larakelley.woodshed.ui.tools.MetronomeScreen
 import com.larakelley.woodshed.ui.tools.TunerActions
 import com.larakelley.woodshed.ui.tools.TunerScreen
+import com.larakelley.woodshed.ui.transcribe.TranscribeScreen
+import com.larakelley.woodshed.ui.transcribe.TranscribeViewModel
 import kotlinx.coroutines.flow.first
 
 class MainActivity : ComponentActivity() {
@@ -54,8 +56,10 @@ class MainActivity : ComponentActivity() {
           val settings: SettingsViewModel = viewModel { SettingsViewModel(app.repository, app.backups, version) }
           val settingsUi by settings.ui.collectAsStateWithLifecycle()
           val browse: BrowseViewModel = viewModel { BrowseViewModel(app.repository, app.practice, app.tunes, app.playlists, app.exercises, app.media) }
-          val practice: PracticeViewModel = viewModel { PracticeViewModel(app.repository, app.practice) }
+          val practice: PracticeViewModel = viewModel { PracticeViewModel(app.repository, app.practice, app.transcriptions) }
           val dice: DiceViewModel = viewModel { DiceViewModel(app.repository, app.practice) }
+        val transcribe: TranscribeViewModel = viewModel { TranscribeViewModel(app.repository, app.transcriptions) }
+        val transcribeUi by transcribe.ui.collectAsStateWithLifecycle()
           val browseState by browse.state.collectAsStateWithLifecycle()
           val practiceUi by practice.ui.collectAsStateWithLifecycle()
           val diceUi by dice.ui.collectAsStateWithLifecycle()
@@ -98,7 +102,8 @@ class MainActivity : ComponentActivity() {
                   PracticeHome(practiceUi, setupActions)
                 }
               },
-              metronomeTab = {
+              transcribeTab = { TranscribeScreen(transcribeUi, transcribe.actions) },
+            metronomeTab = {
                 MetronomeScreen(click, MetronomeActions(metronome::toggle, metronome::setBpm, metronome::setBeatsPerBar, metronome::setAccentFirst, metronome::setFeel))
               },
               tunerTab = {

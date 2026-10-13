@@ -2,7 +2,9 @@ package com.larakelley.woodshed.data.seed
 
 import androidx.room.withTransaction
 import com.larakelley.woodshed.data.db.ExerciseEntity
+import com.larakelley.woodshed.data.db.Performer
 import com.larakelley.woodshed.data.db.StandardEntity
+import com.larakelley.woodshed.data.db.TranscriptionEntity
 import com.larakelley.woodshed.data.db.WoodshedDatabase
 import com.larakelley.woodshed.domain.Family
 import com.larakelley.woodshed.domain.Key
@@ -17,7 +19,7 @@ class SeedImporter(private val db: WoodshedDatabase, private val now: () -> Long
 
   suspend fun import(seed: Seed): Result = db.withTransaction {
     val timestamp = now()
-    importStandards(seed.standards, timestamp) + importExercises(seed.exercises, timestamp)
+    importStandards(seed.standards, timestamp) + importExercises(seed.exercises, timestamp) + importTranscriptions(seed.transcriptions, timestamp)
   }
 
   private suspend fun importStandards(seeds: List<StandardSeed>, timestamp: Long): Result {
@@ -85,6 +87,43 @@ class SeedImporter(private val db: WoodshedDatabase, private val now: () -> Long
     }
     val seen = seeds.map { it.name }.toSet()
     val archived = existing.values.filter { it.name !in seen && it.archivedAt == null }.map { it.copy(archivedAt = timestamp) }
+    dao.update(updates + archived)
+    return Result(inserted, updates.size, archived.size)
+  }
+
+  /** Runs after the tunes, so each solo can find its tune by slug. */
+  private suspend fun importTranscriptions(seeds: List<TranscriptionSeed>, timestamp: Long): Result {
+    val dao = db.transcriptions()
+    val existing = dao.all().filterNot { it.userCreated }.associateBy { it.slug }
+    val tunes = db.standards().all().associate { it.slug to it.id }
+    val updates = mutableListOf<TranscriptionEntity>()
+    var inserted = 0
+    for (t in seeds) {
+      val row = TranscriptionEntity(
+        id = existing[t.slug]?.id ?: 0,
+        slug = t.slug,
+        standardId = t.tune?.let { tunes[it] },
+        title = t.title,
+        soloist = t.soloist,
+        instrument = t.instrument,
+        context = t.context,
+        url = t.url,
+        startSeconds = t.startSeconds,
+        endSeconds = t.endSeconds,
+        keyName = t.key,
+        keyPitchClass = Key.pitchClassOf(t.key),
+        tonality = Tonality.fromSeedName(t.tonality),
+        performers = t.performers.map { Performer(it.name, it.instrument) },
+      )
+      if (row.id == 0L) {
+        dao.insert(row)
+        inserted++
+      } else {
+        updates += row
+      }
+    }
+    val seen = seeds.map { it.slug }.toSet()
+    val archived = existing.values.filter { it.slug !in seen && it.archivedAt == null }.map { it.copy(archivedAt = timestamp) }
     dao.update(updates + archived)
     return Result(inserted, updates.size, archived.size)
   }

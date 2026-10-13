@@ -6,6 +6,8 @@ import androidx.core.content.edit
 import com.larakelley.woodshed.data.db.ExerciseEntity
 import com.larakelley.woodshed.data.db.ExerciseOverrideEntity
 import com.larakelley.woodshed.data.db.StandardEntity
+import com.larakelley.woodshed.data.db.TranscriptionEntity
+import com.larakelley.woodshed.data.db.TranscriptionStateEntity
 import com.larakelley.woodshed.data.db.TuneKnowledgeEntity
 import com.larakelley.woodshed.data.db.TuneMediaEntity
 import com.larakelley.woodshed.data.db.TuneOverrideEntity
@@ -72,6 +74,10 @@ class WoodshedRepository(
 
   /** The user's edits to seeded tunes. */
   val overrides: Flow<List<TuneOverrideEntity>> = db.tuneOverrides().observeAll()
+
+  /** Solos to transcribe, and the user's progress on each. */
+  val transcriptions: Flow<List<TranscriptionEntity>> = db.transcriptions().observeActive()
+  val transcriptionStates: Flow<List<TranscriptionStateEntity>> = db.transcriptions().observeStates()
 
   /** Recordings and videos attached to tunes. */
   val media: Flow<List<TuneMediaEntity>> = db.tuneMedia().observeAll()
@@ -151,10 +157,11 @@ class WoodshedRepository(
   suspend fun seedIfChanged() {
     val standardsJson = assets.open("standards.json").bufferedReader().use { it.readText() }
     val exercisesJson = assets.open("exercises.json").bufferedReader().use { it.readText() }
-    val hash = sha256(standardsJson + "\u0000" + exercisesJson)
+    val transcriptionsJson = assets.open("transcriptions.json").bufferedReader().use { it.readText() }
+    val hash = sha256(standardsJson + "\u0000" + exercisesJson + "\u0000" + transcriptionsJson)
     if (hash == prefs.getString(SEED_HASH, null)) return
     try {
-      SeedImporter(db).import(Seed.parse(standardsJson, exercisesJson))
+      SeedImporter(db).import(Seed.parse(standardsJson, exercisesJson, transcriptionsJson))
       prefs.edit { putString(SEED_HASH, hash) }
       _seedError.value = null
     } catch (e: Exception) {

@@ -2,6 +2,7 @@ package com.larakelley.woodshed.data.seed
 
 import com.larakelley.woodshed.domain.Family
 import com.larakelley.woodshed.domain.Key
+import com.larakelley.woodshed.domain.MediaLink
 import com.larakelley.woodshed.domain.Tonality
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -40,18 +41,42 @@ data class ExerciseSeed(
   @SerialName("applies_to_tune") val appliesToTune: Boolean,
 )
 
+@Serializable
+data class PerformerSeed(val name: String, val instrument: String)
+
+/** A solo to transcribe: who played it, where, and the recording. */
+@Serializable
+data class TranscriptionSeed(
+  val slug: String,
+  /** The tune's slug in standards.json, when the tune is in the library. */
+  val tune: String? = null,
+  val title: String,
+  val soloist: String,
+  val instrument: String,
+  /** Where it was played, such as an album or a live series. */
+  val context: String? = null,
+  val url: String,
+  @SerialName("start_seconds") val startSeconds: Int? = null,
+  @SerialName("end_seconds") val endSeconds: Int? = null,
+  /** Concert tonic of the key the solo is played in. */
+  val key: String? = null,
+  val tonality: String? = null,
+  val performers: List<PerformerSeed> = emptyList(),
+)
+
 class SeedException(val problems: List<String>) : Exception(problems.joinToString("; "))
 
-data class Seed(val standards: List<StandardSeed>, val exercises: List<ExerciseSeed>) {
+data class Seed(val standards: List<StandardSeed>, val exercises: List<ExerciseSeed>, val transcriptions: List<TranscriptionSeed> = emptyList()) {
   companion object {
     // Strict on purpose: an unknown or misspelled field is a data bug, not something to skip.
     private val json = Json { ignoreUnknownKeys = false }
 
     /** Parses and validates both files, throwing [SeedException] listing everything wrong. */
-    fun parse(standardsJson: String, exercisesJson: String): Seed {
+    fun parse(standardsJson: String, exercisesJson: String, transcriptionsJson: String = "[]"): Seed {
       val standards = decode<List<StandardSeed>>("standards.json", standardsJson)
       val exercises = decode<List<ExerciseSeed>>("exercises.json", exercisesJson)
-      val seed = Seed(standards, exercises)
+      val transcriptions = decode<List<TranscriptionSeed>>("transcriptions.json", transcriptionsJson)
+      val seed = Seed(standards, exercises, transcriptions)
       val problems = SeedValidator.validate(seed)
       if (problems.isNotEmpty()) throw SeedException(problems)
       return seed
@@ -95,6 +120,20 @@ object SeedValidator {
       if (s.key != null && Key.pitchClassOf(s.key) == null) add("$at: bad key ${s.key}")
       if (s.tonality != null && Tonality.fromSeedName(s.tonality) == null) add("$at: bad tonality ${s.tonality}")
       if (s.key != null && s.tonality == null) add("$at: key without a tonality")
+    }
+
+    val tuneSlugs = seed.standards.map { it.slug }.toSet()
+    duplicates(seed.transcriptions.map { it.slug }).forEach { add("duplicate transcription: $it") }
+    for (t in seed.transcriptions) {
+      val at = "transcription ${t.slug}"
+      if (!SLUG.matches(t.slug)) add("$at: malformed slug")
+      if (t.slug.startsWith(USER_SLUG_PREFIX)) add("$at: slugs starting $USER_SLUG_PREFIX are kept for the user's own solos")
+      if (t.tune != null && t.tune !in tuneSlugs) add("$at: no tune ${t.tune}")
+      if (t.title.isBlank() || t.soloist.isBlank() || t.instrument.isBlank()) add("$at: title, soloist and instrument are needed")
+      if (MediaLink.parse(t.url) == null) add("$at: bad url ${t.url}")
+      if (t.key != null && Key.pitchClassOf(t.key) == null) add("$at: bad key ${t.key}")
+      if (t.tonality != null && Tonality.fromSeedName(t.tonality) == null) add("$at: bad tonality ${t.tonality}")
+      if (t.startSeconds != null && t.endSeconds != null && t.endSeconds <= t.startSeconds) add("$at: ends before it starts")
     }
 
     duplicates(seed.exercises.map { it.name }).forEach { add("duplicate exercise: $it") }

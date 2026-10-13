@@ -161,6 +161,33 @@ interface TuneMediaDao {
 }
 
 @Dao
+interface TranscriptionDao {
+  @Query("SELECT * FROM transcriptions") suspend fun all(): List<TranscriptionEntity>
+
+  @Query("SELECT * FROM transcriptions WHERE archivedAt IS NULL") fun observeActive(): Flow<List<TranscriptionEntity>>
+
+  @Query("SELECT * FROM transcriptions WHERE id = :id") suspend fun byId(id: Long): TranscriptionEntity?
+
+  @Query("SELECT * FROM transcriptions WHERE slug = :slug") suspend fun bySlug(slug: String): TranscriptionEntity?
+
+  @Insert suspend fun insert(t: TranscriptionEntity): Long
+
+  @Update suspend fun update(ts: List<TranscriptionEntity>)
+
+  @Query("SELECT * FROM transcription_state") fun observeStates(): Flow<List<TranscriptionStateEntity>>
+
+  @Query("SELECT * FROM transcription_state") suspend fun states(): List<TranscriptionStateEntity>
+
+  @Query("SELECT * FROM transcription_state WHERE transcriptionId = :id") suspend fun state(id: Long): TranscriptionStateEntity?
+
+  @Upsert suspend fun upsertState(state: TranscriptionStateEntity)
+
+  @Query("DELETE FROM transcription_state WHERE transcriptionId = :id") suspend fun deleteState(id: Long)
+
+  @Query("DELETE FROM transcription_state") suspend fun deleteAllStates()
+}
+
+@Dao
 interface ReviewEventDao {
   @Insert suspend fun insert(event: ReviewEventEntity): Long
 
@@ -175,6 +202,12 @@ interface ReviewEventDao {
 }
 
 class Converters {
+  private val json = kotlinx.serialization.json.Json
+
+  @TypeConverter fun performersToString(performers: List<Performer>): String = json.encodeToString(performers)
+
+  @TypeConverter fun stringToPerformers(value: String): List<Performer> = if (value.isBlank()) emptyList() else json.decodeFromString(value)
+
   @TypeConverter fun familiesToNullableString(families: List<Family>?): String? = families?.let(::familiesToString)
 
   @TypeConverter fun nullableStringToFamilies(value: String?): List<Family>? = value?.let(::stringToFamilies)
@@ -187,8 +220,8 @@ class Converters {
 }
 
 @Database(
-  entities = [StandardEntity::class, ExerciseEntity::class, TuneStateEntity::class, ReviewEventEntity::class, TuneKnowledgeEntity::class, TuneOverrideEntity::class, PlaylistEntity::class, PlaylistTuneEntity::class, ExerciseOverrideEntity::class, TuneMediaEntity::class],
-  version = 10,
+  entities = [StandardEntity::class, ExerciseEntity::class, TuneStateEntity::class, ReviewEventEntity::class, TuneKnowledgeEntity::class, TuneOverrideEntity::class, PlaylistEntity::class, PlaylistTuneEntity::class, ExerciseOverrideEntity::class, TuneMediaEntity::class, TranscriptionEntity::class, TranscriptionStateEntity::class],
+  version = 11,
   autoMigrations = [
     AutoMigration(from = 1, to = 2),
     AutoMigration(from = 2, to = 3),
@@ -199,6 +232,7 @@ class Converters {
     AutoMigration(from = 7, to = 8),
     AutoMigration(from = 8, to = 9),
     AutoMigration(from = 9, to = 10),
+    AutoMigration(from = 10, to = 11),
   ],
 )
 @TypeConverters(Converters::class)
@@ -220,6 +254,8 @@ abstract class WoodshedDatabase : RoomDatabase() {
   abstract fun exerciseOverrides(): ExerciseOverrideDao
 
   abstract fun tuneMedia(): TuneMediaDao
+
+  abstract fun transcriptions(): TranscriptionDao
 
   /** Version 4 listed every fake book a tune is printed in; version 5 keeps only its collection. */
   @DeleteColumn(tableName = "standards", columnName = "books")

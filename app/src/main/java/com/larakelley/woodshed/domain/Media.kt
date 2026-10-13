@@ -17,11 +17,17 @@ enum class MediaKind(val label: String, val emoji: String, val inline: Boolean) 
 data class MediaLink(val url: String, val kind: MediaKind, val videoId: String? = null, val startSeconds: Int? = null) {
   /** The address of the embeddable player, for links the app can play in place. */
   val embedUrl: String?
-    get() = when (kind) {
-      MediaKind.YOUTUBE -> "https://www.youtube-nocookie.com/embed/$videoId?playsinline=1" + (startSeconds?.let { "&start=$it" } ?: "")
-      MediaKind.VIMEO -> "https://player.vimeo.com/video/$videoId?playsinline=1" + (startSeconds?.let { "#t=${it}s" } ?: "")
-      else -> null
-    }
+    get() = embed(startSeconds, null)
+
+  /**
+   * The player starting at [start] and, where the service supports it, stopping at [end], both in seconds.
+   * Vimeo's embed has no end time, so it plays on.
+   */
+  fun embed(start: Int?, end: Int?): String? = when (kind) {
+    MediaKind.YOUTUBE -> "https://www.youtube-nocookie.com/embed/$videoId?playsinline=1" + (start?.let { "&start=$it" } ?: "") + (end?.let { "&end=$it" } ?: "")
+    MediaKind.VIMEO -> "https://player.vimeo.com/video/$videoId?playsinline=1" + (start?.let { "#t=${it}s" } ?: "")
+    else -> null
+  }
 
   /** The site's name, such as "open.spotify.com", for links shown as a row to open. */
   val host: String
