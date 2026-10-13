@@ -270,6 +270,8 @@ data class TranscriptionEntity(
   val soloist: String,
   val instrument: String,
   val context: String? = null,
+  /** When it was played: "2022-08-13", "2022-08" or "2022". */
+  val recorded: String? = null,
   val url: String,
   val startSeconds: Int? = null,
   val endSeconds: Int? = null,

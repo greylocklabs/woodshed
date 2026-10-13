@@ -14,6 +14,12 @@ import com.larakelley.woodshed.domain.MediaLink
 import com.larakelley.woodshed.domain.Scheduler
 import com.larakelley.woodshed.domain.Sm2Scheduler
 import com.larakelley.woodshed.domain.Tonality
+import java.time.LocalDate
+import java.time.Year
+import java.time.YearMonth
+import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeParseException
+import java.util.Locale
 
 /** A solo as the editor fills it in. Times are "m:ss" or seconds; blank means unknown. */
 data class TranscriptionDraft(
@@ -21,6 +27,7 @@ data class TranscriptionDraft(
   val soloist: String = "",
   val instrument: String = "",
   val context: String = "",
+  val recorded: String = "",
   val url: String = "",
   val start: String = "",
   val end: String = "",
@@ -35,6 +42,7 @@ data class TranscriptionDraft(
     if (soloist.isBlank()) add("Who plays the solo?")
     if (instrument.isBlank()) add("What do they play?")
     if (MediaLink.parse(url) == null) add("The recording needs a web address.")
+    if (recorded.isNotBlank() && parseRecorded(recorded) == null) add("Recorded should look like 2022-08-13, or just the year.")
     if (start.isNotBlank() && parseClock(start) == null) add("Start should look like 2:00.")
     if (end.isNotBlank() && parseClock(end) == null) add("End should look like 5:29.")
     val s = parseClock(start)
@@ -54,6 +62,7 @@ data class TranscriptionDraft(
       soloist = t.soloist,
       instrument = t.instrument,
       context = t.context.orEmpty(),
+      recorded = t.recorded.orEmpty(),
       url = t.url,
       start = t.startSeconds?.let(::clock).orEmpty(),
       end = t.endSeconds?.let(::clock).orEmpty(),
@@ -63,6 +72,28 @@ data class TranscriptionDraft(
       tuneId = t.standardId,
     )
   }
+}
+
+/** A recording date as "2022-08-13", "2022-08" or "2022", or null when it is none of those. */
+fun parseRecorded(text: String): String? {
+  val t = text.trim()
+  return try {
+    when (t.length) {
+      10 -> LocalDate.parse(t).toString()
+      7 -> YearMonth.parse(t).toString()
+      4 -> Year.parse(t).toString()
+      else -> null
+    }
+  } catch (_: DateTimeParseException) {
+    null
+  }
+}
+
+/** A recording date for display: "Aug 13, 2022", "Aug 2022" or "2022". */
+fun recordedLabel(recorded: String): String = when (recorded.length) {
+  10 -> LocalDate.parse(recorded).format(DateTimeFormatter.ofPattern("MMM d, yyyy", Locale.US))
+  7 -> YearMonth.parse(recorded).format(DateTimeFormatter.ofPattern("MMM yyyy", Locale.US))
+  else -> recorded
 }
 
 /** "2:00", "1:02:03" or "120" as seconds. */
@@ -167,6 +198,7 @@ class TranscriptionService(
     soloist = d.soloist.trim(),
     instrument = d.instrument.trim(),
     context = d.context.trim().ifEmpty { null },
+    recorded = parseRecorded(d.recorded),
     url = d.url.trim(),
     startSeconds = parseClock(d.start),
     endSeconds = parseClock(d.end),

@@ -40,6 +40,7 @@ import com.larakelley.woodshed.data.TranscriptionDraft
 import com.larakelley.woodshed.data.TranscriptionService
 import com.larakelley.woodshed.data.WoodshedRepository
 import com.larakelley.woodshed.data.clock
+import com.larakelley.woodshed.data.recordedLabel
 import com.larakelley.woodshed.data.db.TranscriptionEntity
 import com.larakelley.woodshed.data.db.TranscriptionStateEntity
 import com.larakelley.woodshed.data.db.TranscriptionStatus
@@ -81,7 +82,7 @@ fun soloGroups(rows: List<SoloRow>): List<Pair<String, List<SoloRow>>> = listOf(
 /** The key a solo is played in: concert, and written for the user's transposition. */
 fun soloKey(solo: TranscriptionEntity, transposition: Transposition): String? {
   val key = Key.of(solo.keyName, solo.tonality) ?: return null
-  return if (transposition == Transposition.C) "Concert ${key.displayName}" else "${key.writtenFor(transposition).displayName} for ${transposition.name} (concert ${key.displayName})"
+  return if (transposition == Transposition.C) "Concert ${key.displayName}" else "${key.writtenFor(transposition).displayName} (Concert ${key.displayName})"
 }
 
 data class TranscribeUi(val rows: List<SoloRow> = emptyList(), val transposition: Transposition = Transposition.C)
@@ -161,7 +162,7 @@ fun TranscribeScreen(ui: TranscribeUi, actions: SoloActions) {
           item(key = r.solo.id) {
             Column(Modifier.fillMaxWidth().clickable { open = r.solo.id }.padding(horizontal = 16.dp, vertical = 10.dp).testTag("solo-${r.solo.slug}")) {
               Text(r.solo.title, style = MaterialTheme.typography.titleMedium)
-              Text(listOfNotNull("${r.solo.soloist}, ${r.solo.instrument.lowercase()}", r.solo.context).joinToString(" · "), style = MaterialTheme.typography.bodySmall)
+              Text(listOfNotNull("${r.solo.soloist}, ${r.solo.instrument.lowercase()}", r.solo.context, r.solo.recorded?.let(::recordedLabel)).joinToString(" · "), style = MaterialTheme.typography.bodySmall)
             }
             HorizontalDivider()
           }
@@ -190,7 +191,9 @@ private fun SoloDetail(row: SoloRow, transposition: Transposition, actions: Solo
     }
     Text(solo.title, style = MaterialTheme.typography.headlineMedium)
     Text("${solo.soloist}, ${solo.instrument.lowercase()}", style = MaterialTheme.typography.titleMedium)
-    solo.context?.let { Text(it, color = callie.textMuted) }
+    listOfNotNull(solo.context, solo.recorded?.let(::recordedLabel)).takeIf { it.isNotEmpty() }?.let {
+      Text(it.joinToString(" · "), color = callie.textMuted, modifier = Modifier.testTag("solo-context"))
+    }
     soloKey(solo, transposition)?.let { Text(it, style = MaterialTheme.typography.titleLarge, modifier = Modifier.testTag("solo-key")) }
     if (solo.startSeconds != null) {
       Text("Solo ${clock(solo.startSeconds)}" + (solo.endSeconds?.let { " to ${clock(it)}" } ?: ""), color = callie.textMuted, modifier = Modifier.testTag("solo-times"))
@@ -251,6 +254,7 @@ private fun SoloDetail(row: SoloRow, transposition: Transposition, actions: Solo
         solo.startSeconds?.let { "Solo" to clock(it) + (solo.endSeconds?.let { e -> " to ${clock(e)}" } ?: "") },
         Key.of(solo.keyName, solo.tonality)?.let { "Key" to "concert ${it.displayName}" },
         solo.context?.let { "Context" to it },
+        solo.recorded?.let { "Recorded" to it },
       ),
     )
   }
@@ -271,6 +275,7 @@ private fun SoloEditor(solo: TranscriptionEntity?, onSave: (TranscriptionDraft) 
     Field("Soloist", draft.soloist, "solo-soloist") { draft = draft.copy(soloist = it) }
     Field("Their instrument", draft.instrument, "solo-instrument") { draft = draft.copy(instrument = it) }
     Field("Where it was played (album, show)", draft.context, "solo-context") { draft = draft.copy(context = it) }
+    Field("Recorded (2022-08-13, or just the year)", draft.recorded, "solo-recorded", capitalize = false) { draft = draft.copy(recorded = it) }
     Field("Link to the recording", draft.url, "solo-url", capitalize = false) { draft = draft.copy(url = it) }
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
       Field("Solo starts (2:00)", draft.start, "solo-start", capitalize = false, modifier = Modifier.weight(1f)) { draft = draft.copy(start = it) }
