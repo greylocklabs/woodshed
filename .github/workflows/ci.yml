@@ -30,6 +30,9 @@ jobs:
       - name: Setup Android SDK
         if: hashFiles('gradlew') != ''
         uses: android-actions/setup-android@v3
+        with:
+          # The default also asks for "tools", which current command-line tools no longer ship.
+          packages: platform-tools
 
       - name: Setup Gradle
         if: hashFiles('gradlew') != ''
@@ -64,6 +67,9 @@ jobs:
       - name: Setup Android SDK
         if: hashFiles('gradlew') != ''
         uses: android-actions/setup-android@v3
+        with:
+          # The default also asks for "tools", which current command-line tools no longer ship.
+          packages: platform-tools
 
       - name: Setup Gradle
         if: hashFiles('gradlew') != ''
