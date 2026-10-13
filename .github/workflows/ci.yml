@@ -79,9 +79,17 @@ jobs:
         if: hashFiles('gradlew') != ''
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Unit and Robolectric tests
+      # Runs every unit and Robolectric test, comparing the screenshot tests against app/src/test/screenshots.
+      - name: Unit, Robolectric and screenshot tests
         if: hashFiles('gradlew') != ''
-        run: ./gradlew testDebugUnitTest
+        run: ./gradlew verifyRoborazziDebug
+
+      - name: Upload screenshot differences
+        if: failure() && hashFiles('gradlew') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshot-diffs
+          path: app/build/outputs/roborazzi
 
   commitlint:
     runs-on: ubuntu-latest
