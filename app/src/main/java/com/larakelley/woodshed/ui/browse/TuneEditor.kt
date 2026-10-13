@@ -37,6 +37,7 @@ import com.larakelley.woodshed.theme.LocalCallie
 import com.larakelley.woodshed.theme.PillChoice
 import com.larakelley.woodshed.theme.SectionLabel
 import com.larakelley.woodshed.theme.StickerButton
+import com.larakelley.woodshed.ui.jsonSaver
 
 private val METERS = listOf("4/4", "3/4", "2/4", "5/4", "6/4", "6/8", "12/8")
 
@@ -47,7 +48,7 @@ private val METERS = listOf("4/4", "3/4", "2/4", "5/4", "6/4", "6/8", "12/8")
 @Composable
 fun TuneEditor(tune: TuneRow?, onSave: (TuneDraft) -> Unit, onDelete: () -> Unit, onReset: () -> Unit, onBack: () -> Unit, modifier: Modifier = Modifier) {
   BackHandler(onBack = onBack)
-  var draft by remember(tune?.slug) { mutableStateOf(tune?.draft ?: TuneDraft()) }
+  var draft by rememberSaveable(tune?.slug, stateSaver = jsonSaver()) { mutableStateOf(tune?.draft ?: TuneDraft()) }
   var tried by remember { mutableStateOf(false) }
   var confirm by rememberSaveable { mutableStateOf<String?>(null) }
   val problems = draft.problems()

@@ -54,13 +54,17 @@ class PlaylistServiceTest {
   fun movingAndRemovingRewriteTheOrder() = runTest {
     val gig = lists.create("Gig")
     for (slug in listOf("solar", "autumn-leaves", "blue-bossa")) lists.add(gig, id(slug))
-    lists.move(gig, 2, 0)
+    lists.move(gig, id("blue-bossa"), id("solar"))
     assertEquals(listOf(id("blue-bossa"), id("solar"), id("autumn-leaves")), order(gig))
     lists.remove(gig, id("solar"))
     assertEquals(listOf(id("blue-bossa"), id("autumn-leaves")), order(gig))
     assertEquals(listOf(0, 1), db.playlists().entries(gig).map { it.position })
-    lists.move(gig, 0, 5)
+    lists.move(gig, id("blue-bossa"), id("solar"))
     assertEquals(listOf(id("blue-bossa"), id("autumn-leaves")), order(gig))
+    // A hidden tune between two shown ones stays put while they swap.
+    lists.add(gig, id("solar"))
+    lists.move(gig, id("solar"), id("blue-bossa"))
+    assertEquals(listOf(id("solar"), id("blue-bossa"), id("autumn-leaves")), order(gig))
   }
 
   @Test

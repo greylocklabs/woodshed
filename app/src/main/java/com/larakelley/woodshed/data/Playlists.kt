@@ -36,10 +36,12 @@ class PlaylistService(private val db: WoodshedDatabase, private val now: () -> L
 
   suspend fun remove(id: Long, tuneId: Long) = db.withTransaction { write(id, dao.entries(id).map { it.standardId } - tuneId) }
 
-  /** Moves the tune at [from] to [to], shifting the ones between. */
-  suspend fun move(id: Long, from: Int, to: Int) = db.withTransaction {
+  /** Moves [tune] to [onto]'s place, shifting the tunes between. Ids rather than positions, since archived tunes are hidden. */
+  suspend fun move(id: Long, tune: Long, onto: Long) = db.withTransaction {
     val order = dao.entries(id).map { it.standardId }.toMutableList()
-    if (from !in order.indices || to !in order.indices) return@withTransaction
+    val from = order.indexOf(tune)
+    val to = order.indexOf(onto)
+    if (from < 0 || to < 0) return@withTransaction
     order.add(to, order.removeAt(from))
     write(id, order)
   }

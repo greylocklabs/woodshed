@@ -146,4 +146,19 @@ class TuneLibraryTest {
     assertEquals("salt-and-pepper", TuneLibrary.slugify("Salt & Pepper"))
     assertEquals("dexters-tune", TuneLibrary.slugify("  Dexter's Tune!  "))
   }
+
+  @Test
+  fun blankingASeededFieldStaysBlankThroughABackup() = runTest {
+    val id = db.standards().bySlug("solar")!!.id
+    val seen = repository.standards.first().single { it.id == id }
+    assertTrue(seen.composer != null)
+    library.edit(id, TuneDraft.of(seen).copy(composer = ""))
+    assertNull(repository.standards.first().single { it.id == id }.composer)
+
+    val backups = BackupService(db, repository)
+    val text = backups.export()
+    db.tuneOverrides().deleteAll()
+    backups.restore(text)
+    assertNull(repository.standards.first().single { it.id == id }.composer)
+  }
 }

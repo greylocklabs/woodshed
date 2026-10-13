@@ -16,6 +16,7 @@ import com.larakelley.woodshed.domain.Lifecycle
 import com.larakelley.woodshed.domain.Transposition
 import kotlin.random.Random
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.Json
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
@@ -111,5 +112,30 @@ class BackupTest {
     assertThrows(BackupException::class.java) { kotlinx.coroutines.runBlocking { backups.restore(unmarked) } }
     assertEquals(1, db.tuneStates().all().size)
     assertEquals(Lifecycle.WISHLIST, db.tuneStates().all().single().lifecycle)
+  }
+
+  private val format = Json { encodeDefaults = true }
+
+  @Test
+  fun restoreRefusesRowsThatWouldTakeOverSeedDataOrCrash() = runTest {
+    val seeded = db.exercises().all().first { !it.userCreated }
+    val base = format.decodeFromString(Backup.serializer(), backups.export())
+    val text = format.encodeToString(
+      Backup.serializer(),
+      base.copy(
+        myTunes = listOf(BackupMyTune(slug = "solar", title = "Not Solar")),
+        myExercises = listOf(BackupExercise(seeded.name, "Tone", "Mine.", 5, 1)),
+        media = listOf(BackupMedia("solar", "javascript:alert(1)")),
+      ),
+    )
+    backups.restore(text)
+    // Restoring the same file again must not trip over the copy made the first time.
+    backups.restore(text)
+
+    val solar = db.standards().bySlug("solar")!!
+    assertEquals("Solar", solar.title)
+    assertTrue(!solar.userCreated)
+    assertEquals(listOf("${seeded.name} (yours)"), db.exercises().userCreated().map { it.name })
+    assertTrue(db.tuneMedia().all().isEmpty())
   }
 }

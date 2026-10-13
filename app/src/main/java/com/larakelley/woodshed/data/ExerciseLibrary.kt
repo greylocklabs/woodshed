@@ -4,10 +4,13 @@ import androidx.room.withTransaction
 import com.larakelley.woodshed.data.db.ExerciseEntity
 import com.larakelley.woodshed.data.db.ExerciseOverrideEntity
 import com.larakelley.woodshed.data.db.WoodshedDatabase
+import com.larakelley.woodshed.data.db.clearedFields
 import com.larakelley.woodshed.data.db.withOverride
 import com.larakelley.woodshed.domain.Family
+import kotlinx.serialization.Serializable
 
 /** An exercise as the editor fills it in. */
+@Serializable
 data class ExerciseDraft(
   val name: String = "",
   val category: String = "Technique",
@@ -42,6 +45,14 @@ data class ExerciseDraft(
   }
 }
 
+/**
+ * [name] if no exercise is stored under it, otherwise the first free "name (yours)", "name (yours 2)" and so on.
+ * Stored names are unique even where an edit or archiving hides them, so the user's own exercise steps aside.
+ */
+fun freeExerciseName(name: String, stored: Set<String>): String =
+  if (name !in stored) name
+  else generateSequence(1) { it + 1 }.map { if (it == 1) "$name (yours)" else "$name (yours $it)" }.first { it !in stored }
+
 /** Adds, edits and removes exercises on the user's behalf. Seeded exercises are edited through overrides. */
 class ExerciseLibrary(private val db: WoodshedDatabase, private val now: () -> Long = System::currentTimeMillis) {
   /** Whether [name] belongs to an active exercise other than [except], as the user sees names. */
@@ -53,7 +64,8 @@ class ExerciseLibrary(private val db: WoodshedDatabase, private val now: () -> L
   suspend fun add(draft: ExerciseDraft): Long = db.withTransaction {
     require(draft.problems { false }.isEmpty())
     require(!nameTaken(draft.name.trim())) { "name taken" }
-    db.exercises().insert(entity(draft))
+    val row = entity(draft)
+    db.exercises().insert(row.copy(name = freeExerciseName(row.name, db.exercises().all().map { it.name }.toSet())))
   }
 
   /** Saves [draft] over exercise [id]: in place for the user's own, as an override of changed fields for seeded ones. */
@@ -63,7 +75,8 @@ class ExerciseLibrary(private val db: WoodshedDatabase, private val now: () -> L
     val current = db.exercises().byId(id) ?: return@withTransaction
     val wanted = entity(draft)
     if (current.userCreated) {
-      db.exercises().update(listOf(wanted.copy(id = id)))
+      val stored = db.exercises().all().filter { it.id != id }.map { it.name }.toSet()
+      db.exercises().update(listOf(wanted.copy(id = id, name = freeExerciseName(wanted.name, stored))))
       return@withTransaction
     }
     fun <T> diff(mine: T?, seed: T?): T? = mine?.takeIf { it != seed }
@@ -78,6 +91,7 @@ class ExerciseLibrary(private val db: WoodshedDatabase, private val now: () -> L
       families = wanted.families.takeIf { it.toSet() != current.families.toSet() },
       appliesToTune = diff(wanted.appliesToTune, current.appliesToTune),
       updatedAt = now(),
+      cleared = clearedFields(listOfNotNull("tempoBpm".takeIf { wanted.tempoBpm == null && current.tempoBpm != null })),
     )
     if (o == ExerciseOverrideEntity(id, updatedAt = o.updatedAt)) db.exerciseOverrides().delete(id) else db.exerciseOverrides().upsert(o)
   }

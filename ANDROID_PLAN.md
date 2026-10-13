@@ -10,7 +10,7 @@ Decisions already made:
 | --- | --- |
 | Stack | Kotlin, Compose, Room |
 | Shape | Flash cards *and* a timed session mode |
-| Scope | Local-only, single user, offline. No account, no server, no sync |
+| Scope | Local-only, single user. No account, no server, no sync; the network is used only to play linked videos |
 | Seed | `data/standards.json` (2,522), `data/exercises.json` (61), shipped as assets |
 
 Kotlin over a Rust core via UniFFI: the two files worth salvaging
@@ -124,11 +124,12 @@ Major prefers flats (C Db D Eb E F Gb G Ab A Bb B), minor prefers sharps
 (C C# D Eb E F F# G G# A Bb B). One table produces names no musician writes,
 like Db minor for what is plainly C# minor.
 
-Parsing is **fallible and must stay fallible**. The real data contains
-`"Eb, C"` for On Green Dolphin Street, which genuinely modulates. Return null
-and render the raw string; a confidently wrong transposition is worse than a
-visible unknown. In Kotlin that is `Key?` plus a preserved `rawKey: String`,
-not an exception.
+A tune's key is stored as two fields: the tonic as the seed spells it
+(`key`, such as "Eb") and its `tonality`, major or minor. A tune is one or the
+other, so tonality is not something to learn "in both". An unknown key is null
+and shows as unknown; a confidently wrong transposition is worse than a visible
+gap. Tunes that modulate, like On Green Dolphin Street, carry the key they
+start in.
 
 Key rotation walks the circle of fourths (C F Bb Eb Ab Db Gb B E A D G) rather
 than picking at random, because that is the order keys actually get practiced
@@ -414,8 +415,8 @@ prefilled with the item, the field in question (key, link, credit) and the app
 version. It uses GitHub's new-issue URL, so the app holds no token and sends
 nothing until the user submits. It adds no personal details to the report.
 Broken links, wrong keys and missing recordings are the expected bulk. Shipped
-for tunes, exercises and the app itself; recordings and transcriptions get the
-same button when they exist. Reporting needs a GitHub account for now; once the
+for tunes, exercises, solos and the app itself; seeded recordings get the same
+button when they exist. Reporting needs a GitHub account for now; once the
 project has its own email address, the dialog can offer sending the report by
 email as well.
 
