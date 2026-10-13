@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 import androidx.core.content.ContextCompat
+import com.larakelley.woodshed.audio.Drone
 import com.larakelley.woodshed.audio.Metronome
 import com.larakelley.woodshed.audio.Tuner
 import com.larakelley.woodshed.data.BackupService
@@ -38,6 +39,9 @@ class WoodshedApplication : Application() {
 
   val tuner: Tuner by lazy { Tuner(prefs) }
 
+  /** Shares the tuner's reference pitch, so the two always agree. */
+  val drone: Drone by lazy { Drone(prefs) { tuner.state.value.a4 } }
+
   val practice: PracticeService by lazy { PracticeService(database) }
 
   val backups: BackupService by lazy { BackupService(database, repository) }
@@ -70,9 +74,14 @@ class WoodshedApplication : Application() {
         if (active) startSessionService()
       }
     }
-    // A metronome left running for a session stops with it, even if the session was ended from the notification.
+    // A metronome or drone left running for a session stops with it, even if the session was ended from the notification.
     mainScope.launch {
-      sessions.state.map { it.running }.distinctUntilChanged().drop(1).collect { running -> if (!running) metronome.stop() }
+      sessions.state.map { it.running }.distinctUntilChanged().drop(1).collect { running ->
+        if (!running) {
+          metronome.stop()
+          drone.stop()
+        }
+      }
     }
   }
 

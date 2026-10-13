@@ -1,0 +1,90 @@
+package com.larakelley.woodshed.ui.tools
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.unit.dp
+import com.larakelley.woodshed.audio.DroneState
+import com.larakelley.woodshed.domain.Key
+import com.larakelley.woodshed.domain.Transposition
+import com.larakelley.woodshed.domain.pitchHz
+import com.larakelley.woodshed.theme.CallieChip
+import com.larakelley.woodshed.theme.Helper
+import com.larakelley.woodshed.theme.LocalCallie
+import com.larakelley.woodshed.theme.PillChoice
+import com.larakelley.woodshed.theme.SectionLabel
+import com.larakelley.woodshed.theme.StickerButton
+import com.larakelley.woodshed.theme.SwitchRow
+
+data class DroneActions(
+  val toggle: () -> Unit = {},
+  /** Takes a concert pitch class. */
+  val setPitchClass: (Int) -> Unit = {},
+  val setOctave: (Int) -> Unit = {},
+  val setFifth: (Boolean) -> Unit = {},
+  val setVolume: (Float) -> Unit = {},
+)
+
+/** A note name as major keys spell it, which is how drones are usually named. */
+private fun noteName(pitchClass: Int) = Key(pitchClass, minor = false).displayName
+
+/** A sustained note to play against, named for [transposition] and sounding in concert pitch. */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun DroneScreen(state: DroneState, transposition: Transposition, a4: Int, actions: DroneActions) {
+  val callie = LocalCallie.current
+  val written = Math.floorMod(state.pitchClass + transposition.offset, 12)
+  Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp).padding(bottom = 24.dp)) {
+    Spacer(Modifier.height(24.dp))
+    Text(noteName(written), style = MaterialTheme.typography.displayLarge, modifier = Modifier.align(Alignment.CenterHorizontally).testTag("drone-note"))
+    Text(
+      (if (transposition == Transposition.C) "" else "Concert ${noteName(state.pitchClass)}, ") + "%.1f Hz".format(pitchHz(state.pitchClass, state.octave, a4.toDouble())),
+      style = MaterialTheme.typography.bodyMedium,
+      color = callie.textMuted,
+      modifier = Modifier.align(Alignment.CenterHorizontally),
+    )
+    Spacer(Modifier.height(16.dp))
+    StickerButton(onClick = actions.toggle, modifier = Modifier.fillMaxWidth().height(60.dp).testTag("drone-toggle")) {
+      Text(if (state.playing) "◼ Stop" else "▶ Start drone", style = MaterialTheme.typography.titleLarge)
+    }
+
+    SectionLabel("Note")
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+      (0..11).forEach { w ->
+        CallieChip(
+          selected = w == written,
+          onClick = { actions.setPitchClass(w - transposition.offset) },
+          label = { Text(noteName(w)) },
+          modifier = Modifier.testTag("drone-note-$w"),
+        )
+      }
+    }
+    SectionLabel("Range")
+    PillChoice(listOf("Low" to 3, "Middle" to 4, "High" to 5), state.octave, actions.setOctave, tagPrefix = "drone-octave")
+    SwitchRow("Add the fifth", state.fifth, actions.setFifth, helper = "A root and fifth, for hearing thirds and sevenths against", modifier = Modifier.testTag("drone-fifth"))
+    SectionLabel("Volume")
+    Slider(
+      value = state.volume,
+      onValueChange = actions.setVolume,
+      colors = SliderDefaults.colors(thumbColor = callie.accent, activeTrackColor = callie.accent, inactiveTrackColor = callie.surfaceAlt),
+      modifier = Modifier.testTag("drone-volume"),
+    )
+    Helper("Notes are named for your instrument's key. The pitch follows the tuner's reference, A = $a4 Hz.", Modifier.padding(top = 8.dp))
+  }
+}

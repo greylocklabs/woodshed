@@ -40,6 +40,8 @@ data class CardView(
   val shape: String,
   val buttons: List<Pair<Grade, String>>,
   val beatsPerBar: Int = 4,
+  /** The key the card is in, in concert pitch, for a drone on it. */
+  val concertPitchClass: Int? = null,
 )
 
 fun cardView(card: Card, preview: Map<Grade, Long>, now: Long): CardView {
@@ -57,6 +59,7 @@ fun cardView(card: Card, preview: Map<Grade, Long>, now: Long): CardView {
     shape = shape,
     buttons = Grade.entries.map { it to delayLabel(now, preview.getValue(it)) },
     beatsPerBar = ClickTrack.beatsPerBar(card.tune.timeSignature),
+    concertPitchClass = card.concertKey?.pitchClass,
   )
 }
 
