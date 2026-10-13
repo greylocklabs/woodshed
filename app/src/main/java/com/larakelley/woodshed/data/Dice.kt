@@ -2,6 +2,9 @@ package com.larakelley.woodshed.data
 
 import com.larakelley.woodshed.data.db.ExerciseEntity
 import com.larakelley.woodshed.data.db.StandardEntity
+import com.larakelley.woodshed.data.db.TranscriptionEntity
+import com.larakelley.woodshed.data.db.TranscriptionStateEntity
+import com.larakelley.woodshed.data.db.TranscriptionStatus
 import com.larakelley.woodshed.data.db.TuneKnowledgeEntity
 import com.larakelley.woodshed.data.db.TuneStateEntity
 import com.larakelley.woodshed.data.db.homeKey
@@ -19,6 +22,20 @@ enum class TunePool(val label: String) {
   ANY("Any tune"),
 }
 
+/** What the dice roll: a tune to play over, or a solo to transcribe. */
+enum class RollKind(val label: String) {
+  TUNE("🎵 Tune"),
+  SOLO("🎧 Solo"),
+}
+
+/** Which solos the dice draw from. */
+enum class SoloPool(val label: String) {
+  MINE("My solos"),
+  TRANSCRIBING("Transcribing"),
+  WISHLIST("Wishlist"),
+  ANY("Any solo"),
+}
+
 /** How the dice choose a key. */
 enum class KeyChoice(val label: String) {
   USUAL("Usual key"),
@@ -27,6 +44,8 @@ enum class KeyChoice(val label: String) {
 }
 
 data class DiceConstraints(
+  val kind: RollKind = RollKind.TUNE,
+  val soloPool: SoloPool = SoloPool.MINE,
   val pool: TunePool = TunePool.MY_TUNES,
   val style: String? = null,
   val collection: String? = null,
@@ -44,6 +63,18 @@ data class Roll(
   /** Concert pitch; null when the usual key is wanted and the tune's key does not parse. */
   val concertKey: Key?,
 )
+
+/** Draws a solo from [pool], or null when none qualifies. */
+fun rollSolo(solos: List<TranscriptionEntity>, states: Map<Long, TranscriptionStateEntity>, pool: SoloPool, random: Random): TranscriptionEntity? =
+  solos.filter { s ->
+    val status = states[s.id]?.status
+    s.archivedAt == null && when (pool) {
+      SoloPool.MINE -> status != null
+      SoloPool.TRANSCRIBING -> status == TranscriptionStatus.ACTIVE
+      SoloPool.WISHLIST -> status == TranscriptionStatus.WISHLIST
+      SoloPool.ANY -> true
+    }
+  }.randomOrNull(random)
 
 /** Draws a tune, an exercise and a key that satisfy [c], or null when no tune qualifies. */
 fun roll(

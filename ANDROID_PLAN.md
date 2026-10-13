@@ -393,11 +393,13 @@ re-seeding, and included in the backup file:
 - **Transcribe tab (shipped, first pass):** solos to learn by ear. Each one names the tune, soloist,
   recording and a link, with optional start and end times, and a status of
   wishlist, active or done. The tab is seeded with a few solos Lara picks, and
-  users add their own. Transcriptions are scheduled and graded like tunes, and an
-  active one gets its own block in session plans. The player has transcribing
-  controls: half and three-quarter speed, five seconds back or forward, back to
-  the solo's start, and an A-B loop; playback pads the solo by five seconds each
-  side. Still to do: surfacing the active solo on the Random tab.
+  users add their own. Transcriptions are scheduled and graded like tunes. Session
+  setup offers the solos on the user's list, with the active one chosen, and the
+  chosen solo gets its own block in the plan. The Random tab rolls solos as well
+  as tunes. A solo links to its tune, and a tune's page lists its solos. The
+  player has transcribing controls: half and three-quarter speed, five seconds
+  back or forward, back to the solo's start, and an A-B loop; playback pads the
+  solo by five seconds each side.
 
 **M7 — Recordings.** Users can already attach their own links to any tune:
 YouTube and Vimeo play in place (after a tap, so nothing loads until then) and
@@ -455,6 +457,3 @@ starting set is still open.
 load-bearing bet of this plan. If *All The Things You Are · changes without the
 melody · written F* feels like a chore assignment rather than a prompt, M1 needs
 rethinking before M4 builds on the same model.
-
-**Which solos seed the Transcribe tab?** M6 starts it with a few solos Lara
-picks. The list, and the recording and timestamps for each, are still to choose.

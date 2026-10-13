@@ -11,10 +11,15 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.larakelley.woodshed.data.ThemeMode
+import com.larakelley.woodshed.data.recordedLabel
 import com.larakelley.woodshed.theme.WoodshedTheme
+import com.larakelley.woodshed.ui.AppNavigation
+import com.larakelley.woodshed.ui.Destination
+import com.larakelley.woodshed.ui.SoloLink
 import com.larakelley.woodshed.ui.browse.BrowseScreen
 import com.larakelley.woodshed.ui.browse.BrowseViewModel
 import com.larakelley.woodshed.ui.dice.DiceScreen
@@ -58,8 +63,14 @@ class MainActivity : ComponentActivity() {
           val browse: BrowseViewModel = viewModel { BrowseViewModel(app.repository, app.practice, app.tunes, app.playlists, app.exercises, app.media) }
           val practice: PracticeViewModel = viewModel { PracticeViewModel(app.repository, app.practice, app.transcriptions) }
           val dice: DiceViewModel = viewModel { DiceViewModel(app.repository, app.practice) }
-        val transcribe: TranscribeViewModel = viewModel { TranscribeViewModel(app.repository, app.transcriptions) }
-        val transcribeUi by transcribe.ui.collectAsStateWithLifecycle()
+          val transcribe: TranscribeViewModel = viewModel { TranscribeViewModel(app.repository, app.transcriptions) }
+          val transcribeUi by transcribe.ui.collectAsStateWithLifecycle()
+          val navigation = remember { AppNavigation() }
+          val tuneSolos = remember(transcribeUi.rows) {
+            transcribeUi.rows.filter { it.solo.standardId != null }.groupBy({ it.solo.standardId!! }) { r ->
+              SoloLink(r.solo.id, "${r.solo.soloist}, ${r.solo.instrument.lowercase()}", listOfNotNull(r.solo.context, r.solo.recorded?.let(::recordedLabel)).joinToString(" · "))
+            }
+          }
           val browseState by browse.state.collectAsStateWithLifecycle()
           val practiceUi by practice.ui.collectAsStateWithLifecycle()
           val diceUi by dice.ui.collectAsStateWithLifecycle()
@@ -75,7 +86,8 @@ class MainActivity : ComponentActivity() {
             setMinutes = practice::setMinutes,
             toggleFocus = practice::toggleFocus,
             toggleTune = practice::toggleTune,
-          usePlaylist = practice::usePlaylist,
+            usePlaylist = practice::usePlaylist,
+            pickSolo = practice::pickSolo,
             buildPlan = practice::buildPlan,
             discardPlan = practice::discardPlan,
             swap = practice::swap,
@@ -102,10 +114,12 @@ class MainActivity : ComponentActivity() {
                   PracticeHome(practiceUi, setupActions)
                 }
               },
-              transcribeTab = { TranscribeScreen(transcribeUi, transcribe.actions) },
+              transcribeTab = { TranscribeScreen(transcribeUi, transcribe.actions, navigation) },
             metronomeTab = {
                 MetronomeScreen(click, MetronomeActions(metronome::toggle, metronome::setBpm, metronome::setBeatsPerBar, metronome::setAccentFirst, metronome::setFeel))
               },
+              tuneSolos = tuneSolos,
+              navigation = navigation,
               tunerTab = {
                 // The microphone is only on while this tab is showing.
                 DisposableEffect(Unit) { onDispose { app.tuner.stop() } }
@@ -120,7 +134,7 @@ class MainActivity : ComponentActivity() {
                 )
               },
               diceTab = {
-                DiceScreen(diceUi, dice::constrain, dice::roll, dice::grade, dice::toggleKeyKnown)
+                DiceScreen(diceUi, dice::constrain, dice::roll, dice::grade, dice::toggleKeyKnown, onOpenSolo = { navigation.go(Destination.Solo(it)) })
               },
             )
           }

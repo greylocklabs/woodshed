@@ -10,6 +10,8 @@ import com.larakelley.woodshed.data.WoodshedRepository
 import com.larakelley.woodshed.data.db.ExerciseEntity
 import com.larakelley.woodshed.data.db.StandardEntity
 import com.larakelley.woodshed.data.db.TranscriptionEntity
+import com.larakelley.woodshed.data.db.TranscriptionStateEntity
+import com.larakelley.woodshed.data.db.TranscriptionStatus
 import com.larakelley.woodshed.data.db.TuneStateEntity
 import com.larakelley.woodshed.domain.ClickTrack
 import com.larakelley.woodshed.domain.Focus
@@ -89,6 +91,17 @@ fun sessionTunes(standards: List<StandardEntity>, states: List<TuneStateEntity>,
     .map { it.first }
 }
 
+/** A solo the session can include: one being transcribed or on the wishlist. */
+data class SessionSolo(val id: Long, val title: String, val soloist: String, val active: Boolean)
+
+/** Solos on the user's list and not yet done, the ones being transcribed first, most due first. */
+fun sessionSolos(solos: List<TranscriptionEntity>, states: List<TranscriptionStateEntity>): List<SessionSolo> {
+  val byId = solos.filter { it.archivedAt == null }.associateBy { it.id }
+  return states.filter { it.status != TranscriptionStatus.DONE && it.transcriptionId in byId }
+    .sortedWith(compareBy({ it.status != TranscriptionStatus.ACTIVE }, { it.dueAt ?: Long.MAX_VALUE }, { byId.getValue(it.transcriptionId).title.lowercase() }))
+    .map { s -> byId.getValue(s.transcriptionId).let { SessionSolo(it.id, it.title, it.soloist, s.status == TranscriptionStatus.ACTIVE) } }
+}
+
 /** One row of a plan, as the setup screen lists it. [exercise] is the block's exercise, for its details. */
 data class PlanItem(val block: PlanBlock, val title: String, val detail: String, val exercise: ExerciseRow? = null)
 
@@ -107,6 +120,9 @@ data class SetupUi(
   val playlists: List<Pair<Long, String>> = emptyList(),
   /** The playlist whose tunes were picked, until the selection is changed by hand. */
   val playlistId: Long? = null,
+  val solos: List<SessionSolo> = emptyList(),
+  /** The solo the session includes, or null for none. */
+  val soloId: Long? = null,
   /** Null until a plan is built; changing the setup clears it. */
   val plan: List<PlanItem>? = null,
 )
@@ -163,6 +179,7 @@ class PracticeViewModel(
   private var steps: List<PlanBlock> = emptyList()
   private var current: Card? = null
   private var selectionTouched = false
+  private var soloTouched = false
 
   init {
     refresh()
@@ -174,7 +191,9 @@ class PracticeViewModel(
       val standards = repository.standards.first()
       titles = standards.associate { it.id to it.title }
       exercises = repository.exercises.first().associateBy { it.id }
-      solos = repository.transcriptions.first().associateBy { it.id }
+      val allSolos = repository.transcriptions.first()
+      solos = allSolos.associateBy { it.id }
+      val offeredSolos = sessionSolos(allSolos, repository.transcriptionStates.first())
       val lists = repository.playlists.first()
       val chosen = lists.firstOrNull { it.id == _ui.value.setup.playlistId }
       val own = sessionTunes(standards, repository.tuneStates.first(), now())
@@ -203,6 +222,9 @@ class PracticeViewModel(
             selected = selected,
             playlists = lists.map { it.id to it.name },
             playlistId = chosen?.id,
+            solos = offeredSolos,
+            // The solo being transcribed is included until the user picks another or none.
+            soloId = if (soloTouched) ui.setup.soloId?.takeIf { id -> offeredSolos.any { it.id == id } } else offeredSolos.firstOrNull { it.active }?.id,
           ),
         )
       }
@@ -231,6 +253,11 @@ class PracticeViewModel(
     editSetup { it.copy(selected = if (id in it.selected) it.selected - id else it.selected + id) }
   }
 
+  fun pickSolo(id: Long?) {
+    soloTouched = true
+    editSetup { it.copy(soloId = id) }
+  }
+
   private fun editSetup(change: (SetupUi) -> SetupUi) = _ui.update { it.copy(setup = change(it.setup).copy(plan = null)) }
 
   /** Back from the plan to the setup. */
@@ -242,7 +269,7 @@ class PracticeViewModel(
     repository.rememberSession(setup.minutes, setup.focus)
     viewModelScope.launch {
       val tuneIds = setup.tunes.map { it.id }.filter { it in setup.selected }
-      val blocks = practice.plan(setup.minutes, setup.focus, tuneIds, instrument)
+      val blocks = practice.plan(setup.minutes, setup.focus, tuneIds, instrument, setup.soloId)
       _ui.update { it.copy(setup = it.setup.copy(plan = blocks.map(::planItem))) }
     }
   }

@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
@@ -13,6 +14,9 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToNode
+import com.larakelley.woodshed.data.db.TranscriptionEntity
+import com.larakelley.woodshed.data.db.TranscriptionStateEntity
+import com.larakelley.woodshed.data.db.TranscriptionStatus
 import com.larakelley.woodshed.domain.Focus
 import com.larakelley.woodshed.domain.Grade
 import com.larakelley.woodshed.domain.Instrument
@@ -101,6 +105,30 @@ class PracticeScreenTest {
     list.performScrollToNode(hasTestTag("pick-3"))
     compose.onNodeWithTag("pick-3").performClick()
     assertEquals(listOf<Any>(Focus.SPEED, 45, 3L), toggled)
+  }
+
+  @Test
+  fun setupOffersSolosWithTheActiveOneChosen() {
+    val picked = mutableListOf<Long?>()
+    val solos = listOf(SessionSolo(7, "Tangerine", "Chet Baker", active = true), SessionSolo(8, "Blues By Five", "Miles Davis", active = false))
+    compose.setContent { PracticeHome(PracticeUi(setup = SetupUi(solos = solos, soloId = 7)), SetupActions(pickSolo = { picked += it })) }
+
+    compose.onNodeWithText("🎧 Tangerine (Chet Baker)").performScrollTo().assertIsSelected()
+    compose.onNodeWithTag("solo-8").performScrollTo().performClick()
+    compose.onNodeWithTag("solo-none").performScrollTo().performClick()
+    assertEquals(listOf(8L, null), picked)
+  }
+
+  @Test
+  fun sessionSolosLeaveOutDoneOnesAndPutActiveFirst() {
+    fun solo(id: Long, title: String) = TranscriptionEntity(id = id, slug = "s$id", title = title, soloist = "X", instrument = "Trumpet", url = "https://example.org")
+    val solos = listOf(solo(1, "Airegin"), solo(2, "Blues By Five"), solo(3, "Cherokee"), solo(4, "Donna Lee"))
+    val states = listOf(
+      TranscriptionStateEntity(1, TranscriptionStatus.WISHLIST),
+      TranscriptionStateEntity(2, TranscriptionStatus.DONE),
+      TranscriptionStateEntity(3, TranscriptionStatus.ACTIVE),
+    )
+    assertEquals(listOf(3L, 1L), sessionSolos(solos, states).map { it.id })
   }
 
   @Test

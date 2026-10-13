@@ -24,6 +24,9 @@ import com.larakelley.woodshed.data.DiceConstraints
 import com.larakelley.woodshed.data.KeyChoice
 import com.larakelley.woodshed.data.PracticeService
 import com.larakelley.woodshed.data.Roll
+import com.larakelley.woodshed.data.RollKind
+import com.larakelley.woodshed.data.SoloPool
+import com.larakelley.woodshed.data.clock
 import com.larakelley.woodshed.data.TunePool
 import com.larakelley.woodshed.data.WoodshedRepository
 import com.larakelley.woodshed.data.seed.SeedValidator
@@ -33,9 +36,11 @@ import com.larakelley.woodshed.domain.KeyMask
 import com.larakelley.woodshed.domain.Transposition
 import com.larakelley.woodshed.domain.delayLabel
 import com.larakelley.woodshed.theme.EmptyState
+import com.larakelley.woodshed.theme.PillChoice
 import com.larakelley.woodshed.theme.StickerButton
 import com.larakelley.woodshed.ui.browse.DropdownChip
 import com.larakelley.woodshed.ui.practice.GradeButtons
+import com.larakelley.woodshed.ui.transcribe.soloKey
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -56,9 +61,13 @@ data class RolledCard(
   val keyKnown: Boolean,
 )
 
+/** A rolled solo, with its key for the user's horn. */
+data class RolledSolo(val id: Long, val title: String, val soloist: String, val key: String?, val times: String?)
+
 data class DiceUi(
   val constraints: DiceConstraints = DiceConstraints(),
   val card: RolledCard? = null,
+  val solo: RolledSolo? = null,
   val nothingMatches: Boolean = false,
   val styles: List<String> = emptyList(),
   val exercises: List<String> = emptyList(),
@@ -93,11 +102,24 @@ class DiceViewModel(
   fun constrain(change: (DiceConstraints) -> DiceConstraints) = _ui.update { it.copy(constraints = change(it.constraints)) }
 
   fun roll() {
+    if (_ui.value.constraints.kind == RollKind.SOLO) return rollSolo()
     viewModelScope.launch {
       val r = practice.roll(_ui.value.constraints)
       roll = r
       val card = r?.let { present(it) }
-      _ui.update { it.copy(card = card, nothingMatches = r == null, graded = null) }
+      _ui.update { it.copy(card = card, solo = null, nothingMatches = r == null, graded = null) }
+    }
+  }
+
+  private fun rollSolo() {
+    roll = null
+    viewModelScope.launch {
+      val s = practice.rollSolo(_ui.value.constraints)
+      val solo = s?.let {
+        val times = it.startSeconds?.let { start -> "Solo ${clock(start)}" + (it.endSeconds?.let { end -> " to ${clock(end)}" } ?: "") }
+        RolledSolo(it.id, it.title, "${it.soloist}, ${it.instrument.lowercase()}", soloKey(it, repository.transposition.value), times)
+      }
+      _ui.update { it.copy(card = null, solo = solo, nothingMatches = s == null, graded = null) }
     }
   }
 
@@ -149,14 +171,19 @@ fun DiceScreen(
   onRoll: () -> Unit,
   onGrade: (Grade) -> Unit,
   onToggleKeyKnown: () -> Unit,
+  onOpenSolo: (Long) -> Unit = {},
 ) {
   val c = ui.constraints
+  val solos = c.kind == RollKind.SOLO
   Column(Modifier.fillMaxSize()) {
     Column(
       Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(16.dp),
       verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-      FlowRow(Modifier.padding(vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+      PillChoice(RollKind.entries.map { it.label to it }, c.kind, { k -> onConstrain { it.copy(kind = k) } }, tagPrefix = "roll-kind")
+      if (solos) {
+        DropdownChip("Solos", c.soloPool.label, SoloPool.entries.map { it.label to it }) { p -> onConstrain { it.copy(soloPool = p ?: SoloPool.MINE) } }
+      } else FlowRow(Modifier.padding(vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
         if (c.playlistId == null) {
           DropdownChip("Tunes", c.pool.label, TunePool.entries.map { it.label to it }) { p -> onConstrain { it.copy(pool = p ?: TunePool.MY_TUNES) } }
         }
@@ -171,12 +198,22 @@ fun DiceScreen(
         DropdownChip("Key", c.keyChoice.label, KeyChoice.entries.map { it.label to it }) { k -> onConstrain { it.copy(keyChoice = k ?: KeyChoice.USUAL) } }
       }
       StickerButton(onClick = onRoll, modifier = Modifier.fillMaxWidth().height(64.dp).testTag("roll")) {
-        Text(if (ui.card == null) "🎲 Roll" else "🎲 Roll again", style = MaterialTheme.typography.titleLarge)
+        Text(if (ui.card == null && ui.solo == null) "🎲 Roll" else "🎲 Roll again", style = MaterialTheme.typography.titleLarge)
       }
       if (ui.nothingMatches) {
-        EmptyState("🎲", "Nothing to roll", "No tunes fit these choices. Loosen them, or add tunes to your list from the Tunes tab.")
+        if (solos) EmptyState("🎧", "Nothing to roll", "No solos fit. Pick a wider set, or add solos to your list from the Transcribe tab.")
+        else EmptyState("🎲", "Nothing to roll", "No tunes fit these choices. Loosen them, or add tunes to your list from the Tunes tab.")
       }
-      ui.card?.let { card ->
+      ui.solo?.takeIf { solos }?.let { s ->
+        Text(s.title, style = MaterialTheme.typography.displaySmall, modifier = Modifier.testTag("dice-solo-title"))
+        Text(s.soloist, style = MaterialTheme.typography.titleMedium)
+        s.key?.let { Text(it, style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.primary) }
+        s.times?.let { Text(it, style = MaterialTheme.typography.titleMedium) }
+        StickerButton(onClick = { onOpenSolo(s.id) }, modifier = Modifier.fillMaxWidth().height(56.dp).testTag("dice-open-solo")) {
+          Text("🎧 Open solo", style = MaterialTheme.typography.titleMedium)
+        }
+      }
+      ui.card?.takeIf { !solos }?.let { card ->
         Text(card.title, style = MaterialTheme.typography.displaySmall, modifier = Modifier.testTag("dice-title"))
         Text(card.key, style = MaterialTheme.typography.displayMedium, color = MaterialTheme.colorScheme.primary)
         if (card.shape.isNotEmpty()) Text(card.shape, style = MaterialTheme.typography.titleMedium)
@@ -190,6 +227,6 @@ fun DiceScreen(
         ui.graded?.let { Text("Logged as ${it.name.lowercase()}.") }
       }
     }
-    ui.card?.buttons?.let { GradeButtons(it, onGrade, Modifier.fillMaxHeight(0.25f)) }
+    ui.card?.takeIf { !solos }?.buttons?.let { GradeButtons(it, onGrade, Modifier.fillMaxHeight(0.25f)) }
   }
 }

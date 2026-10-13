@@ -65,6 +65,7 @@ data class SetupActions(
   val toggleFocus: (Focus) -> Unit = {},
   val toggleTune: (Long) -> Unit = {},
   val usePlaylist: (Long?) -> Unit = {},
+  val pickSolo: (Long?) -> Unit = {},
   val buildPlan: () -> Unit = {},
   val discardPlan: () -> Unit = {},
   val swap: (Int) -> Unit = {},
@@ -123,6 +124,22 @@ private fun SessionSetup(ui: PracticeUi, actions: SetupActions) {
         FlowRow(Modifier.padding(vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
           Focus.entries.forEach { f ->
             CallieChip(selected = f in setup.focus, onClick = { actions.toggleFocus(f) }, label = { Text("${f.emoji} ${f.label}") }, modifier = Modifier.testTag("focus-${f.name.lowercase()}"))
+          }
+        }
+        if (setup.solos.isNotEmpty()) {
+          Spacer(Modifier.height(16.dp))
+          Text("Solo to transcribe", style = MaterialTheme.typography.titleMedium)
+          Text("Takes a quarter of the session, 5 to 15 minutes. Sessions under 15 minutes leave it out.", style = MaterialTheme.typography.bodySmall)
+          FlowRow(Modifier.padding(vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            CallieChip(selected = setup.soloId == null, onClick = { actions.pickSolo(null) }, label = { Text("None") }, modifier = Modifier.testTag("solo-none"))
+            setup.solos.forEach { s ->
+              CallieChip(
+                selected = setup.soloId == s.id,
+                onClick = { actions.pickSolo(s.id) },
+                label = { Text("${if (s.active) "🎧" else "💭"} ${s.title} (${s.soloist})") },
+                modifier = Modifier.testTag("solo-${s.id}"),
+              )
+            }
           }
         }
         Spacer(Modifier.height(16.dp))
