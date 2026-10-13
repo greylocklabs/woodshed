@@ -18,5 +18,26 @@
       { "name": "Yasushi Nakamura", "instrument": "Bass" },
       { "name": "Kyle Poole", "instrument": "Drums" }
     ]
+  },
+  {
+    "slug": "tangerine-chet-baker",
+    "tune": "tangerine",
+    "title": "Tangerine",
+    "soloist": "Chet Baker",
+    "instrument": "Trumpet",
+    "context": "She Was Too Good to Me, Van Gelder Studio",
+    "recorded": "1974-07-17",
+    "url": "https://vimeo.com/22270990",
+    "start_seconds": 48,
+    "end_seconds": 138,
+    "key": "Eb",
+    "tonality": "major",
+    "performers": [
+      { "name": "Chet Baker", "instrument": "Trumpet" },
+      { "name": "Paul Desmond", "instrument": "Alto sax" },
+      { "name": "Bob James", "instrument": "Electric piano" },
+      { "name": "Ron Carter", "instrument": "Bass" },
+      { "name": "Steve Gadd", "instrument": "Drums" }
+    ]
   }
 ]
