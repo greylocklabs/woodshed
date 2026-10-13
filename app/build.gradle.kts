@@ -4,6 +4,7 @@ plugins {
   alias(libs.plugins.kotlin.serialization)
   alias(libs.plugins.ksp)
   alias(libs.plugins.androidx.room)
+  alias(libs.plugins.roborazzi)
 }
 
 android {
@@ -66,6 +67,11 @@ kotlin {
   jvmToolchain(21)
 }
 
+// Screenshot references live beside the tests. `recordRoborazziDebug` rewrites them; CI runs `verifyRoborazziDebug`.
+roborazzi {
+  outputDir.set(file("src/test/screenshots"))
+}
+
 room {
   schemaDirectory("$projectDir/schemas")
 }
@@ -114,4 +120,7 @@ dependencies {
   testImplementation(libs.androidx.test.core)
   testImplementation(composeBom)
   testImplementation(libs.androidx.compose.ui.test.junit4)
+  testImplementation(libs.roborazzi)
+  testImplementation(libs.roborazzi.compose)
+  testImplementation(libs.roborazzi.junit.rule)
 }
