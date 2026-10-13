@@ -1,5 +1,6 @@
 package com.larakelley.woodshed.ui.practice
 
+import android.Manifest
 import android.app.Application
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -14,6 +15,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToNode
+import androidx.test.core.app.ApplicationProvider
 import com.larakelley.woodshed.data.db.TranscriptionEntity
 import com.larakelley.woodshed.data.db.TranscriptionStateEntity
 import com.larakelley.woodshed.data.db.TranscriptionStatus
@@ -28,6 +30,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
@@ -153,6 +156,8 @@ class PracticeScreenTest {
     )
     val swapped = mutableListOf<Int>()
     var started = false
+    // With notifications allowed, Start goes straight to the session rather than asking first.
+    shadowOf(ApplicationProvider.getApplicationContext<Application>()).grantPermissions(Manifest.permission.POST_NOTIFICATIONS)
     compose.setContent { PracticeHome(PracticeUi(setup = SetupUi(plan = plan)), SetupActions(swap = { swapped += it }, start = { started = true })) }
 
     compose.onNodeWithText("30 min planned").assertExists()

@@ -354,10 +354,15 @@ after this benefits from real data.*
 **M2 — Session mode.** Greedy weighted phase planner, foreground-service runner
 with timer and notification, keep-awake, auto-advance, interruption-safe state.
 Emits into the same event log. *Now you can compare planned sessions against
-card sessions on your own logged history.* Session setup shipped early: pick a
-length, focus areas and tunes (due ones ticked), review and edit the plan, then
-step through it with a per-block timer. The foreground service, notification and
-interruption-safe state are still to do.
+card sessions on your own logged history.* Shipped: pick a length, focus areas,
+tunes and a solo, review and edit the plan, then step through it with a per-block
+timer. A running session belongs to the app rather than the screen. A foreground
+service keeps it going with the screen off or another app open, with a countdown
+notification offering Done or Skip, Pause and End, and an alert when a block's
+time is up. Blocks do not advance on their own, since the time often runs out
+mid-phrase. The session is saved as it goes, so one cut short by the system
+picks up where it was. The screen stays on during a session, and back asks
+before ending it.
 
 **M3 — Audio.** Drone at arbitrary pitch. Shipped early: the sample-accurate
 metronome on a streaming `AudioTrack`, now its own tab with tap tempo, jazz

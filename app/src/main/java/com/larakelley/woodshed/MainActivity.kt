@@ -61,7 +61,7 @@ class MainActivity : ComponentActivity() {
           val settings: SettingsViewModel = viewModel { SettingsViewModel(app.repository, app.backups, version) }
           val settingsUi by settings.ui.collectAsStateWithLifecycle()
           val browse: BrowseViewModel = viewModel { BrowseViewModel(app.repository, app.practice, app.tunes, app.playlists, app.exercises, app.media) }
-          val practice: PracticeViewModel = viewModel { PracticeViewModel(app.repository, app.practice, app.transcriptions) }
+          val practice: PracticeViewModel = viewModel { PracticeViewModel(app.repository, app.practice, app.sessions) }
           val dice: DiceViewModel = viewModel { DiceViewModel(app.repository, app.practice) }
           val transcribe: TranscribeViewModel = viewModel { TranscribeViewModel(app.repository, app.transcriptions) }
           val transcribeUi by transcribe.ui.collectAsStateWithLifecycle()
@@ -108,7 +108,10 @@ class MainActivity : ComponentActivity() {
               practiceTab = {
                 // A running session lives in this tab, so switching to the metronome or tuner and back keeps it.
                 if (practiceUi.running) {
-                  SessionScreen(practiceUi, practice::grade, practice::next, onStop = practice::stop, onUseTempo = { metronome.setBpm(it); metronome.start() })
+                  SessionScreen(
+                    practiceUi, practice::grade, practice::next, onStop = practice::stop, onUseTempo = { metronome.setBpm(it); metronome.start() },
+                    onPause = practice::pause, onResume = practice::resume,
+                  )
                 } else {
                   LaunchedEffect(Unit) { practice.refresh() }
                   PracticeHome(practiceUi, setupActions)
@@ -145,8 +148,9 @@ class MainActivity : ComponentActivity() {
 
   override fun onStop() {
     super.onStop()
-    // The metronome and tuner only run while the app is on screen.
-    app.metronome.stop()
+    // The tuner only listens while the app is on screen. The metronome may keep time for a running session,
+    // whose service keeps the app alive; otherwise it stops too.
+    if (!app.sessions.state.value.running) app.metronome.stop()
     app.tuner.stop()
   }
 }
