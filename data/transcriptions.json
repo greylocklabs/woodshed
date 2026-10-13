@@ -39,5 +39,26 @@
       { "name": "Ron Carter", "instrument": "Bass" },
       { "name": "Steve Gadd", "instrument": "Drums" }
     ]
+  },
+  {
+    "slug": "blues-by-five-miles-davis",
+    "tune": "blues-by-five",
+    "title": "Blues By Five",
+    "soloist": "Miles Davis",
+    "instrument": "Trumpet",
+    "context": "Cookin' With The Miles Davis Quintet, Van Gelder Studio",
+    "recorded": "1956-10-26",
+    "url": "https://www.youtube.com/watch?v=jFFB1nxWKfA",
+    "start_seconds": 32,
+    "end_seconds": 163,
+    "key": "Bb",
+    "tonality": "major",
+    "performers": [
+      { "name": "Miles Davis", "instrument": "Trumpet" },
+      { "name": "John Coltrane", "instrument": "Tenor sax" },
+      { "name": "Red Garland", "instrument": "Piano" },
+      { "name": "Paul Chambers", "instrument": "Bass" },
+      { "name": "Philly Joe Jones", "instrument": "Drums" }
+    ]
   }
 ]
