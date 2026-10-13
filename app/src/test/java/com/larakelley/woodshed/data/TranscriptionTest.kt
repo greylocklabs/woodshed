@@ -84,8 +84,20 @@ class TranscriptionTest {
     assertEquals(soloMinutes(40), plan[soloAt].minutes)
     assertTrue(soloAt < plan.indexOfFirst { it is PlanBlock.Tune })
     assertEquals(40, plan.sumOf { it.minutes })
+    assertTrue(PracticeService(db, random = Random(1)).plan(40, emptySet(), listOf(solar), Instrument.ALTO_SAX, null).none { it is PlanBlock.Solo })
     service.finish(id)
     assertTrue(PracticeService(db, random = Random(1)).plan(40, emptySet(), listOf(solar), Instrument.ALTO_SAX).none { it is PlanBlock.Solo })
+    // A solo chosen at setup takes the place of the active one.
+    val chosen = PracticeService(db, random = Random(1)).plan(40, emptySet(), listOf(solar), Instrument.ALTO_SAX, id).filterIsInstance<PlanBlock.Solo>()
+    assertEquals(listOf(id), chosen.map { it.transcriptionId })
+  }
+
+  @Test
+  fun yourOwnSolosLinkToTheTuneOfTheSameName() = runTest {
+    val id = service.add(TranscriptionDraft(title = "solar", soloist = "Me", instrument = "Alto sax", url = "https://youtu.be/jNQXAC9IVRw"))
+    assertEquals(db.standards().bySlug("solar")!!.id, db.transcriptions().byId(id)!!.standardId)
+    service.edit(id, TranscriptionDraft(title = "Not A Real Tune", soloist = "Me", instrument = "Alto sax", url = "https://youtu.be/jNQXAC9IVRw"))
+    assertNull(db.transcriptions().byId(id)!!.standardId)
   }
 
   @Test

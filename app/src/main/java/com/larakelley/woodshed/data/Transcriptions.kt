@@ -7,6 +7,7 @@ import com.larakelley.woodshed.data.db.TranscriptionEntity
 import com.larakelley.woodshed.data.db.TranscriptionStateEntity
 import com.larakelley.woodshed.data.db.TranscriptionStatus
 import com.larakelley.woodshed.data.db.WoodshedDatabase
+import com.larakelley.woodshed.data.db.withOverride
 import com.larakelley.woodshed.data.seed.SeedValidator
 import com.larakelley.woodshed.domain.Grade
 import com.larakelley.woodshed.domain.Key
@@ -170,14 +171,21 @@ class TranscriptionService(
     var slug = base
     var n = 2
     while (dao.bySlug(slug) != null) slug = "$base-${n++}"
-    dao.insert(entity(draft, slug))
+    dao.insert(entity(draft, slug).copy(standardId = tuneNamed(draft.title)))
   }
 
   /** Edits one of the user's own solos. Seeded solos are not editable; reporting a problem fixes them for everyone. */
   suspend fun edit(id: Long, draft: TranscriptionDraft) = db.withTransaction {
     require(draft.problems().isEmpty())
     val current = dao.byId(id)?.takeIf { it.userCreated } ?: return@withTransaction
-    dao.update(listOf(entity(draft, current.slug).copy(id = id)))
+    dao.update(listOf(entity(draft, current.slug).copy(id = id, standardId = tuneNamed(draft.title))))
+  }
+
+  /** The one library tune with [title], as the user sees it, so their own solos link to it. */
+  private suspend fun tuneNamed(title: String): Long? {
+    val key = TuneLibrary.slugify(title)
+    val overrides = db.tuneOverrides().all().associateBy { it.standardId }
+    return db.standards().all().filter { it.archivedAt == null && TuneLibrary.slugify(it.withOverride(overrides[it.id]).title) == key }.singleOrNull()?.id
   }
 
   suspend fun delete(id: Long) = db.withTransaction {

@@ -4,6 +4,7 @@ import androidx.room.withTransaction
 import com.larakelley.woodshed.data.db.ExerciseEntity
 import com.larakelley.woodshed.data.db.ReviewEventEntity
 import com.larakelley.woodshed.data.db.StandardEntity
+import com.larakelley.woodshed.data.db.TranscriptionEntity
 import com.larakelley.woodshed.data.db.TranscriptionStatus
 import com.larakelley.woodshed.data.db.TuneKnowledgeEntity
 import com.larakelley.woodshed.data.db.TuneStateEntity
@@ -135,15 +136,20 @@ class PracticeService(
     return null
   }
 
-  /** A session plan; see [planSession]. Exercises that don't suit [instrument] are left out; null keeps them all. */
-  suspend fun plan(minutes: Int, focus: Set<Focus>, tuneIds: List<Long>, instrument: Instrument?): List<PlanBlock> {
+  /** A session plan including the solo being transcribed, if any; see the full form. */
+  suspend fun plan(minutes: Int, focus: Set<Focus>, tuneIds: List<Long>, instrument: Instrument?): List<PlanBlock> =
+    plan(minutes, focus, tuneIds, instrument, activeSoloId())
+
+  /**
+   * A session plan; see [planSession]. Exercises that don't suit [instrument] are left out; null keeps them all.
+   * [soloId] takes its share of the time first; null leaves solos out.
+   */
+  suspend fun plan(minutes: Int, focus: Set<Focus>, tuneIds: List<Long>, instrument: Instrument?, soloId: Long?): List<PlanBlock> {
     val exercises = allExercises().filter { it.archivedAt == null && (instrument == null || instrument.suits(it.families, it.category)) }
     val tuneExercises = exercises.filter { it.appliesToTune }
     val history = tuneIds.associateWith { id -> db.reviewEvents().forItem(ReviewEventEntity.TUNE, id).mapNotNull { it.exerciseId }.reversed().distinct() }
-    // The solo being transcribed comes first among priorities: it takes its share before the rest is planned.
-    val solos = db.transcriptions().all().filter { it.archivedAt == null }.associateBy { it.id }
-    val active = db.transcriptions().states().filter { it.status == TranscriptionStatus.ACTIVE && it.transcriptionId in solos }.minByOrNull { it.dueAt ?: Long.MAX_VALUE }
-    val forSolo = if (active == null) 0 else soloMinutes(minutes)
+    val solo = soloId?.let { db.transcriptions().byId(it) }?.takeIf { it.archivedAt == null }
+    val forSolo = if (solo == null) 0 else soloMinutes(minutes)
     val blocks = planSession(
       totalMinutes = minutes - forSolo,
       focus = focus,
@@ -152,7 +158,13 @@ class PracticeService(
       tuneExercise = { id -> tuneExercises.takeIf { it.isNotEmpty() }?.let { pickExercise(it, { e -> e.id }, history.getValue(id), random).id } },
       random = random,
     )
-    return if (active != null && forSolo > 0) withSolo(blocks, PlanBlock.Solo(active.transcriptionId, forSolo)) else blocks
+    return if (solo != null && forSolo > 0) withSolo(blocks, PlanBlock.Solo(solo.id, forSolo)) else blocks
+  }
+
+  /** The solo being transcribed that is most due, if any. */
+  suspend fun activeSoloId(): Long? {
+    val live = db.transcriptions().all().filter { it.archivedAt == null }.map { it.id }.toSet()
+    return db.transcriptions().states().filter { it.status == TranscriptionStatus.ACTIVE && it.transcriptionId in live }.minByOrNull { it.dueAt ?: Long.MAX_VALUE }?.transcriptionId
   }
 
   /** The card for a tune block, moving the tune into learning first if it is not already being practiced. */
@@ -176,6 +188,10 @@ class PracticeService(
       random = random,
       playlist = constraints.playlistId?.let { id -> db.playlists().entries(id).map { it.standardId }.toSet() },
     )
+
+  /** A random solo within [constraints]; see [rollSolo]. */
+  suspend fun rollSolo(constraints: DiceConstraints): TranscriptionEntity? =
+    rollSolo(db.transcriptions().all(), db.transcriptions().states().associateBy { it.transcriptionId }, constraints.soloPool, random)
 
   /** A rolled tune that is in the practice queue can be graded like any other card. */
   fun cardFor(roll: Roll, transposition: Transposition): Card? {

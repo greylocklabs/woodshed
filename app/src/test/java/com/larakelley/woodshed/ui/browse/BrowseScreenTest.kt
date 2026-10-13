@@ -15,6 +15,7 @@ import androidx.compose.ui.test.performTextInput
 import com.larakelley.woodshed.data.db.ExerciseEntity
 import com.larakelley.woodshed.data.db.StandardEntity
 import com.larakelley.woodshed.data.db.TuneKnowledgeEntity
+import com.larakelley.woodshed.data.db.TranscriptionEntity
 import com.larakelley.woodshed.data.db.TuneStateEntity
 import com.larakelley.woodshed.domain.Comfort
 import com.larakelley.woodshed.domain.Family
@@ -22,6 +23,12 @@ import com.larakelley.woodshed.domain.KeyMask
 import com.larakelley.woodshed.domain.Lifecycle
 import com.larakelley.woodshed.domain.Tonality
 import com.larakelley.woodshed.domain.Transposition
+import com.larakelley.woodshed.ui.AppNavigation
+import com.larakelley.woodshed.ui.SoloLink
+import com.larakelley.woodshed.ui.transcribe.SoloActions
+import com.larakelley.woodshed.ui.transcribe.SoloRow
+import com.larakelley.woodshed.ui.transcribe.TranscribeScreen
+import com.larakelley.woodshed.ui.transcribe.TranscribeUi
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -63,6 +70,29 @@ class BrowseScreenTest {
         onExerciseFilter = { exerciseFilter = it(exerciseFilter) },
       )
     }
+  }
+
+  @Test
+  fun aTuneAndItsSolosOpenEachOther() {
+    val solo = TranscriptionEntity(id = 9, slug = "body-hawkins", standardId = 1, title = "Body And Soul", soloist = "Coleman Hawkins", instrument = "Tenor sax", url = "https://example.org/clip")
+    compose.setContent {
+      val navigation = remember { AppNavigation() }
+      val rows = tuneRows(standards, Transposition.C)
+      BrowseScreen(
+        BrowseState(Transposition.C, rows, rows.size, exerciseRows(exercises), exercises.size, allTunes = rows),
+        onSelectTransposition = {},
+        transcribeTab = { TranscribeScreen(TranscribeUi(listOf(SoloRow(solo, null))), SoloActions(), navigation) },
+        tuneSolos = mapOf(1L to listOf(SoloLink(9, "Coleman Hawkins, tenor sax", ""))),
+        navigation = navigation,
+      )
+    }
+    compose.onNodeWithTag("tab-Tunes").performClick()
+    compose.onNodeWithText("Body And Soul").performClick()
+    compose.onNodeWithTag("tune-solo-9").performScrollTo().performClick()
+    compose.onNodeWithText("Coleman Hawkins, tenor sax").assertExists()
+    compose.onNodeWithTag("solo-tune").performClick()
+    compose.onNodeWithTag("tune-status").assertExists()
+    compose.onNodeWithTag("tune-solo-9").performScrollTo().assertExists()
   }
 
   @Test

@@ -2,6 +2,9 @@ package com.larakelley.woodshed.data
 
 import com.larakelley.woodshed.data.db.ExerciseEntity
 import com.larakelley.woodshed.data.db.StandardEntity
+import com.larakelley.woodshed.data.db.TranscriptionEntity
+import com.larakelley.woodshed.data.db.TranscriptionStateEntity
+import com.larakelley.woodshed.data.db.TranscriptionStatus
 import com.larakelley.woodshed.data.db.TuneKnowledgeEntity
 import com.larakelley.woodshed.data.db.TuneStateEntity
 import com.larakelley.woodshed.domain.Key
@@ -83,6 +86,19 @@ class DiceTest {
     val trad = tunes.map { if (it.id == 2L) it.copy(collection = "Trad") else it }
     val ids = (1..100).mapNotNull { roll(trad, states, emptyMap(), exercises, DiceConstraints(collection = "Trad"), Random(it)) }.map { it.tune.id }.toSet()
     assertEquals(setOf(2L), ids)
+  }
+
+  @Test
+  fun solosRollFromTheChosenPart() {
+    fun solo(id: Long) = TranscriptionEntity(id = id, slug = "s$id", title = "Solo $id", soloist = "X", instrument = "Trumpet", url = "https://example.org")
+    val solos = listOf(solo(1), solo(2), solo(3), solo(4).copy(archivedAt = 1))
+    val soloStates = mapOf(1L to TranscriptionStateEntity(1, TranscriptionStatus.ACTIVE), 2L to TranscriptionStateEntity(2, TranscriptionStatus.WISHLIST), 4L to TranscriptionStateEntity(4, TranscriptionStatus.ACTIVE))
+    fun drawn(pool: SoloPool) = (1..100).mapNotNull { rollSolo(solos, soloStates, pool, Random(it))?.id }.toSet()
+    assertEquals(setOf(1L, 2L), drawn(SoloPool.MINE))
+    assertEquals(setOf(1L), drawn(SoloPool.TRANSCRIBING))
+    assertEquals(setOf(2L), drawn(SoloPool.WISHLIST))
+    assertEquals(setOf(1L, 2L, 3L), drawn(SoloPool.ANY))
+    assertNull(rollSolo(solos.take(0), soloStates, SoloPool.ANY, Random(0)))
   }
 
   @Test

@@ -23,6 +23,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -57,6 +58,8 @@ import com.larakelley.woodshed.theme.PillChoice
 import com.larakelley.woodshed.theme.SectionLabel
 import com.larakelley.woodshed.theme.StickerButton
 import com.larakelley.woodshed.theme.neutralSticker
+import com.larakelley.woodshed.ui.AppNavigation
+import com.larakelley.woodshed.ui.Destination
 import com.larakelley.woodshed.ui.media.PracticePlayer
 import com.larakelley.woodshed.ui.report.ReportButton
 import kotlinx.coroutines.flow.SharingStarted
@@ -124,9 +127,15 @@ private const val NEW_SOLO = -1L
 
 /** The Transcribe tab: solos grouped by progress, each opening to a page with the recording and practice controls. */
 @Composable
-fun TranscribeScreen(ui: TranscribeUi, actions: SoloActions) {
+fun TranscribeScreen(ui: TranscribeUi, actions: SoloActions, navigation: AppNavigation? = null) {
   var open by rememberSaveable { mutableStateOf<Long?>(null) }
   var editing by rememberSaveable { mutableStateOf<Long?>(null) }
+  LaunchedEffect(navigation?.pending) {
+    val to = navigation?.pending as? Destination.Solo ?: return@LaunchedEffect
+    navigation.take()
+    editing = null
+    open = to.id
+  }
   editing?.let { target ->
     val row = ui.rows.firstOrNull { it.solo.id == target }
     SoloEditor(
@@ -139,7 +148,8 @@ fun TranscribeScreen(ui: TranscribeUi, actions: SoloActions) {
   }
   val row = ui.rows.firstOrNull { it.solo.id == open }
   if (row != null) {
-    SoloDetail(row, ui.transposition, actions, onBack = { open = null }, onEdit = { editing = row.solo.id })
+    val onOpenTune = navigation?.let { nav -> row.solo.standardId?.let { id -> { nav.go(Destination.Tune(id)) } } }
+    SoloDetail(row, ui.transposition, actions, onBack = { open = null }, onEdit = { editing = row.solo.id }, onOpenTune = onOpenTune)
     return
   }
   Column(Modifier.fillMaxSize()) {
@@ -173,7 +183,7 @@ fun TranscribeScreen(ui: TranscribeUi, actions: SoloActions) {
 }
 
 @Composable
-private fun SoloDetail(row: SoloRow, transposition: Transposition, actions: SoloActions, onBack: () -> Unit, onEdit: () -> Unit) {
+private fun SoloDetail(row: SoloRow, transposition: Transposition, actions: SoloActions, onBack: () -> Unit, onEdit: () -> Unit, onOpenTune: (() -> Unit)? = null) {
   BackHandler(onBack = onBack)
   val solo = row.solo
   val id = solo.id
@@ -195,6 +205,11 @@ private fun SoloDetail(row: SoloRow, transposition: Transposition, actions: Solo
       Text(it.joinToString(" · "), color = callie.textMuted, modifier = Modifier.testTag("solo-context"))
     }
     soloKey(solo, transposition)?.let { Text(it, style = MaterialTheme.typography.titleLarge, modifier = Modifier.testTag("solo-key")) }
+    if (onOpenTune != null) {
+      StickerButton(onClick = onOpenTune, sticker = neutralSticker, modifier = Modifier.height(40.dp).testTag("solo-tune"), contentPadding = PaddingValues(horizontal = 14.dp)) {
+        Text("🎵 Open the tune ›", style = MaterialTheme.typography.labelLarge)
+      }
+    }
     if (solo.startSeconds != null) {
       Text("Solo ${clock(solo.startSeconds)}" + (solo.endSeconds?.let { " to ${clock(it)}" } ?: ""), color = callie.textMuted, modifier = Modifier.testTag("solo-times"))
     }

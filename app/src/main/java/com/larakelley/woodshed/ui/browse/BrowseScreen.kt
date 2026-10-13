@@ -39,9 +39,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -67,8 +69,13 @@ import com.larakelley.woodshed.domain.titleSortKey
 import com.larakelley.woodshed.theme.BackButton
 import com.larakelley.woodshed.theme.CallieChip
 import com.larakelley.woodshed.theme.EmptyState
+import com.larakelley.woodshed.theme.LocalCallie
+import com.larakelley.woodshed.theme.SectionLabel
 import com.larakelley.woodshed.theme.StickerButton
 import com.larakelley.woodshed.theme.neutralSticker
+import com.larakelley.woodshed.ui.AppNavigation
+import com.larakelley.woodshed.ui.Destination
+import com.larakelley.woodshed.ui.SoloLink
 import com.larakelley.woodshed.ui.report.ReportButton
 
 /** "Add to playlist", or which playlists the tune is in, opening the picker. */
@@ -118,6 +125,9 @@ fun BrowseScreen(
   metronomeTab: (@Composable () -> Unit)? = null,
   tunerTab: (@Composable () -> Unit)? = null,
   settings: (@Composable (onBack: () -> Unit, modifier: Modifier) -> Unit)? = null,
+  /** Solos on each tune, by tune id. */
+  tuneSolos: Map<Long, List<SoloLink>> = emptyMap(),
+  navigation: AppNavigation = remember { AppNavigation() },
 ) {
   var settingsOpen by rememberSaveable { mutableStateOf(false) }
   var tab by rememberSaveable { mutableIntStateOf(0) }
@@ -137,6 +147,26 @@ fun BrowseScreen(
     if (tunerTab != null) add("Tuner")
     add("Tunes")
     add("Exercises")
+  }
+  // Another tab asked to show a tune or a solo: close whatever is open here and switch to it.
+  LaunchedEffect(navigation.pending) {
+    val to = navigation.pending ?: return@LaunchedEffect
+    settingsOpen = false
+    editing = null
+    playlistsOpen = false
+    openPlaylist = null
+    openExercise = null
+    editingExercise = null
+    openSlug = null
+    when (to) {
+      is Destination.Tune -> {
+        navigation.take()
+        openSlug = (state.allTunes.ifEmpty { state.tunes }).firstOrNull { it.id == to.id }?.slug
+        tab = tabs.indexOf("Tunes")
+      }
+      // The Transcribe tab takes the request once it is showing.
+      is Destination.Solo -> tabs.indexOf("Transcribe").takeIf { it >= 0 }?.let { tab = it } ?: navigation.take()
+    }
   }
 
   Scaffold(
@@ -171,6 +201,7 @@ fun BrowseScreen(
       TuneDetail(open, actions, now, onBack = { openSlug = null }, onEdit = { editing = open.slug }, modifier = Modifier.padding(padding)) {
         PlaylistButton(open, state.playlists, playlistActions)
         MediaSection(open.id, state.media[open.id].orEmpty(), mediaActions)
+        TuneSolos(tuneSolos[open.id].orEmpty()) { navigation.go(Destination.Solo(it)) }
       }
       return@Scaffold
     }
@@ -260,7 +291,22 @@ fun BrowseScreen(
   }
 }
 
-/** A filter chip that opens a menu of options; [anyLabel] clears it when [allowAny]. */
+/** Solos to transcribe on this tune; each opens in the Transcribe tab. */
+@Composable
+private fun TuneSolos(solos: List<SoloLink>, onOpen: (Long) -> Unit) {
+  if (solos.isEmpty()) return
+  SectionLabel("🎧 Solos to transcribe")
+  solos.forEach { s ->
+    Row(Modifier.fillMaxWidth().clickable { onOpen(s.id) }.padding(vertical = 8.dp).testTag("tune-solo-${s.id}"), verticalAlignment = Alignment.CenterVertically) {
+      Column(Modifier.weight(1f)) {
+        Text(s.soloist, style = MaterialTheme.typography.titleMedium)
+        if (s.detail.isNotEmpty()) Text(s.detail, style = MaterialTheme.typography.bodySmall, color = LocalCallie.current.textMuted)
+      }
+      Text("›", style = MaterialTheme.typography.titleLarge, color = LocalCallie.current.textMuted)
+    }
+  }
+}
+
 /** The logo and name, in the display face. */
 @Composable
 private fun AppTitle() {
@@ -270,6 +316,7 @@ private fun AppTitle() {
   }
 }
 
+/** A filter chip that opens a menu of options; [anyLabel] clears it when [allowAny]. */
 @Composable
 fun <T> DropdownChip(
   name: String,
