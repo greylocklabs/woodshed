@@ -9,7 +9,6 @@ import com.larakelley.woodshed.data.seed.Seed
 import com.larakelley.woodshed.data.seed.SeedImporter
 import com.larakelley.woodshed.domain.Family
 import com.larakelley.woodshed.domain.Instrument
-import kotlin.random.Random
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
@@ -28,6 +27,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
+import kotlin.random.Random
 
 @RunWith(RobolectricTestRunner::class)
 @Config(application = Application::class)
@@ -49,7 +49,8 @@ class ExerciseLibraryTest {
   @After
   fun tearDown() = db.close()
 
-  private val mine = ExerciseDraft(name = "Tongue twisters", category = "Articulation", description = "Ta-ka-ta-ka on one note.", minutes = "6", families = setOf(Family.BRASS))
+  private val mine =
+    ExerciseDraft(name = "Tongue twisters", category = "Articulation", description = "Ta-ka-ta-ka on one note.", minutes = "6", families = setOf(Family.BRASS))
 
   @Test
   fun addedExercisesShowUpAndSurviveReseeding() = runTest {
@@ -68,7 +69,7 @@ class ExerciseLibraryTest {
     exercises += JsonObject(
       exercises.first().jsonObject.toMutableMap().apply {
         put("name", JsonPrimitive("Brand new seed drill"))
-      }
+      },
     )
     SeedImporter(db).import(Seed.parse(read("standards.json"), JsonArray(exercises).toString()))
     assertEquals("Brand new seed drill (yours)", db.exercises().byId(id)!!.name)

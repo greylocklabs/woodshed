@@ -15,13 +15,13 @@ import com.larakelley.woodshed.domain.MediaLink
 import com.larakelley.woodshed.domain.Scheduler
 import com.larakelley.woodshed.domain.Sm2Scheduler
 import com.larakelley.woodshed.domain.Tonality
+import kotlinx.serialization.Serializable
 import java.time.LocalDate
 import java.time.Year
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 import java.util.Locale
-import kotlinx.serialization.Serializable
 
 /** A solo as the editor fills it in. Times are "m:ss" or seconds; blank means unknown. */
 @Serializable
@@ -157,7 +157,7 @@ class TranscriptionService(
         itemKind = ReviewEventEntity.TRANSCRIPTION, itemId = id, exerciseId = null, transposition = "C", keyWrittenPitchClass = null,
         keyWrittenMinor = null, grade = grade, reviewedAt = t, elapsedMs = elapsedMs, schedulerId = scheduler.id, schedulerVersion = scheduler.version,
         intervalBefore = before.intervalDays, intervalAfter = after.intervalDays, easeBefore = before.ease, easeAfter = after.ease,
-      )
+      ),
     )
     dao.upsertState(before.withCardState(after).copy(lastReviewedAt = t))
   }

@@ -84,7 +84,11 @@ fun AlphabetStrip(listState: LazyListState, sortKeys: List<String>, modifier: Mo
         .testTag("alphabet-strip")
         .pointerInput(sortKeys) {
           stripHeight = size.height.coerceAtLeast(1)
-          detectTapGestures(onPress = { jumpTo(it.y); tryAwaitRelease(); active = null })
+          detectTapGestures(onPress = {
+            jumpTo(it.y)
+            tryAwaitRelease()
+            active = null
+          })
         }
         .pointerInput(sortKeys) {
           detectVerticalDragGestures(onDragEnd = { active = null }, onDragCancel = { active = null }) { change, _ -> jumpTo(change.position.y) }

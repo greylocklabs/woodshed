@@ -22,12 +22,12 @@ object SessionNotifications {
     manager.createNotificationChannel(
       NotificationChannel(ONGOING_CHANNEL, "Practice session", NotificationManager.IMPORTANCE_LOW).apply {
         description = "The block you're on and its time left"
-      }
+      },
     )
     manager.createNotificationChannel(
       NotificationChannel(ALERT_CHANNEL, "Block time's up", NotificationManager.IMPORTANCE_HIGH).apply {
         description = "When a block's planned time runs out"
-      }
+      },
     )
   }
 
@@ -48,7 +48,7 @@ object SessionNotifications {
     val paused = s.pausedAt != null
     val over = !paused && System.currentTimeMillis() >= ends
     builder.setContentText(
-      listOfNotNull("Block ${s.stepIndex + 1} of ${s.stepCount}", "paused".takeIf { paused }, "time's up".takeIf { over }).joinToString(" · ")
+      listOfNotNull("Block ${s.stepIndex + 1} of ${s.stepCount}", "paused".takeIf { paused }, "time's up".takeIf { over }).joinToString(" · "),
     )
     // A countdown to the block's end that the system keeps ticking; paused, it shows the time left frozen instead.
     if (paused) {
@@ -62,16 +62,15 @@ object SessionNotifications {
     return builder.build()
   }
 
-  fun timesUp(context: Context, s: SessionState): Notification =
-    NotificationCompat.Builder(context, ALERT_CHANNEL)
-      .setSmallIcon(R.drawable.ic_notification)
-      .setContentTitle("Time's up")
-      .setContentText(s.step?.let { "${title(it)}: move on when you reach a stopping point" } ?: "")
-      .setCategory(NotificationCompat.CATEGORY_ALARM)
-      .setPriority(NotificationCompat.PRIORITY_HIGH)
-      .setAutoCancel(true)
-      .setContentIntent(openApp(context))
-      .build()
+  fun timesUp(context: Context, s: SessionState): Notification = NotificationCompat.Builder(context, ALERT_CHANNEL)
+    .setSmallIcon(R.drawable.ic_notification)
+    .setContentTitle("Time's up")
+    .setContentText(s.step?.let { "${title(it)}: move on when you reach a stopping point" } ?: "")
+    .setCategory(NotificationCompat.CATEGORY_ALARM)
+    .setPriority(NotificationCompat.PRIORITY_HIGH)
+    .setAutoCancel(true)
+    .setContentIntent(openApp(context))
+    .build()
 
   /** The block as one line, such as "Long tones" or "Solar: Melody from memory". */
   fun title(step: StepView): String = when (step) {

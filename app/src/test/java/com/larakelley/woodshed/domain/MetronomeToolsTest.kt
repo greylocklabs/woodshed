@@ -1,14 +1,14 @@
 package com.larakelley.woodshed.domain
 
-import kotlin.math.PI
-import kotlin.math.abs
-import kotlin.math.sin
-import kotlin.random.Random
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import kotlin.math.PI
+import kotlin.math.abs
+import kotlin.math.sin
+import kotlin.random.Random
 
 class MetronomeToolsTest {
   @Test

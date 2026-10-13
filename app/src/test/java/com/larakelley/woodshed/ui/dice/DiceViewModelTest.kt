@@ -12,7 +12,6 @@ import com.larakelley.woodshed.data.db.WoodshedDatabase
 import com.larakelley.woodshed.data.seed.Seed
 import com.larakelley.woodshed.data.seed.SeedImporter
 import com.larakelley.woodshed.domain.Grade
-import kotlin.random.Random
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -29,6 +28,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
+import kotlin.random.Random
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)

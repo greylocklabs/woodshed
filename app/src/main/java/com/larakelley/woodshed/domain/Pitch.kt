@@ -75,7 +75,9 @@ object Yin {
       val (a, b, c) = Triple(cmnd[lag - 1], cmnd[lag], cmnd[lag + 1])
       val denom = a - 2 * b + c
       if (denom == 0.0) lag.toDouble() else lag + (a - c) / (2 * denom)
-    } else lag.toDouble()
+    } else {
+      lag.toDouble()
+    }
     return sampleRate / better
   }
 }

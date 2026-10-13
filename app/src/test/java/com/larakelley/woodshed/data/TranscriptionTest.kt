@@ -14,7 +14,6 @@ import com.larakelley.woodshed.domain.Instrument
 import com.larakelley.woodshed.domain.PlanBlock
 import com.larakelley.woodshed.domain.Tonality
 import com.larakelley.woodshed.domain.soloMinutes
-import kotlin.random.Random
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -25,6 +24,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
+import kotlin.random.Random
 
 @RunWith(RobolectricTestRunner::class)
 @Config(application = Application::class)
@@ -103,7 +103,17 @@ class TranscriptionTest {
 
   @Test
   fun yourOwnSolosAndProgressAreBackedUp() = runTest {
-    val mine = service.add(TranscriptionDraft(title = "Donna Lee", soloist = "Charlie Parker", instrument = "Alto sax", url = "https://youtu.be/jNQXAC9IVRw", start = "0:10", end = "1:00", recorded = "1947"))
+    val mine = service.add(
+      TranscriptionDraft(
+        title = "Donna Lee",
+        soloist = "Charlie Parker",
+        instrument = "Alto sax",
+        url = "https://youtu.be/jNQXAC9IVRw",
+        start = "0:10",
+        end = "1:00",
+        recorded = "1947",
+      ),
+    )
     service.start(mine)
     service.grade(mine, Grade.GOOD)
     service.wishlist(bartley().id)

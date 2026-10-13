@@ -84,7 +84,7 @@ class PracticeService(
     val existing = states.get(standardId)
     val t = now()
     states.upsert(
-      (existing ?: TuneStateEntity(standardId, Lifecycle.LEARNING)).copy(lifecycle = Lifecycle.LEARNING, introducedAt = existing?.introducedAt ?: t, dueAt = t)
+      (existing ?: TuneStateEntity(standardId, Lifecycle.LEARNING)).copy(lifecycle = Lifecycle.LEARNING, introducedAt = existing?.introducedAt ?: t, dueAt = t),
     )
   }
 
@@ -93,7 +93,15 @@ class PracticeService(
     val existing = states.get(standardId)
     val t = now()
     val base = existing ?: TuneStateEntity(standardId, Lifecycle.REPERTOIRE)
-    states.upsert(base.copy(lifecycle = Lifecycle.REPERTOIRE, introducedAt = base.introducedAt ?: t, reps = maxOf(base.reps, 2), intervalDays = maxOf(base.intervalDays, 7.0), dueAt = t))
+    states.upsert(
+      base.copy(
+        lifecycle = Lifecycle.REPERTOIRE,
+        introducedAt = base.introducedAt ?: t,
+        reps = maxOf(base.reps, 2),
+        intervalDays = maxOf(base.intervalDays, 7.0),
+        dueAt = t,
+      ),
+    )
   }
 
   suspend fun retire(standardId: Long) {
@@ -164,7 +172,10 @@ class PracticeService(
   /** The solo being transcribed that is most due, if any. */
   suspend fun activeSoloId(): Long? {
     val live = db.transcriptions().all().filter { it.archivedAt == null }.map { it.id }.toSet()
-    return db.transcriptions().states().filter { it.status == TranscriptionStatus.ACTIVE && it.transcriptionId in live }.minByOrNull { it.dueAt ?: Long.MAX_VALUE }?.transcriptionId
+    return db.transcriptions().states().filter { it.status == TranscriptionStatus.ACTIVE && it.transcriptionId in live }.minByOrNull {
+      it.dueAt
+        ?: Long.MAX_VALUE
+    }?.transcriptionId
   }
 
   /** The card for a tune block, moving the tune into learning first if it is not already being practiced. */
@@ -178,16 +189,15 @@ class PracticeService(
   }
 
   /** A random card within [constraints]; see [roll]. */
-  suspend fun roll(constraints: DiceConstraints): Roll? =
-    roll(
-      tunes = allTunes(),
-      states = states.all().associateBy { it.standardId },
-      knowledge = db.tuneKnowledge().all().associateBy { it.standardId },
-      exercises = allExercises(),
-      c = constraints,
-      random = random,
-      playlist = constraints.playlistId?.let { id -> db.playlists().entries(id).map { it.standardId }.toSet() },
-    )
+  suspend fun roll(constraints: DiceConstraints): Roll? = roll(
+    tunes = allTunes(),
+    states = states.all().associateBy { it.standardId },
+    knowledge = db.tuneKnowledge().all().associateBy { it.standardId },
+    exercises = allExercises(),
+    c = constraints,
+    random = random,
+    playlist = constraints.playlistId?.let { id -> db.playlists().entries(id).map { it.standardId }.toSet() },
+  )
 
   /** A random solo within [constraints]; see [rollSolo]. */
   suspend fun rollSolo(constraints: DiceConstraints): TranscriptionEntity? =
@@ -224,7 +234,7 @@ class PracticeService(
         intervalAfter = after.intervalDays,
         easeBefore = before.ease,
         easeAfter = after.ease,
-      )
+      ),
     )
     val lifecycle = when {
       grade == Grade.AGAIN -> Lifecycle.LEARNING

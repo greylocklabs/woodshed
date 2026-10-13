@@ -119,16 +119,32 @@ fun PracticePlayer(embedUrl: String, soloStart: Int?, modifier: Modifier = Modif
       if (soloStart != null) SmallSticker("⏮ Solo start", "solo-start") { control.seek(soloStart) }
       SmallSticker("5s ⏩", "forward-5") { control.nudge(5) }
     }
-    PillChoice(listOf("½×" to 0.5f, "¾×" to 0.75f, "1×" to 1f), rate, { rate = it; control.setRate(it) }, tagPrefix = "speed")
+    PillChoice(listOf("½×" to 0.5f, "¾×" to 0.75f, "1×" to 1f), rate, {
+      rate = it
+      control.setRate(it)
+    }, tagPrefix = "speed")
     Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
       SmallSticker(loopA?.let { "A ${clock(it.toInt())}" } ?: "Set A", "loop-a") {
-        control.time { t -> loopA = t; if (t != null && loopB != null && loopB!! <= t) loopB = null; control.setLoop(loopA, loopB) }
+        control.time { t ->
+          loopA = t
+          if (t != null && loopB != null && loopB!! <= t) loopB = null
+          control.setLoop(loopA, loopB)
+        }
       }
       SmallSticker(loopB?.let { "B ${clock(it.toInt())}" } ?: "Set B", "loop-b") {
-        control.time { t -> if (t != null && (loopA == null || t > loopA!!)) { loopB = t; control.setLoop(loopA, loopB) } }
+        control.time { t ->
+          if (t != null && (loopA == null || t > loopA!!)) {
+            loopB = t
+            control.setLoop(loopA, loopB)
+          }
+        }
       }
       if (loopA != null || loopB != null) {
-        SmallSticker("Clear loop", "loop-clear") { loopA = null; loopB = null; control.setLoop(null, null) }
+        SmallSticker("Clear loop", "loop-clear") {
+          loopA = null
+          loopB = null
+          control.setLoop(null, null)
+        }
       }
     }
     Helper(
@@ -136,14 +152,19 @@ fun PracticePlayer(embedUrl: String, soloStart: Int?, modifier: Modifier = Modif
         loopA != null && loopB != null -> "Looping ${clock(loopA!!.toInt())} to ${clock(loopB!!.toInt())}."
         loopA != null -> "Play on, then set B where the phrase ends."
         else -> "Set A at the start of a phrase and B at its end to loop it."
-      }
+      },
     )
   }
 }
 
 @Composable
 private fun SmallSticker(label: String, tag: String, onClick: () -> Unit) {
-  StickerButton(onClick = onClick, sticker = neutralSticker, modifier = Modifier.height(40.dp).testTag(tag), contentPadding = PaddingValues(horizontal = 12.dp)) {
+  StickerButton(
+    onClick = onClick,
+    sticker = neutralSticker,
+    modifier = Modifier.height(40.dp).testTag(tag),
+    contentPadding = PaddingValues(horizontal = 12.dp),
+  ) {
     Text(label, style = MaterialTheme.typography.labelLarge)
   }
 }

@@ -1,6 +1,5 @@
 package com.larakelley.woodshed.data.seed
 
-import java.io.File
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
@@ -12,6 +11,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Test
+import java.io.File
 
 /** Runs the parser and validator over the real seed files, and over deliberately broken copies of them. */
 class SeedTest {
@@ -36,8 +36,7 @@ class SeedTest {
   fun rejectsBlankTitle() = assertRejected("blank title", standards = editRow(standards, 0) { it + ("title" to JsonPrimitive(" ")) })
 
   @Test
-  fun rejectsEmptyStringWhereNullMeansUnknown() =
-    assertRejected("blank form", standards = editRow(standards, 0) { it + ("form" to JsonPrimitive("")) })
+  fun rejectsEmptyStringWhereNullMeansUnknown() = assertRejected("blank form", standards = editRow(standards, 0) { it + ("form" to JsonPrimitive("")) })
 
   @Test
   fun rejectsDifficultyOutOfRange() = assertRejected("difficulty 9", exercises = editRow(exercises, 0) { it + ("difficulty" to JsonPrimitive(9)) })
@@ -64,7 +63,12 @@ class SeedTest {
   }
 
   @Test
-  fun rejectsUnknownCollection() = assertRejected("unknown collection Bebop", standards = editRow(standards, 0) { it + ("collection" to JsonPrimitive("Bebop")) })
+  fun rejectsUnknownCollection() = assertRejected(
+    "unknown collection Bebop",
+    standards = editRow(standards, 0) {
+      it + ("collection" to JsonPrimitive("Bebop"))
+    },
+  )
 
   @Test
   fun everyBulkRowIsMarkedUnverified() {

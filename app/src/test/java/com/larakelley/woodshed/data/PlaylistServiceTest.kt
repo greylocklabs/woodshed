@@ -7,7 +7,6 @@ import androidx.test.core.app.ApplicationProvider
 import com.larakelley.woodshed.data.db.WoodshedDatabase
 import com.larakelley.woodshed.data.seed.Seed
 import com.larakelley.woodshed.data.seed.SeedImporter
-import kotlin.random.Random
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -18,6 +17,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
+import kotlin.random.Random
 
 @RunWith(RobolectricTestRunner::class)
 @Config(application = Application::class)

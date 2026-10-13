@@ -19,12 +19,12 @@ import com.larakelley.woodshed.data.seed.SeedImporter
 import com.larakelley.woodshed.domain.Focus
 import com.larakelley.woodshed.domain.Instrument
 import com.larakelley.woodshed.domain.Transposition
-import java.security.MessageDigest
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import java.security.MessageDigest
 
 /** Light or dark: follow the system, or pick one. */
 enum class ThemeMode(val label: String) {
@@ -33,14 +33,9 @@ enum class ThemeMode(val label: String) {
   DARK("Dark"),
 }
 
-class WoodshedRepository(
-  private val db: WoodshedDatabase,
-  private val prefs: SharedPreferences,
-  private val assets: AssetManager,
-) {
+class WoodshedRepository(private val db: WoodshedDatabase, private val prefs: SharedPreferences, private val assets: AssetManager) {
   private val _transposition = MutableStateFlow(enumPref(TRANSPOSITION) ?: Transposition.C)
   val transposition: StateFlow<Transposition> = _transposition.asStateFlow()
-
 
   private val _instrument = MutableStateFlow(enumPref<Instrument>(INSTRUMENT))
 
@@ -48,8 +43,11 @@ class WoodshedRepository(
   val instrument: StateFlow<Instrument?> = _instrument.asStateFlow()
 
   private val _myInstruments = MutableStateFlow(
-    if (!prefs.contains(MY_INSTRUMENTS)) DEFAULT_INSTRUMENTS
-    else prefs.getStringSet(MY_INSTRUMENTS, emptySet())!!.mapNotNull { n -> Instrument.entries.firstOrNull { it.name == n } }.toSet()
+    if (!prefs.contains(MY_INSTRUMENTS)) {
+      DEFAULT_INSTRUMENTS
+    } else {
+      prefs.getStringSet(MY_INSTRUMENTS, emptySet())!!.mapNotNull { n -> Instrument.entries.firstOrNull { it.name == n } }.toSet()
+    },
   )
 
   /** The instruments the user plays, offered when planning a session. Starts as a jazz combo; empty offers all. */
@@ -90,6 +88,7 @@ class WoodshedRepository(
     val byId = overrides.associateBy { it.standardId }
     standards.map { it.withOverride(byId[it.id]) }
   }
+
   /** The user's edits to seeded exercises. */
   val exerciseOverrides: Flow<List<ExerciseOverrideEntity>> = db.exerciseOverrides().observeAll()
 
@@ -105,7 +104,6 @@ class WoodshedRepository(
     prefs.edit { putString(TRANSPOSITION, transposition.name) }
     _transposition.value = transposition
   }
-
 
   fun setInstrument(instrument: Instrument) {
     prefs.edit { putString(INSTRUMENT, instrument.name) }
@@ -172,11 +170,11 @@ class WoodshedRepository(
   private inline fun <reified T : Enum<T>> enumPref(key: String): T? =
     prefs.getString(key, null)?.let { name -> enumValues<T>().firstOrNull { it.name == name } }
 
-  private fun sha256(text: String): String =
-    MessageDigest.getInstance("SHA-256").digest(text.toByteArray()).joinToString("") { "%02x".format(it) }
+  private fun sha256(text: String): String = MessageDigest.getInstance("SHA-256").digest(text.toByteArray()).joinToString("") { "%02x".format(it) }
 
   private companion object {
     const val TRANSPOSITION = "transposition"
+
     /** A fresh install starts with a jazz combo's front line and rhythm section. */
     val DEFAULT_INSTRUMENTS = setOf(Instrument.TRUMPET, Instrument.TENOR_SAX, Instrument.BASS, Instrument.PIANO, Instrument.DRUMS)
     const val INSTRUMENT = "instrument"

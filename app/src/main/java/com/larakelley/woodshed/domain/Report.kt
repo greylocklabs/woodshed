@@ -7,7 +7,13 @@ enum class ReportSubject(val label: String, val problems: List<String>) {
   TUNE(
     "Tune",
     listOf(
-      "Wrong key", "Wrong major or minor", "Wrong composer or year", "Wrong form, bars or style", "Broken or wrong link", "Missing details", "Duplicate tune",
+      "Wrong key",
+      "Wrong major or minor",
+      "Wrong composer or year",
+      "Wrong form, bars or style",
+      "Broken or wrong link",
+      "Missing details",
+      "Duplicate tune",
       "Something else",
     ),
   ),

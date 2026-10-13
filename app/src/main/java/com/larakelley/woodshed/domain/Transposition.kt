@@ -5,7 +5,8 @@ enum class Family(val seedName: String, val displayName: String) {
   SAXOPHONE("Saxophone", "Sax"),
   CLARINET("Clarinet", "Clarinet"),
   FLUTE("Flute", "Flute"),
-  BRASS("Brass", "Brass");
+  BRASS("Brass", "Brass"),
+  ;
 
   companion object {
     fun fromSeedName(name: String): Family? = entries.firstOrNull { it.seedName == name }
@@ -39,13 +40,7 @@ enum class InstrumentGroup(val label: String) {
  * [family] is null where the exercises have no family of their own, so only exercises for everyone apply;
  * [breath] is false for instruments you don't blow or sing, which skip tone, breathing and tonguing work.
  */
-enum class Instrument(
-  val label: String,
-  val group: InstrumentGroup,
-  val transposition: Transposition,
-  val family: Family?,
-  val breath: Boolean = true,
-) {
+enum class Instrument(val label: String, val group: InstrumentGroup, val transposition: Transposition, val family: Family?, val breath: Boolean = true) {
   FLUTE("Flute", InstrumentGroup.WOODWINDS, Transposition.C, Family.FLUTE),
   PICCOLO("Piccolo", InstrumentGroup.WOODWINDS, Transposition.C, Family.FLUTE),
   ALTO_FLUTE("Alto flute", InstrumentGroup.WOODWINDS, Transposition.G, Family.FLUTE),

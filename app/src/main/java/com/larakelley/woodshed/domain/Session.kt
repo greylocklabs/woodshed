@@ -1,9 +1,9 @@
 package com.larakelley.woodshed.domain
 
-import kotlin.math.roundToInt
-import kotlin.random.Random
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlin.math.roundToInt
+import kotlin.random.Random
 
 /** What a session concentrates on, as the exercise categories that train it. */
 enum class Focus(val label: String, val emoji: String, val categories: List<String>) {

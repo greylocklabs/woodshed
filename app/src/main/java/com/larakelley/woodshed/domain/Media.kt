@@ -63,7 +63,9 @@ data class MediaLink(val url: String, val kind: MediaKind, val videoId: String? 
           }
           if (id != null && YOUTUBE_ID.matches(id)) return MediaLink(text, MediaKind.YOUTUBE, id, start)
         }
+
         "youtu.be" -> path.firstOrNull()?.takeIf { YOUTUBE_ID.matches(it) }?.let { return MediaLink(text, MediaKind.YOUTUBE, it, start) }
+
         "vimeo.com", "player.vimeo.com" -> {
           val id = path.lastOrNull { VIMEO_ID.matches(it) }
           val fragmentStart = parseTime(uri.rawFragment?.removePrefix("t="))

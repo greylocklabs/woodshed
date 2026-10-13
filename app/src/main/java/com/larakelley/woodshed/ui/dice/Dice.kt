@@ -26,9 +26,9 @@ import com.larakelley.woodshed.data.PracticeService
 import com.larakelley.woodshed.data.Roll
 import com.larakelley.woodshed.data.RollKind
 import com.larakelley.woodshed.data.SoloPool
-import com.larakelley.woodshed.data.clock
 import com.larakelley.woodshed.data.TunePool
 import com.larakelley.woodshed.data.WoodshedRepository
+import com.larakelley.woodshed.data.clock
 import com.larakelley.woodshed.data.seed.SeedValidator
 import com.larakelley.woodshed.domain.ClickTrack
 import com.larakelley.woodshed.domain.Grade
@@ -84,6 +84,7 @@ class DiceViewModel(
   private val _ui = MutableStateFlow(DiceUi())
   val ui: StateFlow<DiceUi> = _ui.asStateFlow()
   private var roll: Roll? = null
+
   /** When the current roll was shown, so a grade logs how long it was worked on. */
   private var rolledAt = 0L
 
@@ -198,26 +199,45 @@ fun DiceScreen(
       PillChoice(RollKind.entries.map { it.label to it }, c.kind, { k -> onConstrain { it.copy(kind = k) } }, tagPrefix = "roll-kind")
       if (solos) {
         DropdownChip("Solos", c.soloPool.label, SoloPool.entries.map { it.label to it }) { p -> onConstrain { it.copy(soloPool = p ?: SoloPool.MINE) } }
-      } else FlowRow(Modifier.padding(vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-        if (c.playlistId == null) {
-          DropdownChip("Tunes", c.pool.label, TunePool.entries.map { it.label to it }) { p -> onConstrain { it.copy(pool = p ?: TunePool.MY_TUNES) } }
-        }
-        if (ui.playlists.isNotEmpty()) {
-          DropdownChip("Playlist", ui.playlists.firstOrNull { it.first == c.playlistId }?.second ?: "Any", ui.playlists.map { it.second to it.first }, allowAny = true) { id ->
-            onConstrain { it.copy(playlistId = id) }
+      } else {
+        FlowRow(Modifier.padding(vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+          if (c.playlistId == null) {
+            DropdownChip("Tunes", c.pool.label, TunePool.entries.map { it.label to it }) { p -> onConstrain { it.copy(pool = p ?: TunePool.MY_TUNES) } }
           }
+          if (ui.playlists.isNotEmpty()) {
+            DropdownChip(
+              "Playlist",
+              ui.playlists.firstOrNull {
+                it.first == c.playlistId
+              }?.second ?: "Any",
+              ui.playlists.map { it.second to it.first },
+              allowAny = true,
+            ) { id ->
+              onConstrain { it.copy(playlistId = id) }
+            }
+          }
+          DropdownChip("Style", c.style ?: "Any", ui.styles.map { it to it }, allowAny = true) { s -> onConstrain { it.copy(style = s) } }
+          DropdownChip(
+            "Collection",
+            c.collection ?: "Any",
+            SeedValidator.COLLECTIONS.map {
+              it to it
+            },
+            allowAny = true,
+          ) { v -> onConstrain { it.copy(collection = v) } }
+          DropdownChip("Exercise", c.exerciseName ?: "Any", ui.exercises.map { it to it }, allowAny = true) { e -> onConstrain { it.copy(exerciseName = e) } }
+          DropdownChip("Key", c.keyChoice.label, KeyChoice.entries.map { it.label to it }) { k -> onConstrain { it.copy(keyChoice = k ?: KeyChoice.USUAL) } }
         }
-        DropdownChip("Style", c.style ?: "Any", ui.styles.map { it to it }, allowAny = true) { s -> onConstrain { it.copy(style = s) } }
-        DropdownChip("Collection", c.collection ?: "Any", SeedValidator.COLLECTIONS.map { it to it }, allowAny = true) { v -> onConstrain { it.copy(collection = v) } }
-        DropdownChip("Exercise", c.exerciseName ?: "Any", ui.exercises.map { it to it }, allowAny = true) { e -> onConstrain { it.copy(exerciseName = e) } }
-        DropdownChip("Key", c.keyChoice.label, KeyChoice.entries.map { it.label to it }) { k -> onConstrain { it.copy(keyChoice = k ?: KeyChoice.USUAL) } }
       }
       StickerButton(onClick = onRoll, modifier = Modifier.fillMaxWidth().height(64.dp).testTag("roll")) {
         Text(if (ui.card == null && ui.solo == null) "🎲 Roll" else "🎲 Roll again", style = MaterialTheme.typography.titleLarge)
       }
       if (ui.nothingMatches) {
-        if (solos) EmptyState("🎧", "Nothing to roll", "No solos fit. Pick a wider set, or add solos to your list from the Transcribe tab.")
-        else EmptyState("🎲", "Nothing to roll", "No tunes fit these choices. Loosen them, or add tunes to your list from the Tunes tab.")
+        if (solos) {
+          EmptyState("🎧", "Nothing to roll", "No solos fit. Pick a wider set, or add solos to your list from the Transcribe tab.")
+        } else {
+          EmptyState("🎲", "Nothing to roll", "No tunes fit these choices. Loosen them, or add tunes to your list from the Tunes tab.")
+        }
       }
       ui.solo?.takeIf { solos }?.let { s ->
         Text(s.title, style = MaterialTheme.typography.displaySmall, modifier = Modifier.testTag("dice-solo-title"))

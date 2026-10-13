@@ -37,8 +37,19 @@ fun ExerciseDetail(exercise: ExerciseRow, onBack: () -> Unit, modifier: Modifier
     }
     Text(exercise.name, style = MaterialTheme.typography.headlineMedium)
     when {
-      exercise.userCreated -> Text("💪 Your exercise", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary, modifier = Modifier.testTag("your-exercise"))
-      exercise.edited -> Text("✏️ Edited by you", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary, modifier = Modifier.testTag("edited-exercise"))
+      exercise.userCreated -> Text(
+        "💪 Your exercise",
+        style = MaterialTheme.typography.labelLarge,
+        color = MaterialTheme.colorScheme.primary,
+        modifier = Modifier.testTag("your-exercise"),
+      )
+
+      exercise.edited -> Text(
+        "✏️ Edited by you",
+        style = MaterialTheme.typography.labelLarge,
+        color = MaterialTheme.colorScheme.primary,
+        modifier = Modifier.testTag("edited-exercise"),
+      )
     }
     ExerciseFacts(exercise)
     ReportButton(

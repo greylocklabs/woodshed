@@ -240,11 +240,7 @@ data class RestoreResult(
 
 class BackupException(message: String) : Exception(message)
 
-class BackupService(
-  private val db: WoodshedDatabase,
-  private val repository: WoodshedRepository,
-  private val now: () -> Long = System::currentTimeMillis,
-) {
+class BackupService(private val db: WoodshedDatabase, private val repository: WoodshedRepository, private val now: () -> Long = System::currentTimeMillis) {
   private val json = Json {
     prettyPrint = true
     ignoreUnknownKeys = true
@@ -266,14 +262,25 @@ class BackupService(
       },
       exerciseEdits = db.exerciseOverrides().all().mapNotNull { o ->
         val name = exercises[o.exerciseId] ?: return@mapNotNull null
-        BackupExerciseEdit(name, o.name, o.category, o.description, o.minutes, o.difficulty, o.tempoBpm, o.families, o.appliesToTune, o.updatedAt, o.cleared.splitFields())
+        BackupExerciseEdit(
+          name, o.name, o.category, o.description, o.minutes, o.difficulty, o.tempoBpm, o.families, o.appliesToTune, o.updatedAt,
+          o.cleared.splitFields(),
+        )
       },
       mySolos = db.transcriptions().all().filter { it.userCreated && it.archivedAt == null }.map {
-        BackupSolo(it.slug, it.standardId?.let { s -> slugs[s] }, it.title, it.soloist, it.instrument, it.context, it.recorded, it.url, it.startSeconds, it.endSeconds, it.keyName, it.tonality, it.performers)
+        BackupSolo(
+          it.slug,
+          it.standardId?.let { s ->
+            slugs[s]
+          },
+          it.title, it.soloist, it.instrument, it.context, it.recorded, it.url, it.startSeconds, it.endSeconds, it.keyName, it.tonality, it.performers,
+        )
       },
       soloProgress = db.transcriptions().all().associate { it.id to it.slug }.let { soloSlugs ->
         db.transcriptions().states().mapNotNull { s ->
-          soloSlugs[s.transcriptionId]?.let { BackupSoloProgress(it, s.status, s.notes, s.startedAt, s.doneAt, s.reps, s.lapses, s.intervalDays, s.ease, s.dueAt, s.lastReviewedAt) }
+          soloSlugs[s.transcriptionId]?.let {
+            BackupSoloProgress(it, s.status, s.notes, s.startedAt, s.doneAt, s.reps, s.lapses, s.intervalDays, s.ease, s.dueAt, s.lastReviewedAt)
+          }
         }
       },
       media = db.tuneMedia().all().mapNotNull { m -> slugs[m.standardId]?.let { BackupMedia(it, m.url, m.title, m.position, m.createdAt) } },
@@ -283,11 +290,17 @@ class BackupService(
       },
       edits = db.tuneOverrides().all().mapNotNull { o ->
         val slug = slugs[o.standardId] ?: return@mapNotNull null
-        BackupEdit(slug, o.title, o.composer, o.year, o.bars, o.timeSignature, o.form, o.style, o.keyName, o.tonality, o.collection, o.updatedAt, o.cleared.splitFields())
+        BackupEdit(
+          slug, o.title, o.composer, o.year, o.bars, o.timeSignature, o.form, o.style, o.keyName, o.tonality, o.collection, o.updatedAt,
+          o.cleared.splitFields(),
+        )
       },
       tunes = db.tuneStates().all().mapNotNull { s ->
         val slug = slugs[s.standardId] ?: return@mapNotNull null
-        BackupTune(slug, s.lifecycle, s.keyPolicy, s.cyclePosition, s.notes, s.wishlistedAt, s.introducedAt, s.reps, s.lapses, s.intervalDays, s.ease, s.dueAt, s.lastReviewedAt)
+        BackupTune(
+          slug, s.lifecycle, s.keyPolicy, s.cyclePosition, s.notes, s.wishlistedAt, s.introducedAt, s.reps, s.lapses, s.intervalDays, s.ease, s.dueAt,
+          s.lastReviewedAt,
+        )
       },
       knowledge = db.tuneKnowledge().all().mapNotNull { k ->
         slugs[k.standardId]?.let { BackupKnowledge(it, k.comfort, k.knownKeys, k.updatedAt) }
@@ -334,7 +347,11 @@ class BackupService(
           style = t.style, keyName = t.key, keyPitchClass = Key.pitchClassOf(t.key), tonality = t.tonality, collection = t.collection, userCreated = true,
         )
         val existing = db.standards().bySlug(t.slug)
-        if (existing == null) db.standards().insert(row) else if (existing.userCreated) db.standards().update(listOf(row.copy(id = existing.id)))
+        if (existing == null) {
+          db.standards().insert(row)
+        } else if (existing.userCreated) {
+          db.standards().update(listOf(row.copy(id = existing.id)))
+        }
       }
       val keepExercises = backup.myExercises.map { it.name }.toSet()
       for (old in db.exercises().userCreated()) {
@@ -349,12 +366,17 @@ class BackupService(
         // A seeded exercise with the same name keeps it; the restored one is marked as the user's.
         when {
           existing == null -> db.exercises().insert(row)
+
           existing.userCreated -> db.exercises().update(listOf(row.copy(id = existing.id)))
+
           else -> {
             // Restoring the same file again finds the copy made last time rather than making another.
             val earlier = db.exercises().byName("${e.name} (yours)")?.takeIf { it.userCreated }
-            if (earlier != null) db.exercises().update(listOf(row.copy(id = earlier.id, name = earlier.name)))
-            else db.exercises().insert(row.copy(name = freeExerciseName(e.name, db.exercises().all().map { it.name }.toSet())))
+            if (earlier != null) {
+              db.exercises().update(listOf(row.copy(id = earlier.id, name = earlier.name)))
+            } else {
+              db.exercises().insert(row.copy(name = freeExerciseName(e.name, db.exercises().all().map { it.name }.toSet())))
+            }
           }
         }
       }
@@ -363,7 +385,12 @@ class BackupService(
       for (e in backup.exerciseEdits) {
         val id = exerciseIds[e.exercise] ?: continue
         db.exerciseOverrides().upsert(
-          ExerciseOverrideEntity(id, e.name, e.category, e.description, e.minutes, e.difficulty, e.tempoBpm, e.families, e.appliesToTune, e.updatedAt, clearedFields(e.cleared))
+          ExerciseOverrideEntity(
+            id, e.name, e.category, e.description, e.minutes, e.difficulty, e.tempoBpm, e.families, e.appliesToTune, e.updatedAt,
+            clearedFields(
+              e.cleared,
+            ),
+          ),
         )
       }
       val ids = db.standards().all().associate { it.slug to it.id }
@@ -372,7 +399,13 @@ class BackupService(
       for (e in backup.edits) {
         val id = ids[e.slug] ?: continue
         db.tuneOverrides().upsert(
-          TuneOverrideEntity(id, e.title, e.composer, e.year, e.bars, e.timeSignature, e.form, e.style, e.key, Key.pitchClassOf(e.key), e.tonality, e.collection, e.updatedAt, clearedFields(e.cleared))
+          TuneOverrideEntity(
+            id, e.title, e.composer, e.year, e.bars, e.timeSignature, e.form, e.style, e.key,
+            Key.pitchClassOf(
+              e.key,
+            ),
+            e.tonality, e.collection, e.updatedAt, clearedFields(e.cleared),
+          ),
         )
         edits++
       }
@@ -389,7 +422,10 @@ class BackupService(
           continue
         }
         db.tuneStates().upsert(
-          TuneStateEntity(id, t.lifecycle, t.keyPolicy, t.cyclePosition, t.notes, t.wishlistedAt, t.introducedAt, t.reps, t.lapses, t.intervalDays, t.ease, t.dueAt, t.lastReviewedAt)
+          TuneStateEntity(
+            id, t.lifecycle, t.keyPolicy, t.cyclePosition, t.notes, t.wishlistedAt, t.introducedAt, t.reps, t.lapses, t.intervalDays, t.ease, t.dueAt,
+            t.lastReviewedAt,
+          ),
         )
         tunes++
       }
@@ -416,7 +452,7 @@ class BackupService(
             keyWrittenPitchClass = r.keyWrittenPitchClass, keyWrittenMinor = r.keyWrittenMinor, grade = r.grade, reviewedAt = r.reviewedAt,
             elapsedMs = r.elapsedMs, schedulerId = r.schedulerId, schedulerVersion = r.schedulerVersion, intervalBefore = r.intervalBefore,
             intervalAfter = r.intervalAfter, easeBefore = r.easeBefore, easeAfter = r.easeAfter,
-          )
+          ),
         )
         reviews++
       }
@@ -427,19 +463,27 @@ class BackupService(
       }
       for (s in backup.mySolos.filter { it.slug.startsWith(SeedValidator.USER_SLUG_PREFIX) }) {
         val row = TranscriptionEntity(
-          slug = s.slug, standardId = s.tune?.let { ids[it] }, title = s.title, soloist = s.soloist, instrument = s.instrument, context = s.context, recorded = s.recorded, url = s.url,
+          slug = s.slug,
+          standardId = s.tune?.let {
+            ids[it]
+          },
+          title = s.title, soloist = s.soloist, instrument = s.instrument, context = s.context, recorded = s.recorded, url = s.url,
           startSeconds = s.startSeconds, endSeconds = s.endSeconds, keyName = s.key, keyPitchClass = Key.pitchClassOf(s.key), tonality = s.tonality,
           performers = s.performers, userCreated = true,
         )
         val existing = db.transcriptions().bySlug(s.slug)
-        if (existing == null) db.transcriptions().insert(row) else if (existing.userCreated) db.transcriptions().update(listOf(row.copy(id = existing.id)))
+        if (existing == null) {
+          db.transcriptions().insert(row)
+        } else if (existing.userCreated) {
+          db.transcriptions().update(listOf(row.copy(id = existing.id)))
+        }
       }
       db.transcriptions().deleteAllStates()
       val soloIds = db.transcriptions().all().associate { it.slug to it.id }
       for (p in backup.soloProgress) {
         val id = soloIds[p.slug] ?: continue
         db.transcriptions().upsertState(
-          TranscriptionStateEntity(id, p.status, p.notes, p.startedAt, p.doneAt, p.reps, p.lapses, p.intervalDays, p.ease, p.dueAt, p.lastReviewedAt)
+          TranscriptionStateEntity(id, p.status, p.notes, p.startedAt, p.doneAt, p.reps, p.lapses, p.intervalDays, p.ease, p.dueAt, p.lastReviewedAt),
         )
       }
       for (r in backup.reviews.filter { it.kind == BackupReview.KIND_SOLO }) {
@@ -450,7 +494,7 @@ class BackupService(
             keyWrittenPitchClass = r.keyWrittenPitchClass, keyWrittenMinor = r.keyWrittenMinor, grade = r.grade, reviewedAt = r.reviewedAt,
             elapsedMs = r.elapsedMs, schedulerId = r.schedulerId, schedulerVersion = r.schedulerVersion, intervalBefore = r.intervalBefore,
             intervalAfter = r.intervalAfter, easeBefore = r.easeBefore, easeAfter = r.easeAfter,
-          )
+          ),
         )
         reviews++
       }

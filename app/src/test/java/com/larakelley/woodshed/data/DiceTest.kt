@@ -11,11 +11,11 @@ import com.larakelley.woodshed.domain.Key
 import com.larakelley.woodshed.domain.KeyMask
 import com.larakelley.woodshed.domain.Lifecycle
 import com.larakelley.woodshed.domain.Tonality
-import kotlin.random.Random
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import kotlin.random.Random
 
 class DiceTest {
   private fun tune(id: Long, key: String?, tonality: Tonality?, style: String = "Swing") =
@@ -77,7 +77,13 @@ class DiceTest {
   @Test
   fun notYetKnownNeverPicksACheckedKey() {
     val known = (0..10).fold(0) { m, pc -> KeyMask.toggle(m, pc) } // everything but B
-    val r = rolls(DiceConstraints(pool = TunePool.IN_PRACTICE, keyChoice = KeyChoice.NOT_YET_KNOWN), mapOf(1L to TuneKnowledgeEntity(1, knownKeys = known), 2L to TuneKnowledgeEntity(2, knownKeys = known)))
+    val r = rolls(
+      DiceConstraints(pool = TunePool.IN_PRACTICE, keyChoice = KeyChoice.NOT_YET_KNOWN),
+      mapOf(
+        1L to TuneKnowledgeEntity(1, knownKeys = known),
+        2L to TuneKnowledgeEntity(2, knownKeys = known),
+      ),
+    )
     assertEquals(setOf(11), r.map { it.concertKey!!.pitchClass }.toSet())
   }
 
@@ -92,7 +98,11 @@ class DiceTest {
   fun solosRollFromTheChosenPart() {
     fun solo(id: Long) = TranscriptionEntity(id = id, slug = "s$id", title = "Solo $id", soloist = "X", instrument = "Trumpet", url = "https://example.org")
     val solos = listOf(solo(1), solo(2), solo(3), solo(4).copy(archivedAt = 1))
-    val soloStates = mapOf(1L to TranscriptionStateEntity(1, TranscriptionStatus.ACTIVE), 2L to TranscriptionStateEntity(2, TranscriptionStatus.WISHLIST), 4L to TranscriptionStateEntity(4, TranscriptionStatus.ACTIVE))
+    val soloStates = mapOf(
+      1L to TranscriptionStateEntity(1, TranscriptionStatus.ACTIVE),
+      2L to TranscriptionStateEntity(2, TranscriptionStatus.WISHLIST),
+      4L to TranscriptionStateEntity(4, TranscriptionStatus.ACTIVE),
+    )
     fun drawn(pool: SoloPool) = (1..100).mapNotNull { rollSolo(solos, soloStates, pool, Random(it))?.id }.toSet()
     assertEquals(setOf(1L, 2L), drawn(SoloPool.MINE))
     assertEquals(setOf(1L), drawn(SoloPool.TRANSCRIBING))

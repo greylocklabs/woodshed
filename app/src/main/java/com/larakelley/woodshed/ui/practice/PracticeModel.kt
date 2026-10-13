@@ -69,6 +69,7 @@ enum class TuneGroup(val label: String, val emoji: String) {
   LEARNING("Learning", "🌱"),
   REPERTOIRE("Repertoire", "⭐"),
   WISHLIST("Wishlist", "💭"),
+
   /** Tunes from the chosen playlist that are not in the user's practice yet. */
   PLAYLIST("From the playlist", "📋"),
 }
@@ -173,7 +174,10 @@ class PracticeViewModel(
   private val sessions: SessionRunner,
   private val now: () -> Long = System::currentTimeMillis,
 ) : ViewModel() {
-  private val _ui = MutableStateFlow(PracticeUi(setup = SetupUi(instrument = repository.instrument.value, minutes = repository.sessionMinutes, focus = repository.sessionFocus)))
+  private val _ui =
+    MutableStateFlow(
+      PracticeUi(setup = SetupUi(instrument = repository.instrument.value, minutes = repository.sessionMinutes, focus = repository.sessionFocus)),
+    )
   val ui: StateFlow<PracticeUi> = _ui.asStateFlow()
 
   private var exercises: Map<Long, ExerciseEntity> = emptyMap()
@@ -189,8 +193,13 @@ class PracticeViewModel(
         val ended = _ui.value.running && !s.running
         _ui.update {
           it.copy(
-            running = s.running, step = s.step, stepIndex = s.stepIndex, stepCount = s.stepCount, stepStartedAt = s.stepStartedAt,
-            pausedAt = s.pausedAt, reviewedThisSession = s.reviewed,
+            running = s.running,
+            step = s.step,
+            stepIndex = s.stepIndex,
+            stepCount = s.stepCount,
+            stepStartedAt = s.stepStartedAt,
+            pausedAt = s.pausedAt,
+            reviewedThisSession = s.reviewed,
             // However the session ended, here or from its notification, the next one starts from setup.
             setup = if (ended) it.setup.copy(plan = null) else it.setup,
           )
@@ -214,7 +223,9 @@ class PracticeViewModel(
       val own = sessionTunes(standards, repository.tuneStates.first(), now())
       // Playlist tunes not yet in practice join the list so they can be ticked; practising them starts them learning.
       val byId = standards.associateBy { it.id }
-      val extra = chosen?.tuneIds.orEmpty().filter { id -> own.none { it.id == id } }.mapNotNull { byId[it] }.map { SessionTune(it.id, it.title, TuneGroup.PLAYLIST) }
+      val extra = chosen?.tuneIds.orEmpty().filter { id ->
+        own.none { it.id == id }
+      }.mapNotNull { byId[it] }.map { SessionTune(it.id, it.title, TuneGroup.PLAYLIST) }
       val tunes = own + extra
       val summary = practice.summary()
       _ui.update { ui ->
@@ -300,7 +311,9 @@ class PracticeViewModel(
         val category = exercises[block.exerciseId]?.category
         usable.filter { it.category == category && !it.appliesToTune && it.id !in inPlan }.randomOrNull()?.let { block.copy(exerciseId = it.id) }
       }
+
       is PlanBlock.Tune -> usable.filter { it.appliesToTune && it.id != block.exerciseId }.randomOrNull()?.let { block.copy(exerciseId = it.id) }
+
       is PlanBlock.Solo -> null
     } ?: return
     _ui.update { it.copy(setup = it.setup.copy(plan = plan.toMutableList().also { p -> p[index] = planItem(swapped) })) }

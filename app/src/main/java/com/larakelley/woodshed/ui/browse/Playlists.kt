@@ -52,7 +52,9 @@ fun PlaylistPicker(tune: TuneRow, playlists: List<Playlist>, actions: PlaylistAc
         playlists.forEach { p ->
           val inList = tune.id in p.tuneIds
           Row(
-            Modifier.fillMaxWidth().toggleable(value = inList, role = Role.Checkbox) { on -> if (on) actions.add(p.id, tune.id) else actions.remove(p.id, tune.id) }
+            Modifier.fillMaxWidth().toggleable(value = inList, role = Role.Checkbox) { on ->
+              if (on) actions.add(p.id, tune.id) else actions.remove(p.id, tune.id)
+            }
               .testTag("pick-playlist-${p.name}"),
             verticalAlignment = Alignment.CenterVertically,
           ) {
@@ -68,7 +70,10 @@ fun PlaylistPicker(tune: TuneRow, playlists: List<Playlist>, actions: PlaylistAc
           modifier = Modifier.fillMaxWidth().padding(top = 8.dp).testTag("new-playlist-name"),
         )
         TextButton(
-          onClick = { actions.create(name, tune.id) {}; name = "" },
+          onClick = {
+            actions.create(name, tune.id) {}
+            name = ""
+          },
           enabled = name.isNotBlank(),
           modifier = Modifier.testTag("create-playlist"),
         ) { Text("Create and add") }
@@ -87,7 +92,9 @@ fun PlaylistsScreen(playlists: List<Playlist>, actions: PlaylistActions, onOpen:
     Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
       BackButton("Back to tunes", onBack)
       Spacer(Modifier.weight(1f))
-      StickerButton(onClick = { naming = true }, modifier = Modifier.height(40.dp).testTag("new-playlist"), contentPadding = PaddingValues(horizontal = 14.dp)) {
+      StickerButton(onClick = {
+        naming = true
+      }, modifier = Modifier.height(40.dp).testTag("new-playlist"), contentPadding = PaddingValues(horizontal = 14.dp)) {
         Text("+ New playlist", style = MaterialTheme.typography.labelLarge)
       }
     }
@@ -112,7 +119,12 @@ fun PlaylistsScreen(playlists: List<Playlist>, actions: PlaylistActions, onOpen:
       }
     }
   }
-  if (naming) NameDialog("New playlist", "", onDismiss = { naming = false }) { name -> actions.create(name, null) { onOpen(it) }; naming = false }
+  if (naming) {
+    NameDialog("New playlist", "", onDismiss = { naming = false }) { name ->
+      actions.create(name, null) { onOpen(it) }
+      naming = false
+    }
+  }
 }
 
 /** One playlist: its tunes in order, with moving, removing, renaming and deleting. */
@@ -144,31 +156,51 @@ fun PlaylistScreen(
     }
     LazyColumn(Modifier.weight(1f).fillMaxWidth()) {
       itemsIndexed(rows, key = { _, t -> t.id }) { i, tune ->
-        Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 4.dp, top = 4.dp, bottom = 4.dp).testTag("entry-$i"), verticalAlignment = Alignment.CenterVertically) {
+        Row(
+          Modifier.fillMaxWidth().padding(start = 16.dp, end = 4.dp, top = 4.dp, bottom = 4.dp).testTag("entry-$i"),
+          verticalAlignment = Alignment.CenterVertically,
+        ) {
           Text("${i + 1}", style = MaterialTheme.typography.titleMedium, color = callie.textMuted, modifier = Modifier.padding(end = 12.dp))
           Column(Modifier.weight(1f).clickable { onOpenTune(tune.slug) }) {
             Text(tune.title, style = MaterialTheme.typography.titleMedium)
             Text(tune.key, style = MaterialTheme.typography.bodySmall, color = callie.textMuted)
           }
-          TextButton(onClick = { actions.move(playlist.id, tune.id, rows[i - 1].id) }, enabled = i > 0, modifier = Modifier.size(44.dp).testTag("up-$i"), contentPadding = PaddingValues(0.dp)) { Text("▲") }
-          TextButton(onClick = { actions.move(playlist.id, tune.id, rows[i + 1].id) }, enabled = i < rows.lastIndex, modifier = Modifier.size(44.dp).testTag("down-$i"), contentPadding = PaddingValues(0.dp)) { Text("▼") }
-          TextButton(onClick = { actions.remove(playlist.id, tune.id) }, modifier = Modifier.size(44.dp).testTag("remove-$i"), contentPadding = PaddingValues(0.dp)) { Text("✕") }
+          TextButton(onClick = {
+            actions.move(playlist.id, tune.id, rows[i - 1].id)
+          }, enabled = i > 0, modifier = Modifier.size(44.dp).testTag("up-$i"), contentPadding = PaddingValues(0.dp)) { Text("▲") }
+          TextButton(onClick = {
+            actions.move(playlist.id, tune.id, rows[i + 1].id)
+          }, enabled = i < rows.lastIndex, modifier = Modifier.size(44.dp).testTag("down-$i"), contentPadding = PaddingValues(0.dp)) { Text("▼") }
+          TextButton(onClick = {
+            actions.remove(playlist.id, tune.id)
+          }, modifier = Modifier.size(44.dp).testTag("remove-$i"), contentPadding = PaddingValues(0.dp)) { Text("✕") }
         }
         HorizontalDivider()
       }
       item {
-        TextButton(onClick = { confirmDelete = true }, modifier = Modifier.padding(16.dp).testTag("delete-playlist")) { Text("Delete this playlist", color = callie.danger) }
+        TextButton(onClick = {
+          confirmDelete = true
+        }, modifier = Modifier.padding(16.dp).testTag("delete-playlist")) { Text("Delete this playlist", color = callie.danger) }
       }
     }
   }
-  if (renaming) NameDialog("Rename playlist", playlist.name, onDismiss = { renaming = false }) { actions.rename(playlist.id, it); renaming = false }
+  if (renaming) {
+    NameDialog("Rename playlist", playlist.name, onDismiss = { renaming = false }) {
+      actions.rename(playlist.id, it)
+      renaming = false
+    }
+  }
   if (confirmDelete) {
     AlertDialog(
       onDismissRequest = { confirmDelete = false },
       title = { Text("Delete ${playlist.name}?") },
       text = { Text("The playlist goes; its tunes stay in your library.") },
       confirmButton = {
-        TextButton(onClick = { confirmDelete = false; actions.delete(playlist.id); onBack() }, modifier = Modifier.testTag("confirm-delete-playlist")) {
+        TextButton(onClick = {
+          confirmDelete = false
+          actions.delete(playlist.id)
+          onBack()
+        }, modifier = Modifier.testTag("confirm-delete-playlist")) {
           Text("Delete", color = callie.danger)
         }
       },

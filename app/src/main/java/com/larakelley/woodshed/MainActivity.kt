@@ -70,7 +70,11 @@ class MainActivity : ComponentActivity() {
           val navigation = remember { AppNavigation() }
           val tuneSolos = remember(transcribeUi.rows) {
             transcribeUi.rows.filter { it.solo.standardId != null }.groupBy({ it.solo.standardId!! }) { r ->
-              SoloLink(r.solo.id, "${r.solo.soloist}, ${r.solo.instrument.lowercase()}", listOfNotNull(r.solo.context, r.solo.recorded?.let(::recordedLabel)).joinToString(" · "))
+              SoloLink(
+                r.solo.id,
+                "${r.solo.soloist}, ${r.solo.instrument.lowercase()}",
+                listOfNotNull(r.solo.context, r.solo.recorded?.let(::recordedLabel)).joinToString(" · "),
+              )
             }
           }
           val browseState by browse.state.collectAsStateWithLifecycle()
@@ -103,19 +107,25 @@ class MainActivity : ComponentActivity() {
               browseState,
               browse::selectTransposition,
               actions = browse.actions,
-            playlistActions = browse.playlistActions,
-            exerciseActions = browse.exerciseActions,
-            mediaActions = browse.mediaActions,
+              playlistActions = browse.playlistActions,
+              exerciseActions = browse.exerciseActions,
+              mediaActions = browse.mediaActions,
               onTuneFilter = browse::updateTuneFilter,
               onExerciseFilter = browse::updateExerciseFilter,
               practiceTab = {
                 // A running session lives in this tab, so switching to the metronome or tuner and back keeps it.
                 if (practiceUi.running) {
                   SessionScreen(
-                    practiceUi, practice::grade, practice::next, onStop = practice::stop, onUseTempo = { metronome.setBpm(it); metronome.start() },
+                    practiceUi, practice::grade, practice::next, onStop = practice::stop, onUseTempo = {
+                      metronome.setBpm(it)
+                      metronome.start()
+                    },
                     onPause = practice::pause, onResume = practice::resume,
                     dronePlaying = droning.playing,
-                    onDrone = { pc -> pc?.let(app.drone::setPitchClass); app.drone.start() },
+                    onDrone = { pc ->
+                      pc?.let(app.drone::setPitchClass)
+                      app.drone.start()
+                    },
                     onStopDrone = app.drone::stop,
                   )
                 } else {
@@ -124,15 +134,20 @@ class MainActivity : ComponentActivity() {
                 }
               },
               transcribeTab = { TranscribeScreen(transcribeUi, transcribe.actions, navigation) },
-            metronomeTab = {
-                MetronomeScreen(click, MetronomeActions(metronome::toggle, metronome::setBpm, metronome::setBeatsPerBar, metronome::setAccentFirst, metronome::setFeel))
+              metronomeTab = {
+                MetronomeScreen(
+                  click,
+                  MetronomeActions(metronome::toggle, metronome::setBpm, metronome::setBeatsPerBar, metronome::setAccentFirst, metronome::setFeel),
+                )
               },
               tuneSolos = tuneSolos,
               navigation = navigation,
               droneTab = {
                 val drone = app.drone
                 DroneScreen(
-                  droning, browseState.transposition, tuning.a4,
+                  droning,
+                  browseState.transposition,
+                  tuning.a4,
                   DroneActions(drone::toggle, drone::setPitchClass, drone::setOctave, drone::setFifth, drone::setVolume),
                 )
               },
@@ -144,8 +159,18 @@ class MainActivity : ComponentActivity() {
               settings = { onBack, modifier ->
                 SettingsScreen(
                   settingsUi,
-                  SettingsActions(settings::setInstrument, settings::toggleMyInstrument, settings::setTransposition, settings::setThemeMode, settings::export, settings::restore),
-                  onBack = { settings.clearMessage(); onBack() },
+                  SettingsActions(
+                    settings::setInstrument,
+                    settings::toggleMyInstrument,
+                    settings::setTransposition,
+                    settings::setThemeMode,
+                    settings::export,
+                    settings::restore,
+                  ),
+                  onBack = {
+                    settings.clearMessage()
+                    onBack()
+                  },
                   modifier = modifier,
                 )
               },

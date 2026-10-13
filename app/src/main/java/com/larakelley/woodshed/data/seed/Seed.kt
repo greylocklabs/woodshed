@@ -85,14 +85,13 @@ data class Seed(val standards: List<StandardSeed>, val exercises: List<ExerciseS
       return seed
     }
 
-    private inline fun <reified T> decode(file: String, text: String): T =
-      try {
-        json.decodeFromString<T>(text)
-      } catch (e: SerializationException) {
-        throw SeedException(listOf("$file: ${e.message}"))
-      } catch (e: IllegalArgumentException) {
-        throw SeedException(listOf("$file: ${e.message}"))
-      }
+    private inline fun <reified T> decode(file: String, text: String): T = try {
+      json.decodeFromString<T>(text)
+    } catch (e: SerializationException) {
+      throw SeedException(listOf("$file: ${e.message}"))
+    } catch (e: IllegalArgumentException) {
+      throw SeedException(listOf("$file: ${e.message}"))
+    }
   }
 }
 
@@ -153,6 +152,5 @@ object SeedValidator {
     }
   }
 
-  private fun duplicates(values: List<String>): Set<String> =
-    values.groupingBy { it }.eachCount().filterValues { it > 1 }.keys
+  private fun duplicates(values: List<String>): Set<String> = values.groupingBy { it }.eachCount().filterValues { it > 1 }.keys
 }

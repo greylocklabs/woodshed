@@ -107,7 +107,14 @@ fun ExerciseEditor(
     }
 
     SectionLabel("Category")
-    PillChoice((categories + draft.category).distinct().map { it to it }, draft.category, { draft = draft.copy(category = it) }, tagPrefix = "exercise-category")
+    PillChoice(
+      (categories + draft.category).distinct().map {
+        it to it
+      },
+      draft.category,
+      { draft = draft.copy(category = it) },
+      tagPrefix = "exercise-category",
+    )
     SectionLabel("Difficulty")
     PillChoice((1..5).map { "$it" to it }, draft.difficulty, { draft = draft.copy(difficulty = it) }, tagPrefix = "exercise-difficulty")
     SectionLabel("For")
@@ -142,6 +149,7 @@ fun ExerciseEditor(
     when {
       exercise?.userCreated == true ->
         TextButton(onClick = { confirm = "delete" }, modifier = Modifier.testTag("exercise-delete")) { Text("Delete this exercise", color = callie.danger) }
+
       exercise?.edited == true ->
         TextButton(onClick = { confirm = "reset" }, modifier = Modifier.testTag("exercise-reset")) { Text("Reset to the original", color = callie.danger) }
     }
@@ -151,9 +159,20 @@ fun ExerciseEditor(
     AlertDialog(
       onDismissRequest = { confirm = null },
       title = { Text(if (what == "delete") "Delete ${exercise?.name}?" else "Reset ${exercise?.name}?") },
-      text = { Text(if (what == "delete") "It leaves your exercises and future sessions. Past practice is kept." else "Your edits are dropped and the original comes back.") },
+      text = {
+        Text(
+          if (what == "delete") {
+            "It leaves your exercises and future sessions. Past practice is kept."
+          } else {
+            "Your edits are dropped and the original comes back."
+          },
+        )
+      },
       confirmButton = {
-        TextButton(onClick = { confirm = null; if (what == "delete") onDelete() else onReset() }, modifier = Modifier.testTag("exercise-confirm")) {
+        TextButton(onClick = {
+          confirm = null
+          if (what == "delete") onDelete() else onReset()
+        }, modifier = Modifier.testTag("exercise-confirm")) {
           Text(if (what == "delete") "Delete" else "Reset", color = callie.danger)
         }
       },
