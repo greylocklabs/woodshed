@@ -25,7 +25,7 @@ class TranscribeScreenTest {
 
   // An "other" link keeps the test off the network: it opens outside rather than embedding a player.
   private val solo = TranscriptionEntity(
-    id = 1, slug = "s", title = "Singin' In The Rain", soloist = "Patrick Bartley", instrument = "Alto sax", context = "Emmet's Place",
+    id = 1, slug = "s", title = "Singin' In The Rain", soloist = "Patrick Bartley", instrument = "Alto sax", context = "Emmet's Place", recorded = "2022-08-13",
     url = "https://example.org/clip", startSeconds = 120, endSeconds = 329, keyName = "Db", keyPitchClass = 1, tonality = Tonality.MAJOR,
   )
 
@@ -34,7 +34,7 @@ class TranscribeScreenTest {
     val rows = listOf(SoloRow(solo, TranscriptionStateEntity(1, TranscriptionStatus.ACTIVE)), SoloRow(solo.copy(id = 2, slug = "t", title = "Donna Lee"), null))
     assertEquals(listOf("🎧 Transcribing", "Solos to try"), soloGroups(rows).map { it.first })
     assertEquals("Concert Db", soloKey(solo, Transposition.C))
-    assertEquals("Bb for Eb (concert Db)", soloKey(solo, Transposition.Eb))
+    assertEquals("Bb (Concert Db)", soloKey(solo, Transposition.Eb))
   }
 
   @Test
@@ -43,7 +43,8 @@ class TranscribeScreenTest {
     compose.setContent { TranscribeScreen(TranscribeUi(listOf(SoloRow(solo, null)), Transposition.Eb), SoloActions(start = { started += it })) }
     compose.onNodeWithTag("solo-s").performClick()
     compose.onNodeWithText("Solo 2:00 to 5:29").assertExists()
-    compose.onNodeWithText("Bb for Eb (concert Db)").assertExists()
+    compose.onNodeWithText("Emmet's Place · Aug 13, 2022").assertExists()
+    compose.onNodeWithText("Bb (Concert Db)").assertExists()
     compose.onNodeWithTag("start-solo").performScrollTo().performClick()
     assertEquals(listOf(1L), started)
   }

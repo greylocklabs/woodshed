@@ -107,6 +107,7 @@ class SeedImporter(private val db: WoodshedDatabase, private val now: () -> Long
         soloist = t.soloist,
         instrument = t.instrument,
         context = t.context,
+        recorded = t.recorded,
         url = t.url,
         startSeconds = t.startSeconds,
         endSeconds = t.endSeconds,

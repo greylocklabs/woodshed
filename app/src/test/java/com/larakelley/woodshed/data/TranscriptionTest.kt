@@ -54,6 +54,7 @@ class TranscriptionTest {
     assertEquals(329, solo.endSeconds)
     assertEquals(1, solo.keyPitchClass)
     assertEquals(Tonality.MAJOR, solo.tonality)
+    assertEquals("2022-08-13", solo.recorded)
     assertEquals(listOf("Emmet Cohen", "Patrick Bartley", "Yasushi Nakamura", "Kyle Poole"), solo.performers.map { it.name })
   }
 
@@ -89,7 +90,7 @@ class TranscriptionTest {
 
   @Test
   fun yourOwnSolosAndProgressAreBackedUp() = runTest {
-    val mine = service.add(TranscriptionDraft(title = "Donna Lee", soloist = "Charlie Parker", instrument = "Alto sax", url = "https://youtu.be/jNQXAC9IVRw", start = "0:10", end = "1:00"))
+    val mine = service.add(TranscriptionDraft(title = "Donna Lee", soloist = "Charlie Parker", instrument = "Alto sax", url = "https://youtu.be/jNQXAC9IVRw", start = "0:10", end = "1:00", recorded = "1947"))
     service.start(mine)
     service.setNotes(bartley().id, "First chorus done")
     val repository = WoodshedRepository(db, context.getSharedPreferences("solo-test", Context.MODE_PRIVATE).also { it.edit().clear().commit() }, context.assets)
@@ -101,6 +102,7 @@ class TranscriptionTest {
     val restored = db.transcriptions().bySlug("user-donna-lee-charlie-parker")!!
     assertNull(restored.archivedAt)
     assertEquals(10, restored.startSeconds)
+    assertEquals("1947", restored.recorded)
     assertEquals(TranscriptionStatus.ACTIVE, db.transcriptions().state(restored.id)!!.status)
     assertEquals("First chorus done", db.transcriptions().state(bartley().id)!!.notes)
   }
@@ -115,6 +117,18 @@ class TranscriptionTest {
     assertNull(parseClock("soon"))
     assertEquals("5:29", clock(329))
     assertEquals("1:02:03", clock(3723))
+  }
+
+  @Test
+  fun recordingDatesTakeADayAMonthOrAYear() {
+    assertEquals("2022-08-13", parseRecorded(" 2022-08-13 "))
+    assertEquals("2022-08", parseRecorded("2022-08"))
+    assertEquals("1959", parseRecorded("1959"))
+    assertNull(parseRecorded("2022-13-01"))
+    assertNull(parseRecorded("Aug 2022"))
+    assertEquals("Aug 13, 2022", recordedLabel("2022-08-13"))
+    assertEquals("Aug 2022", recordedLabel("2022-08"))
+    assertEquals("1959", recordedLabel("1959"))
   }
 
   @Test

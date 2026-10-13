@@ -1,5 +1,6 @@
 package com.larakelley.woodshed.data.seed
 
+import com.larakelley.woodshed.data.parseRecorded
 import com.larakelley.woodshed.domain.Family
 import com.larakelley.woodshed.domain.Key
 import com.larakelley.woodshed.domain.MediaLink
@@ -55,6 +56,8 @@ data class TranscriptionSeed(
   val instrument: String,
   /** Where it was played, such as an album or a live series. */
   val context: String? = null,
+  /** When it was played: "2022-08-13", "2022-08" or "2022". */
+  val recorded: String? = null,
   val url: String,
   @SerialName("start_seconds") val startSeconds: Int? = null,
   @SerialName("end_seconds") val endSeconds: Int? = null,
@@ -131,6 +134,7 @@ object SeedValidator {
       if (t.tune != null && t.tune !in tuneSlugs) add("$at: no tune ${t.tune}")
       if (t.title.isBlank() || t.soloist.isBlank() || t.instrument.isBlank()) add("$at: title, soloist and instrument are needed")
       if (MediaLink.parse(t.url) == null) add("$at: bad url ${t.url}")
+      if (t.recorded != null && parseRecorded(t.recorded) != t.recorded) add("$at: bad recorded date ${t.recorded}")
       if (t.key != null && Key.pitchClassOf(t.key) == null) add("$at: bad key ${t.key}")
       if (t.tonality != null && Tonality.fromSeedName(t.tonality) == null) add("$at: bad tonality ${t.tonality}")
       if (t.startSeconds != null && t.endSeconds != null && t.endSeconds <= t.startSeconds) add("$at: ends before it starts")

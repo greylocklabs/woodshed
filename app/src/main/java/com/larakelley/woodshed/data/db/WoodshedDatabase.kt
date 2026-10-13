@@ -221,7 +221,7 @@ class Converters {
 
 @Database(
   entities = [StandardEntity::class, ExerciseEntity::class, TuneStateEntity::class, ReviewEventEntity::class, TuneKnowledgeEntity::class, TuneOverrideEntity::class, PlaylistEntity::class, PlaylistTuneEntity::class, ExerciseOverrideEntity::class, TuneMediaEntity::class, TranscriptionEntity::class, TranscriptionStateEntity::class],
-  version = 11,
+  version = 12,
   autoMigrations = [
     AutoMigration(from = 1, to = 2),
     AutoMigration(from = 2, to = 3),
@@ -233,6 +233,7 @@ class Converters {
     AutoMigration(from = 8, to = 9),
     AutoMigration(from = 9, to = 10),
     AutoMigration(from = 10, to = 11),
+    AutoMigration(from = 11, to = 12),
   ],
 )
 @TypeConverters(Converters::class)

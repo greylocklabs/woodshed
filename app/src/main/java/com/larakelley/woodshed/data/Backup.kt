@@ -125,6 +125,7 @@ data class BackupSolo(
   val soloist: String,
   val instrument: String,
   val context: String? = null,
+  val recorded: String? = null,
   val url: String,
   @SerialName("start_seconds") val startSeconds: Int? = null,
   @SerialName("end_seconds") val endSeconds: Int? = null,
@@ -255,7 +256,7 @@ class BackupService(
         BackupExerciseEdit(name, o.name, o.category, o.description, o.minutes, o.difficulty, o.tempoBpm, o.families, o.appliesToTune, o.updatedAt)
       },
       mySolos = db.transcriptions().all().filter { it.userCreated && it.archivedAt == null }.map {
-        BackupSolo(it.slug, it.standardId?.let { s -> slugs[s] }, it.title, it.soloist, it.instrument, it.context, it.url, it.startSeconds, it.endSeconds, it.keyName, it.tonality, it.performers)
+        BackupSolo(it.slug, it.standardId?.let { s -> slugs[s] }, it.title, it.soloist, it.instrument, it.context, it.recorded, it.url, it.startSeconds, it.endSeconds, it.keyName, it.tonality, it.performers)
       },
       soloProgress = db.transcriptions().all().associate { it.id to it.slug }.let { soloSlugs ->
         db.transcriptions().states().mapNotNull { s ->
@@ -400,7 +401,7 @@ class BackupService(
       }
       for (s in backup.mySolos) {
         val row = TranscriptionEntity(
-          slug = s.slug, standardId = s.tune?.let { ids[it] }, title = s.title, soloist = s.soloist, instrument = s.instrument, context = s.context, url = s.url,
+          slug = s.slug, standardId = s.tune?.let { ids[it] }, title = s.title, soloist = s.soloist, instrument = s.instrument, context = s.context, recorded = s.recorded, url = s.url,
           startSeconds = s.startSeconds, endSeconds = s.endSeconds, keyName = s.key, keyPitchClass = Key.pitchClassOf(s.key), tonality = s.tonality,
           performers = s.performers, userCreated = true,
         )
