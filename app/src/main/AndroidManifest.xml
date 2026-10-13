@@ -4,6 +4,11 @@
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <!-- Only for playing YouTube and Vimeo links in place; nothing loads until a player is tapped. -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- A running practice session: its notification, the service that keeps it going, and its alert timing. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <application
         android:name=".WoodshedApplication"
@@ -24,6 +29,17 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <service
+            android:name=".session.SessionService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Practice session timer: shows the current block and its time left, and alerts when the time is up." />
+        </service>
+        <receiver
+            android:name=".session.SessionActionReceiver"
+            android:exported="false" />
     </application>
 
 </manifest>

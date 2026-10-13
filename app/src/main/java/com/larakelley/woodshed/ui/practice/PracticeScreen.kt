@@ -1,6 +1,11 @@
 package com.larakelley.woodshed.ui.practice
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -35,13 +40,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import com.larakelley.woodshed.domain.Focus
 import com.larakelley.woodshed.domain.Grade
 import com.larakelley.woodshed.domain.Instrument
@@ -190,6 +198,19 @@ private fun SessionSetup(ui: PracticeUi, actions: SetupActions) {
 
 @Composable
 private fun PlanReview(plan: List<PlanItem>, actions: SetupActions) {
+  val context = LocalContext.current
+  // The session's notification needs this, and one posted before it is granted never appears, so it is asked
+  // before the session starts. The session runs whatever the answer.
+  val askNotifications = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { actions.start() }
+  val start = {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+      ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+    ) {
+      askNotifications.launch(Manifest.permission.POST_NOTIFICATIONS)
+    } else {
+      actions.start()
+    }
+  }
   BackHandler(onBack = actions.discardPlan)
   var shown by remember { mutableStateOf<ExerciseRow?>(null) }
   shown?.let { exercise ->
@@ -226,7 +247,7 @@ private fun PlanReview(plan: List<PlanItem>, actions: SetupActions) {
       }
     }
     if (plan.isNotEmpty()) {
-      StickerButton(onClick = actions.start, modifier = Modifier.fillMaxWidth().padding(16.dp).height(72.dp).testTag("start")) {
+      StickerButton(onClick = start, modifier = Modifier.fillMaxWidth().padding(16.dp).height(72.dp).testTag("start")) {
         Text("🎶 Start", style = MaterialTheme.typography.titleLarge)
       }
     }
@@ -242,21 +263,39 @@ fun SessionScreen(
   onStop: () -> Unit,
   /** Sets the metronome to an exercise's tempo and starts it. */
   onUseTempo: (Int) -> Unit = {},
+  onPause: () -> Unit = {},
+  onResume: () -> Unit = {},
 ) {
   val view = LocalView.current
   val uris = LocalUriHandler.current
+  var confirmEnd by rememberSaveable { mutableStateOf(false) }
   DisposableEffect(Unit) {
     view.keepScreenOn = true
     onDispose { view.keepScreenOn = false }
   }
-  BackHandler(onBack = onStop)
+  // Back used to end the session outright; a session now outlives the screen, so ending it is asked first.
+  BackHandler { if (ui.step == null) onStop() else confirmEnd = true }
+  if (confirmEnd) {
+    AlertDialog(
+      onDismissRequest = { confirmEnd = false },
+      title = { Text("End this session?") },
+      text = { Text("Blocks you've finished stay logged.") },
+      confirmButton = { TextButton(onClick = { confirmEnd = false; onStop() }, modifier = Modifier.testTag("confirm-end")) { Text("End session") } },
+      dismissButton = { TextButton(onClick = { confirmEnd = false }) { Text("Keep going") } },
+    )
+  }
 
   Column(Modifier.fillMaxSize()) {
     val step = ui.step
     Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
       Text(if (step == null) "Done" else "${ui.stepIndex + 1} of ${ui.stepCount}", modifier = Modifier.weight(1f).padding(start = 8.dp))
-      if (step != null) StepTimer(ui.stepStartedAt, step.minutes)
-      TextButton(onClick = onStop) { Text("End session") }
+      if (step != null) {
+        StepTimer(ui.stepStartedAt, step.minutes, ui.pausedAt)
+        TextButton(onClick = if (ui.pausedAt == null) onPause else onResume, modifier = Modifier.testTag("pause")) {
+          Text(if (ui.pausedAt == null) "⏸ Pause" else "▶ Resume")
+        }
+      }
+      TextButton(onClick = { if (step == null) onStop() else confirmEnd = true }, modifier = Modifier.testTag("end-session")) { Text("End") }
     }
     if (step == null) {
       Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -316,14 +355,15 @@ fun SessionScreen(
   }
 }
 
-/** Time on the current block against its planned minutes. */
+/** Time on the current block against its planned minutes; frozen while [pausedAt] is set. */
 @Composable
-private fun StepTimer(startedAt: Long, minutes: Int) {
+private fun StepTimer(startedAt: Long, minutes: Int, pausedAt: Long?) {
   // Counts from when the block started rather than from when this screen appeared, so leaving the tab keeps time.
   var elapsed by remember(startedAt) { mutableLongStateOf(0L) }
-  LaunchedEffect(startedAt) {
+  LaunchedEffect(startedAt, pausedAt) {
     while (true) {
-      elapsed = ((System.currentTimeMillis() - startedAt) / 1000).coerceAtLeast(0)
+      elapsed = (((pausedAt ?: System.currentTimeMillis()) - startedAt) / 1000).coerceAtLeast(0)
+      if (pausedAt != null) break
       delay(1000)
     }
   }

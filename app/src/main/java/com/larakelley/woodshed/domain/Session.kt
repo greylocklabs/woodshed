@@ -2,6 +2,8 @@ package com.larakelley.woodshed.domain
 
 import kotlin.math.roundToInt
 import kotlin.random.Random
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 /** What a session concentrates on, as the exercise categories that train it. */
 enum class Focus(val label: String, val emoji: String, val categories: List<String>) {
@@ -18,15 +20,22 @@ enum class Focus(val label: String, val emoji: String, val categories: List<Stri
 /** The planner's view of an exercise, so planning stays free of the database. */
 data class PlanExercise(val id: Long, val category: String, val minutes: Int, val appliesToTune: Boolean, val difficulty: Int = 1)
 
+@Serializable
 sealed interface PlanBlock {
   val minutes: Int
 
+  @Serializable
+  @SerialName("exercise")
   data class Exercise(val exerciseId: Long, override val minutes: Int) : PlanBlock
 
   /** A tune worked through one tune exercise. */
+  @Serializable
+  @SerialName("tune")
   data class Tune(val tuneId: Long, val exerciseId: Long, override val minutes: Int) : PlanBlock
 
   /** Time on the solo being transcribed. */
+  @Serializable
+  @SerialName("solo")
   data class Solo(val transcriptionId: Long, override val minutes: Int) : PlanBlock
 }
 
@@ -65,11 +74,13 @@ fun planSession(
   val used = mutableSetOf<Long>()
   val blocks = mutableListOf<PlanBlock>()
   var left = totalMinutes
+  var warmedUp = false
 
   drills.filter { it.category in Focus.TONE.categories && it.difficulty <= MAX_WARMUP_DIFFICULTY }.randomOrNull(random)?.let { warmup ->
     val minutes = minOf(warmup.minutes, warmupMinutes(totalMinutes), left)
     if (minutes >= MIN_BLOCK_MINUTES) {
       blocks += PlanBlock.Exercise(warmup.id, minutes)
+      warmedUp = true
       used += warmup.id
       left -= minutes
     }
@@ -103,13 +114,19 @@ fun planSession(
   }
   if (tuneCount > 0) left = 0
 
-  // Leftover minutes too short for a block of their own go to the last block.
-  if (left in 1 until MIN_BLOCK_MINUTES && blocks.isNotEmpty()) {
-    blocks[blocks.lastIndex] = when (val last = blocks.last()) {
-      is PlanBlock.Exercise -> last.copy(minutes = last.minutes + left)
-      is PlanBlock.Tune -> last.copy(minutes = last.minutes + left)
-      is PlanBlock.Solo -> last.copy(minutes = last.minutes + left)
+  // Minutes no block took, such as when the exercises run out with no tunes picked, are shared out a minute at a
+  // time so the plan fills the session. The warm-up keeps its length unless it is all there is.
+  val stretchable = blocks.indices.drop(if (warmedUp && blocks.size > 1) 1 else 0)
+  var i = 0
+  while (left > 0 && stretchable.isNotEmpty()) {
+    val at = stretchable[i % stretchable.size]
+    blocks[at] = when (val b = blocks[at]) {
+      is PlanBlock.Exercise -> b.copy(minutes = b.minutes + 1)
+      is PlanBlock.Tune -> b.copy(minutes = b.minutes + 1)
+      is PlanBlock.Solo -> b.copy(minutes = b.minutes + 1)
     }
+    left--
+    i++
   }
   return blocks
 }

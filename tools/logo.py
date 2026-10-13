@@ -155,6 +155,15 @@ def monochrome():
     return out + "</group>\n</vector>\n"
 
 
+def notification():
+    """The status bar draws small icons as a white silhouette at 24dp, so this is the monochrome glyph with the
+    log's own bounds (x 8-119, y 16-108) filling the frame."""
+    mono = monochrome().split("\n", 5)[5]
+    head = HEAD.replace('android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108"',
+                        'android:width="24dp" android:height="24dp" android:viewportWidth="116" android:viewportHeight="116"')
+    return head + '<group android:translateX="-5.5" android:translateY="-4">\n' + mono
+
+
 def background():
     return HEAD + f'  <path android:pathData="M0,0h108v108h-108z" android:fillColor="{BACKGROUND}"/>\n</vector>\n'
 
@@ -166,4 +175,5 @@ if __name__ == "__main__":
     (RES / "ic_launcher_monochrome.xml").write_text(monochrome())
     (RES / "ic_launcher_background.xml").write_text(background())
     (RES / "logo.xml").write_text(foreground(LOGO_HEAD, "<group>"))
-    print("wrote assets/logo.svg, the launcher icon layers and the in-app logo")
+    (RES / "ic_notification.xml").write_text(notification())
+    print("wrote assets/logo.svg, the launcher icon layers, the notification icon and the in-app logo")

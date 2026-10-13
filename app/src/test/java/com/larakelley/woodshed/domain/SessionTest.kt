@@ -34,6 +34,14 @@ class SessionTest {
   }
 
   @Test
+  fun fillsTheRequestedTimeWithoutTunesEvenWhenExercisesRunShort() {
+    // Air & Breathing has a single five-minute exercise, so a long session on that focus runs out of drills.
+    for (minutes in listOf(10, 15, 60)) {
+      assertEquals("$minutes min", minutes, plan(minutes, setOf(Focus.TONE)).sumOf { it.minutes })
+    }
+  }
+
+  @Test
   fun startsWithAToneWarmup() {
     for (seed in 0..20) {
       val first = plan(30, setOf(Focus.ARTICULATION), seed = seed).first() as PlanBlock.Exercise

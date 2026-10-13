@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import com.larakelley.woodshed.data.Card
 import com.larakelley.woodshed.data.PracticeService
 import com.larakelley.woodshed.data.PracticeSummary
-import com.larakelley.woodshed.data.TranscriptionService
 import com.larakelley.woodshed.data.WoodshedRepository
 import com.larakelley.woodshed.data.db.ExerciseEntity
 import com.larakelley.woodshed.data.db.StandardEntity
@@ -18,11 +17,11 @@ import com.larakelley.woodshed.domain.Focus
 import com.larakelley.woodshed.domain.Grade
 import com.larakelley.woodshed.domain.Instrument
 import com.larakelley.woodshed.domain.Lifecycle
-import com.larakelley.woodshed.domain.MediaLink
 import com.larakelley.woodshed.domain.PlanBlock
 import com.larakelley.woodshed.domain.Transposition
 import com.larakelley.woodshed.domain.delayLabel
 import com.larakelley.woodshed.domain.titleSortKey
+import com.larakelley.woodshed.session.SessionRunner
 import com.larakelley.woodshed.ui.browse.ExerciseRow
 import com.larakelley.woodshed.ui.browse.exerciseRow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -156,6 +155,8 @@ data class PracticeUi(
   val stepIndex: Int = 0,
   /** When the current block began, in epoch milliseconds. */
   val stepStartedAt: Long = 0,
+  /** When the session was paused, or null while it runs. */
+  val pausedAt: Long? = null,
   val stepCount: Int = 0,
   val reviewedThisSession: Int = 0,
 )
@@ -166,7 +167,7 @@ const val SESSION_MINUTES_MAX = 180
 class PracticeViewModel(
   private val repository: WoodshedRepository,
   private val practice: PracticeService,
-  private val transcriptions: TranscriptionService? = null,
+  private val sessions: SessionRunner,
   private val now: () -> Long = System::currentTimeMillis,
 ) : ViewModel() {
   private val _ui = MutableStateFlow(PracticeUi(setup = SetupUi(instrument = repository.instrument.value, minutes = repository.sessionMinutes, focus = repository.sessionFocus)))
@@ -175,14 +176,25 @@ class PracticeViewModel(
   private var exercises: Map<Long, ExerciseEntity> = emptyMap()
   private var titles: Map<Long, String> = emptyMap()
   private var solos: Map<Long, TranscriptionEntity> = emptyMap()
-  private var currentSolo: Long? = null
-  private var steps: List<PlanBlock> = emptyList()
-  private var current: Card? = null
   private var selectionTouched = false
   private var soloTouched = false
 
   init {
     refresh()
+    viewModelScope.launch {
+      sessions.state.collect { s ->
+        val ended = _ui.value.running && !s.running
+        _ui.update {
+          it.copy(
+            running = s.running, step = s.step, stepIndex = s.stepIndex, stepCount = s.stepCount, stepStartedAt = s.stepStartedAt,
+            pausedAt = s.pausedAt, reviewedThisSession = s.reviewed,
+            // However the session ended, here or from its notification, the next one starts from setup.
+            setup = if (ended) it.setup.copy(plan = null) else it.setup,
+          )
+        }
+        if (ended) refresh()
+      }
+    }
   }
 
   /** Reloads the tune list and summary; due tunes stay ticked until the user changes the selection. */
@@ -306,68 +318,17 @@ class PracticeViewModel(
 
   fun start() {
     val plan = _ui.value.setup.plan?.takeIf { it.isNotEmpty() } ?: return
-    steps = plan.map { it.block }
-    _ui.update { it.copy(running = true, stepIndex = 0, stepCount = steps.size, reviewedThisSession = 0) }
-    viewModelScope.launch { show(0) }
+    sessions.start(plan.map { it.block })
   }
 
   /** Finishes an exercise block, or moves past a tune block without grading it. */
-  fun next() {
-    current = null
-    currentSolo = null
-    viewModelScope.launch { show(_ui.value.stepIndex + 1) }
-  }
+  fun next() = sessions.next()
 
-  fun grade(grade: Grade) {
-    currentSolo?.let { solo ->
-      currentSolo = null
-      viewModelScope.launch {
-        transcriptions?.grade(solo, grade)
-        _ui.update { it.copy(reviewedThisSession = it.reviewedThisSession + 1) }
-        show(_ui.value.stepIndex + 1)
-      }
-      return
-    }
-    val card = current ?: return
-    current = null
-    viewModelScope.launch {
-      practice.grade(card, grade)
-      _ui.update { it.copy(reviewedThisSession = it.reviewedThisSession + 1) }
-      show(_ui.value.stepIndex + 1)
-    }
-  }
+  fun grade(grade: Grade) = sessions.grade(grade)
 
-  fun stop() {
-    current = null
-    currentSolo = null
-    steps = emptyList()
-    _ui.update { it.copy(running = false, step = null, setup = it.setup.copy(plan = null)) }
-    refresh()
-  }
+  fun pause() = sessions.pause()
 
-  private suspend fun show(index: Int) {
-    val block = steps.getOrNull(index)
-    val step = when (block) {
-      null -> null
-      is PlanBlock.Exercise -> exercises[block.exerciseId]?.let { StepView.Exercise(it.name, it.category, it.description, it.tempoBpm, block.minutes) }
-      is PlanBlock.Tune -> practice.cardForBlock(block, repository.transposition.value)?.let { card ->
-        current = card
-        val preview = practice.preview(card).mapValues { it.value.dueAt ?: now() }
-        StepView.Tune(cardView(card, preview, now()), block.minutes)
-      }
-      is PlanBlock.Solo -> solos[block.transcriptionId]?.let { solo ->
-        currentSolo = solo.id
-        val state = repository.transcriptionStates.first().firstOrNull { it.transcriptionId == solo.id }
-        val pad = TranscriptionService.PADDING_SECONDS
-        val embed = MediaLink.parse(solo.url)?.embed(solo.startSeconds?.let { (it - pad).coerceAtLeast(0) }, solo.endSeconds?.let { it + pad })
-        val preview = transcriptions?.preview(solo.id).orEmpty()
-        StepView.Solo(
-          solo.title, "${solo.soloist}, ${solo.instrument.lowercase()}", state?.notes, embed, solo.url, solo.startSeconds,
-          Grade.entries.map { g -> g to delayLabel(now(), preview[g] ?: now()) }, block.minutes,
-        )
-      }
-    }
-    if (block != null && step == null) return show(index + 1)
-    _ui.update { it.copy(step = step, stepIndex = index, stepStartedAt = now()) }
-  }
+  fun resume() = sessions.resume()
+
+  fun stop() = sessions.stop()
 }
