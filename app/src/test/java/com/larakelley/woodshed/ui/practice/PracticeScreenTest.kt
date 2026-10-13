@@ -124,7 +124,8 @@ class PracticeScreenTest {
 
   @Test
   fun sessionSolosLeaveOutDoneOnesAndPutActiveFirst() {
-    fun solo(id: Long, title: String) = TranscriptionEntity(id = id, slug = "s$id", title = title, soloist = "X", instrument = "Trumpet", url = "https://example.org")
+    fun solo(id: Long, title: String) =
+      TranscriptionEntity(id = id, slug = "s$id", title = title, soloist = "X", instrument = "Trumpet", url = "https://example.org")
     val solos = listOf(solo(1, "Airegin"), solo(2, "Blues By Five"), solo(3, "Cherokee"), solo(4, "Donna Lee"))
     val states = listOf(
       TranscriptionStateEntity(1, TranscriptionStatus.WISHLIST),
@@ -138,7 +139,15 @@ class PracticeScreenTest {
   fun planningWaitsForAnInstrument() {
     val picked = mutableListOf<Instrument>()
     var ui by mutableStateOf(PracticeUi(setup = SetupUi(instrument = null)))
-    compose.setContent { PracticeHome(ui, SetupActions(setInstrument = { picked += it; ui = ui.copy(setup = ui.setup.copy(instrument = it)) })) }
+    compose.setContent {
+      PracticeHome(
+        ui,
+        SetupActions(setInstrument = {
+          picked += it
+          ui = ui.copy(setup = ui.setup.copy(instrument = it))
+        }),
+      )
+    }
 
     compose.onNodeWithTag("needs-instrument").assertExists()
     compose.onNodeWithTag("build-plan").assertDoesNotExist()

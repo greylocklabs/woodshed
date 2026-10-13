@@ -9,9 +9,11 @@ import kotlin.math.sin
 /** Which beats of the bar click. */
 enum class Feel(val label: String) {
   EVERY_BEAT("Every beat"),
+
   /** Beats 2 and 4, and every other beat in longer bars, where the hi-hat sits in swing. */
   BACKBEAT("2 and 4"),
-  DOWNBEAT("Beat 1 only");
+  DOWNBEAT("Beat 1 only"),
+  ;
 
   /** Whether the beat at [beatInBar] (0 is beat 1) clicks. */
   fun sounds(beatInBar: Int): Boolean = when (this) {
@@ -25,13 +27,7 @@ enum class Feel(val label: String) {
  * Renders metronome clicks into PCM at sample-accurate positions. Each beat's frame is computed from its index,
  * never accumulated, so timing cannot drift however long it runs or however the output is chunked.
  */
-class ClickTrack(
-  val sampleRate: Int,
-  val bpm: Int,
-  val beatsPerBar: Int,
-  val accentFirst: Boolean = true,
-  val feel: Feel = Feel.EVERY_BEAT,
-) {
+class ClickTrack(val sampleRate: Int, val bpm: Int, val beatsPerBar: Int, val accentFirst: Boolean = true, val feel: Feel = Feel.EVERY_BEAT) {
   init {
     require(bpm in MIN_BPM..MAX_BPM) { "bpm out of range: $bpm" }
     require(beatsPerBar >= 1)
@@ -73,11 +69,10 @@ class ClickTrack(
     }
   }
 
-  private fun click(hz: Double): ShortArray =
-    ShortArray(clickFrames) { i ->
-      val t = i.toDouble() / sampleRate
-      (sin(2 * PI * hz * t) * exp(-t * DECAY) * AMPLITUDE * Short.MAX_VALUE).toInt().toShort()
-    }
+  private fun click(hz: Double): ShortArray = ShortArray(clickFrames) { i ->
+    val t = i.toDouble() / sampleRate
+    (sin(2 * PI * hz * t) * exp(-t * DECAY) * AMPLITUDE * Short.MAX_VALUE).toInt().toShort()
+  }
 
   companion object {
     const val MIN_BPM = 30

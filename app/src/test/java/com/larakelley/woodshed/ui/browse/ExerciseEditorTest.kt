@@ -25,7 +25,9 @@ class ExerciseEditorTest {
   @Test
   fun aTakenNameIsRefusedThenANewOneSaves() {
     val saved = mutableListOf<ExerciseDraft>()
-    compose.setContent { ExerciseEditor(null, listOf("Tone", "Technique"), setOf("long tones"), onSave = { saved += it }, onDelete = {}, onReset = {}, onBack = {}) }
+    compose.setContent {
+      ExerciseEditor(null, listOf("Tone", "Technique"), setOf("long tones"), onSave = { saved += it }, onDelete = {}, onReset = {}, onBack = {})
+    }
     compose.onNodeWithTag("exercise-name").performTextInput("Long Tones")
     compose.onNodeWithTag("exercise-description").performTextInput("Hold each note.")
     compose.onNodeWithTag("exercise-save").performScrollTo().performClick()

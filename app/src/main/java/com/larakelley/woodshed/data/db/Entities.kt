@@ -74,9 +74,10 @@ fun clearedFields(names: Collection<String>): String = names.sorted().joinToStri
 private fun String.clears(field: String) = field in split(',')
 
 /** This tune as the user sees it, with their edits laid over the seed's values. */
-fun StandardEntity.withOverride(o: TuneOverrideEntity?): StandardEntity =
-  if (o == null) this
-  else copy(
+fun StandardEntity.withOverride(o: TuneOverrideEntity?): StandardEntity = if (o == null) {
+  this
+} else {
+  copy(
     title = o.title ?: title,
     composer = if (o.cleared.clears("composer")) null else o.composer ?: composer,
     year = if (o.cleared.clears("year")) null else o.year ?: year,
@@ -89,6 +90,7 @@ fun StandardEntity.withOverride(o: TuneOverrideEntity?): StandardEntity =
     tonality = if (o.cleared.clears("tonality")) null else o.tonality ?: tonality,
     collection = o.collection ?: collection,
   )
+}
 
 /** The tune's usual key in concert pitch, or null when unknown. */
 val StandardEntity.homeKey: Key?
@@ -132,9 +134,10 @@ data class ExerciseOverrideEntity(
 )
 
 /** This exercise as the user sees it, with their edits laid over the seed's values. */
-fun ExerciseEntity.withOverride(o: ExerciseOverrideEntity?): ExerciseEntity =
-  if (o == null) this
-  else copy(
+fun ExerciseEntity.withOverride(o: ExerciseOverrideEntity?): ExerciseEntity = if (o == null) {
+  this
+} else {
+  copy(
     name = o.name ?: name,
     category = o.category ?: category,
     description = o.description ?: description,
@@ -144,6 +147,7 @@ fun ExerciseEntity.withOverride(o: ExerciseOverrideEntity?): ExerciseEntity =
     families = o.families ?: families,
     appliesToTune = o.appliesToTune ?: appliesToTune,
   )
+}
 
 /**
  * User-owned state for a tune; re-seeding never touches it. The scheduling columns are a cache that can be
@@ -216,11 +220,7 @@ data class TuneKnowledgeEntity(
 
 /** A named, ordered list of tunes the user made, such as a gig set. */
 @Entity(tableName = "playlists")
-data class PlaylistEntity(
-  @PrimaryKey(autoGenerate = true) val id: Long = 0,
-  val name: String,
-  val createdAt: Long,
-)
+data class PlaylistEntity(@PrimaryKey(autoGenerate = true) val id: Long = 0, val name: String, val createdAt: Long)
 
 /** One tune's place in a playlist. */
 @Entity(

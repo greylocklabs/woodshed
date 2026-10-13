@@ -32,11 +32,12 @@ class Metronome(private val prefs: SharedPreferences) {
       beatsPerBar = prefs.getInt(BEATS, 4).coerceIn(1, 12),
       accentFirst = prefs.getBoolean(ACCENT, true),
       feel = Feel.entries.firstOrNull { it.name == prefs.getString(FEEL, null) } ?: Feel.EVERY_BEAT,
-    )
+    ),
   )
   val state: StateFlow<MetronomeState> = _state.asStateFlow()
 
   @Volatile private var track: ClickTrack? = null
+
   @Volatile private var restartAt = 0L
   private var thread: Thread? = null
 
@@ -97,7 +98,9 @@ class Metronome(private val prefs: SharedPreferences) {
     val minBuffer = AudioTrack.getMinBufferSize(SAMPLE_RATE, AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT)
     val audio = AudioTrack.Builder()
       .setAudioAttributes(AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_MEDIA).setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION).build())
-      .setAudioFormat(AudioFormat.Builder().setSampleRate(SAMPLE_RATE).setEncoding(AudioFormat.ENCODING_PCM_16BIT).setChannelMask(AudioFormat.CHANNEL_OUT_MONO).build())
+      .setAudioFormat(
+        AudioFormat.Builder().setSampleRate(SAMPLE_RATE).setEncoding(AudioFormat.ENCODING_PCM_16BIT).setChannelMask(AudioFormat.CHANNEL_OUT_MONO).build(),
+      )
       .setBufferSizeInBytes(minBuffer * 2)
       .setTransferMode(AudioTrack.MODE_STREAM)
       .setPerformanceMode(AudioTrack.PERFORMANCE_MODE_LOW_LATENCY)

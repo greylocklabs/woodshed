@@ -193,35 +193,34 @@ fun tuneRows(
   states: Map<Long, TuneStateEntity> = emptyMap(),
   knowledge: Map<Long, TuneKnowledgeEntity> = emptyMap(),
   edited: Set<Long> = emptySet(),
-): List<TuneRow> =
-  standards.sortedBy { titleSortKey(it.title) }.map { s ->
-    TuneRow(
-      id = s.id,
-      slug = s.slug,
-      title = s.title,
-      composer = s.composer,
-      year = s.year,
-      credit = listOfNotNull(s.composer, s.year?.toString()).joinToString(", "),
-      shape = listOfNotNull(
-        s.form,
-        s.bars?.let { "$it bars" },
-        s.timeSignature?.takeIf { it != "4/4" },
-        s.style.takeIf { it != s.form },
-      ).joinToString(", "),
-      style = s.style,
-      key = keyLabel(s.homeKey, s.tonality, transposition),
-      homeKey = s.homeKey,
-      tonality = s.tonality,
-      state = states[s.id],
-      knowledge = knowledge[s.id],
-      transposition = transposition,
-      collection = s.collection,
-      verified = s.verified,
-      userCreated = s.userCreated,
-      edited = s.id in edited,
-      draft = TuneDraft.of(s),
-    )
-  }
+): List<TuneRow> = standards.sortedBy { titleSortKey(it.title) }.map { s ->
+  TuneRow(
+    id = s.id,
+    slug = s.slug,
+    title = s.title,
+    composer = s.composer,
+    year = s.year,
+    credit = listOfNotNull(s.composer, s.year?.toString()).joinToString(", "),
+    shape = listOfNotNull(
+      s.form,
+      s.bars?.let { "$it bars" },
+      s.timeSignature?.takeIf { it != "4/4" },
+      s.style.takeIf { it != s.form },
+    ).joinToString(", "),
+    style = s.style,
+    key = keyLabel(s.homeKey, s.tonality, transposition),
+    homeKey = s.homeKey,
+    tonality = s.tonality,
+    state = states[s.id],
+    knowledge = knowledge[s.id],
+    transposition = transposition,
+    collection = s.collection,
+    verified = s.verified,
+    userCreated = s.userCreated,
+    edited = s.id in edited,
+    draft = TuneDraft.of(s),
+  )
+}
 
 /** Lowercase letters and digits only, so "round midnight" finds "'Round Midnight". */
 private fun normalize(text: String): String = text.lowercase().filter { it.isLetterOrDigit() || it == ' ' }
@@ -285,7 +284,7 @@ fun exerciseRows(
         ExerciseSort.NAME -> compareBy { it.name.lowercase() }
         ExerciseSort.MINUTES -> compareBy({ it.minutes }, { it.name.lowercase() })
         ExerciseSort.DIFFICULTY -> compareBy({ it.difficulty }, { it.name.lowercase() })
-      }
+      },
     )
     .map { exerciseRow(it, it.id in edited) }
 }
@@ -339,7 +338,12 @@ class BrowseViewModel(
   private val exerciseFilter = MutableStateFlow(ExerciseFilter(instrument = repository.instrument.value))
 
   private val library = combine(repository.standards, repository.tuneStates, repository.tuneKnowledge, repository.transposition, repository.overrides) {
-      standards, states, knowledge, transposition, overrides ->
+      standards,
+      states,
+      knowledge,
+      transposition,
+      overrides,
+    ->
     tuneRows(standards, transposition, states.associateBy { it.standardId }, knowledge.associateBy { it.standardId }, overrides.map { it.standardId }.toSet())
   }
 
@@ -369,33 +373,34 @@ class BrowseViewModel(
     TunePart(rows, shown, filterTunes(rows, shown, chosen?.tuneIds), playlists, media.groupBy { it.standardId })
   }
 
-  private val exercisePart = combine(repository.exercises, exerciseFilter, repository.myInstruments, repository.exerciseOverrides) { exercises, filter, mine, overrides ->
-    val offered = Instrument.entries.filter { mine.isEmpty() || it in mine }
-    val shown = filter.copy(instrument = filter.instrument?.takeIf { it in offered })
-    val edited = overrides.map { it.exerciseId }.toSet()
-    ExercisePart(exercises, shown, offered, exerciseRows(exercises, shown, mine, edited), exerciseRows(exercises, edited = edited))
-  }
+  private val exercisePart =
+    combine(repository.exercises, exerciseFilter, repository.myInstruments, repository.exerciseOverrides) { exercises, filter, mine, overrides ->
+      val offered = Instrument.entries.filter { mine.isEmpty() || it in mine }
+      val shown = filter.copy(instrument = filter.instrument?.takeIf { it in offered })
+      val edited = overrides.map { it.exerciseId }.toSet()
+      ExercisePart(exercises, shown, offered, exerciseRows(exercises, shown, mine, edited), exerciseRows(exercises, edited = edited))
+    }
 
   val state: StateFlow<BrowseState> =
     combine(tunePart, exercisePart, repository.transposition, repository.seedError) { tunes, ex, transposition, error ->
-        BrowseState(
-          transposition = transposition,
-          tunes = tunes.rows,
-          totalTunes = tunes.all.size,
-          exercises = ex.rows,
-          totalExercises = exerciseRows(ex.all, mine = ex.mine).size,
-          myInstruments = ex.mine,
-          allExercises = ex.allRows,
-          tuneFilter = tunes.filter,
-          exerciseFilter = ex.filter,
-          styles = tunes.all.mapNotNull { it.style }.distinct().sorted(),
-          categories = ex.all.map { it.category }.distinct().sortedBy { Phase.categoryRank(it) },
-          seedError = error,
-          playlists = tunes.playlists,
-          media = tunes.media,
-          allTunes = tunes.all,
-        )
-      }
+      BrowseState(
+        transposition = transposition,
+        tunes = tunes.rows,
+        totalTunes = tunes.all.size,
+        exercises = ex.rows,
+        totalExercises = exerciseRows(ex.all, mine = ex.mine).size,
+        myInstruments = ex.mine,
+        allExercises = ex.allRows,
+        tuneFilter = tunes.filter,
+        exerciseFilter = ex.filter,
+        styles = tunes.all.mapNotNull { it.style }.distinct().sorted(),
+        categories = ex.all.map { it.category }.distinct().sortedBy { Phase.categoryRank(it) },
+        seedError = error,
+        playlists = tunes.playlists,
+        media = tunes.media,
+        allTunes = tunes.all,
+      )
+    }
       .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), BrowseState())
 
   val actions = TuneActions(
@@ -410,7 +415,9 @@ class BrowseViewModel(
     toggleKnownKey = { id, pc -> launch { practice.toggleKnownKey(id, pc) } },
     saveTune = { id, draft, saved ->
       viewModelScope.launch {
-        if (id == null) saved(tunes.add(draft)) else {
+        if (id == null) {
+          saved(tunes.add(draft))
+        } else {
           tunes.edit(id, draft)
           saved(state.value.tunes.firstOrNull { it.id == id }?.slug ?: "")
         }
@@ -423,7 +430,9 @@ class BrowseViewModel(
   val exerciseActions = ExerciseActions(
     save = { id, draft, saved ->
       viewModelScope.launch {
-        if (id == null) saved(exerciseLibrary.add(draft)) else {
+        if (id == null) {
+          saved(exerciseLibrary.add(draft))
+        } else {
           exerciseLibrary.edit(id, draft)
           saved(id)
         }

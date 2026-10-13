@@ -106,7 +106,9 @@ fun SwitchRow(
 ) {
   // The row is the touch target, so its pressed highlight spans the full width it is given.
   Row(
-    modifier.fillMaxWidth().heightIn(min = 52.dp).toggleable(value = checked, role = Role.Switch, onValueChange = onChange).padding(horizontal = horizontalPadding, vertical = 4.dp),
+    modifier.fillMaxWidth().heightIn(
+      min = 52.dp,
+    ).toggleable(value = checked, role = Role.Switch, onValueChange = onChange).padding(horizontal = horizontalPadding, vertical = 4.dp),
     verticalAlignment = Alignment.CenterVertically,
   ) {
     Column(Modifier.weight(1f).padding(end = 12.dp)) {
@@ -148,7 +150,12 @@ fun EmptyState(
     Text(title, style = MaterialTheme.typography.headlineSmall, textAlign = TextAlign.Center)
     Text(message, style = MaterialTheme.typography.bodyMedium, color = LocalCallie.current.textMuted, textAlign = TextAlign.Center)
     if (action != null) {
-      StickerButton(onClick = onAction, sticker = neutralSticker, modifier = Modifier.padding(top = 8.dp).height(44.dp).testTag("empty-action"), contentPadding = PaddingValues(horizontal = 18.dp)) {
+      StickerButton(
+        onClick = onAction,
+        sticker = neutralSticker,
+        modifier = Modifier.padding(top = 8.dp).height(44.dp).testTag("empty-action"),
+        contentPadding = PaddingValues(horizontal = 18.dp),
+      ) {
         Text(action, style = MaterialTheme.typography.labelLarge)
       }
     }

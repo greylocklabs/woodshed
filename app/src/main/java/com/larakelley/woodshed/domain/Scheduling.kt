@@ -16,13 +16,7 @@ enum class KeyPolicy {
   CYCLE,
 }
 
-data class CardState(
-  val reps: Int = 0,
-  val lapses: Int = 0,
-  val intervalDays: Double = 0.0,
-  val ease: Double = 2.5,
-  val dueAt: Long? = null,
-)
+data class CardState(val reps: Int = 0, val lapses: Int = 0, val intervalDays: Double = 0.0, val ease: Double = 2.5, val dueAt: Long? = null)
 
 /** Behind an interface so history can be replayed under a different algorithm later. */
 interface Scheduler {
@@ -58,11 +52,13 @@ object Sm2Scheduler : Scheduler {
     }
     val interval = when (state.reps) {
       0 -> if (grade == Grade.EASY) 4.0 else 1.0
+
       1 -> when (grade) {
         Grade.HARD -> 2.0
         Grade.EASY -> 6.0
         else -> 3.0
       }
+
       else -> when (grade) {
         Grade.HARD -> state.intervalDays * 1.2
         Grade.EASY -> state.intervalDays * ease * 1.3

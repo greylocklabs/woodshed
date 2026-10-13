@@ -1,9 +1,9 @@
 package com.larakelley.woodshed.domain
 
-import kotlin.random.Random
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
+import kotlin.random.Random
 
 class SchedulingTest {
   private val day = 24 * 60 * 60 * 1000L
@@ -11,7 +11,10 @@ class SchedulingTest {
   @Test
   fun goodGradesGrowTheInterval() {
     var s = CardState()
-    val intervals = (1..4).map { s = Sm2Scheduler.next(s, Grade.GOOD, 0); s.intervalDays }
+    val intervals = (1..4).map {
+      s = Sm2Scheduler.next(s, Grade.GOOD, 0)
+      s.intervalDays
+    }
     assertEquals(listOf(1.0, 3.0, 7.5, 18.75), intervals)
     assertEquals(4, s.reps)
     assertEquals((18.75 * day).toLong(), s.dueAt)
@@ -64,7 +67,10 @@ class SchedulingTest {
   fun cyclePolicyWalksTheCircleFromTheTunesKey() {
     val keys = (0..12).map { concertKeyFor(Key(10, true), KeyPolicy.CYCLE, it)!!.displayName }
     assertEquals(
-      listOf("Bb minor", "Eb minor", "G# minor", "C# minor", "F# minor", "B minor", "E minor", "A minor", "D minor", "G minor", "C minor", "F minor", "Bb minor"),
+      listOf(
+        "Bb minor", "Eb minor", "G# minor", "C# minor", "F# minor", "B minor", "E minor",
+        "A minor", "D minor", "G minor", "C minor", "F minor", "Bb minor",
+      ),
       keys,
     )
   }

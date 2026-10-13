@@ -47,7 +47,12 @@ class BrowseModelTest {
     assertEquals(3, exerciseRows(exercises).size)
     // With none chosen, exercises for any instrument the user plays; one they no longer play counts as none.
     assertEquals(listOf("Long tones", "Lip slurs"), exerciseRows(exercises, mine = setOf(Instrument.TRUMPET, Instrument.PIANO)).map { it.name })
-    assertEquals(listOf("Long tones", "Lip slurs"), exerciseRows(exercises, ExerciseFilter(instrument = Instrument.TENOR_SAX), mine = setOf(Instrument.TRUMPET)).map { it.name })
+    assertEquals(
+      listOf("Long tones", "Lip slurs"),
+      exerciseRows(exercises, ExerciseFilter(instrument = Instrument.TENOR_SAX), mine = setOf(Instrument.TRUMPET)).map {
+        it.name
+      },
+    )
     // A piano has no family of its own and does not blow, so tone work drops out too.
     assertEquals(emptyList<String>(), exerciseRows(exercises, ExerciseFilter(instrument = Instrument.PIANO)).map { it.name })
   }
@@ -112,8 +117,7 @@ class BrowseModelTest {
     assertEquals(listOf("Long tones"), exerciseRows(exercises, ExerciseFilter(query = "tones")).map { it.name })
   }
 
-  private fun standard(id: Int, title: String) =
-    StandardEntity(id.toLong(), "s$id", title, null, null, null, "4/4", null, null, null, null, null)
+  private fun standard(id: Int, title: String) = StandardEntity(id.toLong(), "s$id", title, null, null, null, "4/4", null, null, null, null, null)
 
   @Test
   fun exerciseRowNamesItsInstrumentsAndFocus() {
@@ -165,6 +169,5 @@ class BrowseModelTest {
     assertEquals(listOf("Air", "Bends", "Scales"), order(ExerciseSort.DIFFICULTY))
   }
 
-  private fun exercise(id: Long, name: String, families: List<Family>) =
-    ExerciseEntity(id, name, "Tone", "", 5, 1, null, families, false)
+  private fun exercise(id: Long, name: String, families: List<Family>) = ExerciseEntity(id, name, "Tone", "", 5, 1, null, families, false)
 }

@@ -14,8 +14,8 @@ import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
 import com.larakelley.woodshed.data.db.ExerciseEntity
 import com.larakelley.woodshed.data.db.StandardEntity
-import com.larakelley.woodshed.data.db.TuneKnowledgeEntity
 import com.larakelley.woodshed.data.db.TranscriptionEntity
+import com.larakelley.woodshed.data.db.TuneKnowledgeEntity
 import com.larakelley.woodshed.data.db.TuneStateEntity
 import com.larakelley.woodshed.domain.Comfort
 import com.larakelley.woodshed.domain.Family
@@ -74,7 +74,16 @@ class BrowseScreenTest {
 
   @Test
   fun aTuneAndItsSolosOpenEachOther() {
-    val solo = TranscriptionEntity(id = 9, slug = "body-hawkins", standardId = 1, title = "Body And Soul", soloist = "Coleman Hawkins", instrument = "Tenor sax", url = "https://example.org/clip")
+    val solo =
+      TranscriptionEntity(
+        id = 9,
+        slug = "body-hawkins",
+        standardId = 1,
+        title = "Body And Soul",
+        soloist = "Coleman Hawkins",
+        instrument = "Tenor sax",
+        url = "https://example.org/clip",
+      )
     compose.setContent {
       val navigation = remember { AppNavigation() }
       val rows = tuneRows(standards, Transposition.C)
@@ -188,7 +197,8 @@ class BrowseScreenTest {
 
   @Test
   fun bulkTunesSayTheirDetailsAreUnchecked() {
-    val bulk = StandardEntity(9, "the-river-seine", "The River Seine", null, null, null, null, null, null, null, null, null, collection = "Trad", verified = false)
+    val bulk =
+      StandardEntity(9, "the-river-seine", "The River Seine", null, null, null, null, null, null, null, null, null, collection = "Trad", verified = false)
     compose.setContent { BrowseScreen(BrowseState(tunes = tuneRows(listOf(bulk), Transposition.C), totalTunes = 1), {}) }
     compose.onNodeWithText("The River Seine").performClick()
     compose.onNodeWithText("Trad repertoire").assertExists()

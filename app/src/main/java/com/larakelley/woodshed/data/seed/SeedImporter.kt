@@ -1,12 +1,12 @@
 package com.larakelley.woodshed.data.seed
 
 import androidx.room.withTransaction
-import com.larakelley.woodshed.data.freeExerciseName
 import com.larakelley.woodshed.data.db.ExerciseEntity
 import com.larakelley.woodshed.data.db.Performer
 import com.larakelley.woodshed.data.db.StandardEntity
 import com.larakelley.woodshed.data.db.TranscriptionEntity
 import com.larakelley.woodshed.data.db.WoodshedDatabase
+import com.larakelley.woodshed.data.freeExerciseName
 import com.larakelley.woodshed.domain.Family
 import com.larakelley.woodshed.domain.Key
 import com.larakelley.woodshed.domain.Tonality
@@ -132,6 +132,5 @@ class SeedImporter(private val db: WoodshedDatabase, private val now: () -> Long
     return Result(inserted, updates.size, archived.size)
   }
 
-  private operator fun Result.plus(other: Result) =
-    Result(inserted + other.inserted, updated + other.updated, archived + other.archived)
+  private operator fun Result.plus(other: Result) = Result(inserted + other.inserted, updated + other.updated, archived + other.archived)
 }

@@ -33,9 +33,9 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.style.BaselineShift
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.style.BaselineShift
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
@@ -65,7 +65,10 @@ fun TunerScreen(state: TunerState, transposition: Transposition, actions: TunerA
   val callie = LocalCallie.current
   val context = LocalContext.current
   var denied by rememberSaveable { mutableStateOf(false) }
-  val askMic = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted -> denied = !granted; if (granted) actions.start() }
+  val askMic = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+    denied = !granted
+    if (granted) actions.start()
+  }
   val listen = {
     if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
       denied = false
@@ -77,7 +80,10 @@ fun TunerScreen(state: TunerState, transposition: Transposition, actions: TunerA
   val reading = state.reading
   val written = reading?.writtenFor(transposition)
 
-  Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp).padding(bottom = 24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+  Column(
+    Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp).padding(bottom = 24.dp),
+    horizontalAlignment = Alignment.CenterHorizontally,
+  ) {
     Spacer(Modifier.height(24.dp))
     Text(written?.let(::noteText) ?: buildAnnotatedString { append("–") }, style = MaterialTheme.typography.displayLarge, modifier = Modifier.testTag("note"))
     Text(
@@ -110,6 +116,7 @@ fun TunerScreen(state: TunerState, transposition: Transposition, actions: TunerA
         color = callie.danger,
         modifier = Modifier.padding(top = 8.dp).testTag("mic-denied"),
       )
+
       state.failed -> Text(
         "The microphone isn't available. Another app may be using it.",
         color = callie.danger,
@@ -119,8 +126,12 @@ fun TunerScreen(state: TunerState, transposition: Transposition, actions: TunerA
     SectionLabel("Reference pitch", Modifier.align(Alignment.Start))
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
       Text("A = ${state.a4} Hz", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f).testTag("a4"))
-      StickerButton(onClick = { actions.setA4(state.a4 - 1) }, sticker = neutralSticker, modifier = Modifier.size(48.dp), contentPadding = PaddingValues(0.dp)) { Text("-") }
-      StickerButton(onClick = { actions.setA4(state.a4 + 1) }, sticker = neutralSticker, modifier = Modifier.size(48.dp), contentPadding = PaddingValues(0.dp)) { Text("+") }
+      StickerButton(onClick = {
+        actions.setA4(state.a4 - 1)
+      }, sticker = neutralSticker, modifier = Modifier.size(48.dp), contentPadding = PaddingValues(0.dp)) { Text("-") }
+      StickerButton(onClick = {
+        actions.setA4(state.a4 + 1)
+      }, sticker = neutralSticker, modifier = Modifier.size(48.dp), contentPadding = PaddingValues(0.dp)) { Text("+") }
     }
     Helper("Notes are named for your instrument's key. Most bands tune to A = 440.", Modifier.align(Alignment.Start))
   }
@@ -144,10 +155,23 @@ private fun Gauge(cents: Int?, modifier: Modifier = Modifier) {
     val center = Offset(size.width / 2, size.height * 0.95f)
     val arc = Size(radius * 2, radius * 2)
     val topLeft = Offset(center.x - radius, center.y - radius)
-    drawArc(callie.surfaceAlt, startAngle = 200f, sweepAngle = 140f, useCenter = false, topLeft = topLeft, size = arc, style = Stroke(14.dp.toPx(), cap = StrokeCap.Round))
+    drawArc(
+      callie.surfaceAlt,
+      startAngle = 200f,
+      sweepAngle = 140f,
+      useCenter = false,
+      topLeft = topLeft,
+      size = arc,
+      style = Stroke(14.dp.toPx(), cap = StrokeCap.Round),
+    )
     drawArc(
       if (inTune) callie.easy.fill else callie.border,
-      startAngle = 270f - 7f, sweepAngle = 14f, useCenter = false, topLeft = topLeft, size = arc, style = Stroke(14.dp.toPx(), cap = StrokeCap.Round),
+      startAngle = 270f - 7f,
+      sweepAngle = 14f,
+      useCenter = false,
+      topLeft = topLeft,
+      size = arc,
+      style = Stroke(14.dp.toPx(), cap = StrokeCap.Round),
     )
     for (c in listOf(-50, -25, 0, 25, 50)) {
       val a = ((c / 50f * 70f) - 90f) * PI.toFloat() / 180f

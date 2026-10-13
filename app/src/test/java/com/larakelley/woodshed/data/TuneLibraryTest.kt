@@ -10,7 +10,6 @@ import com.larakelley.woodshed.data.seed.SeedImporter
 import com.larakelley.woodshed.domain.Lifecycle
 import com.larakelley.woodshed.domain.Tonality
 import com.larakelley.woodshed.domain.Transposition
-import kotlin.random.Random
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -23,6 +22,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
+import kotlin.random.Random
 
 @RunWith(RobolectricTestRunner::class)
 @Config(application = Application::class)

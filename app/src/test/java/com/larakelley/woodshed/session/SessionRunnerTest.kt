@@ -14,7 +14,6 @@ import com.larakelley.woodshed.data.seed.SeedImporter
 import com.larakelley.woodshed.domain.Grade
 import com.larakelley.woodshed.domain.PlanBlock
 import com.larakelley.woodshed.ui.practice.StepView
-import kotlin.random.Random
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -29,6 +28,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
+import kotlin.random.Random
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
@@ -52,7 +52,8 @@ class SessionRunnerTest {
       .build()
     val read = { name: String -> context.assets.open(name).bufferedReader().use { it.readText() } }
     SeedImporter(db).import(Seed.parse(read("standards.json"), read("exercises.json"), read("transcriptions.json")))
-    repository = WoodshedRepository(db, context.getSharedPreferences("runner-settings", Context.MODE_PRIVATE).also { it.edit().clear().commit() }, context.assets)
+    repository =
+      WoodshedRepository(db, context.getSharedPreferences("runner-settings", Context.MODE_PRIVATE).also { it.edit().clear().commit() }, context.assets)
     practice = PracticeService(db, random = Random(1))
     store = SessionStore(context.getSharedPreferences("runner-session", Context.MODE_PRIVATE).also { it.edit().clear().commit() })
     val exercises = db.exercises().all()
@@ -65,7 +66,12 @@ class SessionRunnerTest {
   fun tearDown() = db.close()
 
   private fun runner() = SessionRunner(
-    repository, practice, TranscriptionService(db), store, CoroutineScope(UnconfinedTestDispatcher()), now = { clock },
+    repository,
+    practice,
+    TranscriptionService(db),
+    store,
+    CoroutineScope(UnconfinedTestDispatcher()),
+    now = { clock },
   )
 
   @Test

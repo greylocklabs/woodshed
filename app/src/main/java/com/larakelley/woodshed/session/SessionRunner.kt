@@ -164,12 +164,16 @@ class SessionRunner(
 
   private suspend fun view(block: PlanBlock): StepView? = when (block) {
     is PlanBlock.Exercise ->
-      repository.exercises.first().firstOrNull { it.id == block.exerciseId }?.let { StepView.Exercise(it.name, it.category, it.description, it.tempoBpm, block.minutes) }
+      repository.exercises.first().firstOrNull {
+        it.id == block.exerciseId
+      }?.let { StepView.Exercise(it.name, it.category, it.description, it.tempoBpm, block.minutes) }
+
     is PlanBlock.Tune -> practice.cardForBlock(block, repository.transposition.value)?.let { c ->
       card = c
       val preview = practice.preview(c).mapValues { it.value.dueAt ?: now() }
       StepView.Tune(cardView(c, preview, now()), block.minutes)
     }
+
     is PlanBlock.Solo -> repository.transcriptions.first().firstOrNull { it.id == block.transcriptionId }?.let { s ->
       solo = s.id
       val notes = repository.transcriptionStates.first().firstOrNull { it.transcriptionId == s.id }?.notes
@@ -177,8 +181,14 @@ class SessionRunner(
       val embed = MediaLink.parse(s.url)?.embed(s.startSeconds?.let { (it - pad).coerceAtLeast(0) }, s.endSeconds?.let { it + pad })
       val preview = transcriptions?.preview(s.id).orEmpty()
       StepView.Solo(
-        s.title, "${s.soloist}, ${s.instrument.lowercase()}", notes, embed, s.url, s.startSeconds,
-        Grade.entries.map { g -> g to delayLabel(now(), preview[g] ?: now()) }, block.minutes,
+        s.title,
+        "${s.soloist}, ${s.instrument.lowercase()}",
+        notes,
+        embed,
+        s.url,
+        s.startSeconds,
+        Grade.entries.map { g -> g to delayLabel(now(), preview[g] ?: now()) },
+        block.minutes,
       )
     }
   }

@@ -89,11 +89,15 @@ fun roll(
 ): Roll? {
   val pool = tunes.filter { t ->
     val lifecycle = states[t.id]?.lifecycle
-    val inPool = if (playlist != null) t.id in playlist else when (c.pool) {
-      TunePool.MY_TUNES -> lifecycle != null && lifecycle != Lifecycle.RETIRED
-      TunePool.IN_PRACTICE -> lifecycle == Lifecycle.LEARNING || lifecycle == Lifecycle.REPERTOIRE
-      TunePool.WISHLIST -> lifecycle == Lifecycle.WISHLIST
-      TunePool.ANY -> true
+    val inPool = if (playlist != null) {
+      t.id in playlist
+    } else {
+      when (c.pool) {
+        TunePool.MY_TUNES -> lifecycle != null && lifecycle != Lifecycle.RETIRED
+        TunePool.IN_PRACTICE -> lifecycle == Lifecycle.LEARNING || lifecycle == Lifecycle.REPERTOIRE
+        TunePool.WISHLIST -> lifecycle == Lifecycle.WISHLIST
+        TunePool.ANY -> true
+      }
     }
     inPool && t.archivedAt == null && (c.style == null || t.style == c.style) && (c.collection == null || t.collection == c.collection)
   }
@@ -105,7 +109,9 @@ fun roll(
   val minor = tune.tonality == Tonality.MINOR
   val key = when (c.keyChoice) {
     KeyChoice.USUAL -> usual
+
     KeyChoice.ANY -> Key(random.nextInt(12), minor)
+
     KeyChoice.NOT_YET_KNOWN -> {
       val known = knowledge[tune.id]?.knownKeys ?: 0
       val unknown = (0..11).filterNot { KeyMask.contains(known, it) }

@@ -55,6 +55,7 @@ class DroneTone(private val sampleRate: Int) {
     /** Overtone multiples and levels: a mellow, organ-like tone that sits under a horn without masking it. */
     val PARTIALS = listOf(1.0 to 1.0, 2.0 to 0.45, 3.0 to 0.2, 4.0 to 0.08)
     const val FIFTH_LEVEL = 0.6
+
     /** The loudest root-and-fifth sum stays under full scale. */
     const val HEADROOM = 0.32
   }

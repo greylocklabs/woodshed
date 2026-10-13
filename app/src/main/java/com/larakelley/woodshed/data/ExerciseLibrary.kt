@@ -24,8 +24,11 @@ data class ExerciseDraft(
   val appliesToTune: Boolean = false,
 ) {
   fun problems(taken: (String) -> Boolean = { false }): List<String> = buildList {
-    if (name.isBlank()) add("A name is needed.")
-    else if (taken(name.trim())) add("Another exercise already has that name.")
+    if (name.isBlank()) {
+      add("A name is needed.")
+    } else if (taken(name.trim())) {
+      add("Another exercise already has that name.")
+    }
     if (description.isBlank()) add("Say how to do it.")
     if (minutes.trim().toIntOrNull()?.takeIf { it in 1..120 } == null) add("Minutes should be a number from 1 to 120.")
     if (tempoBpm.isNotBlank() && tempoBpm.trim().toIntOrNull()?.takeIf { it in 30..300 } == null) add("Tempo should be from 30 to 300 bpm, or blank.")
@@ -49,9 +52,11 @@ data class ExerciseDraft(
  * [name] if no exercise is stored under it, otherwise the first free "name (yours)", "name (yours 2)" and so on.
  * Stored names are unique even where an edit or archiving hides them, so the user's own exercise steps aside.
  */
-fun freeExerciseName(name: String, stored: Set<String>): String =
-  if (name !in stored) name
-  else generateSequence(1) { it + 1 }.map { if (it == 1) "$name (yours)" else "$name (yours $it)" }.first { it !in stored }
+fun freeExerciseName(name: String, stored: Set<String>): String = if (name !in stored) {
+  name
+} else {
+  generateSequence(1) { it + 1 }.map { if (it == 1) "$name (yours)" else "$name (yours $it)" }.first { it !in stored }
+}
 
 /** Adds, edits and removes exercises on the user's behalf. Seeded exercises are edited through overrides. */
 class ExerciseLibrary(private val db: WoodshedDatabase, private val now: () -> Long = System::currentTimeMillis) {

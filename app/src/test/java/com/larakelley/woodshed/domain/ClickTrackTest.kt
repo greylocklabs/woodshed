@@ -1,10 +1,10 @@
 package com.larakelley.woodshed.domain
 
-import kotlin.math.roundToLong
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import kotlin.math.roundToLong
 
 class ClickTrackTest {
   private val rate = 48_000

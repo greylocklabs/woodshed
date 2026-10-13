@@ -100,8 +100,11 @@ private fun SessionSetup(ui: PracticeUi, actions: SetupActions) {
         ui.summary?.takeIf { it.reviewedToday > 0 }?.let { Text("Reviewed today: ${it.reviewedToday}", modifier = Modifier.padding(bottom = 8.dp)) }
         Text("What are you playing?", style = MaterialTheme.typography.titleMedium)
         Text(
-          if (setup.instrumentsChosen) "Sets the key music is written in and keeps exercises to ones for your instrument"
-          else "Sets the key and exercises. Choose the instruments you play in Settings to shorten this list.",
+          if (setup.instrumentsChosen) {
+            "Sets the key music is written in and keeps exercises to ones for your instrument"
+          } else {
+            "Sets the key and exercises. Choose the instruments you play in Settings to shorten this list."
+          },
           style = MaterialTheme.typography.bodySmall,
         )
         FlowRow(Modifier.padding(vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -131,7 +134,9 @@ private fun SessionSetup(ui: PracticeUi, actions: SetupActions) {
         Text("Leave all off for a mix", style = MaterialTheme.typography.bodySmall)
         FlowRow(Modifier.padding(vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
           Focus.entries.forEach { f ->
-            CallieChip(selected = f in setup.focus, onClick = { actions.toggleFocus(f) }, label = { Text("${f.emoji} ${f.label}") }, modifier = Modifier.testTag("focus-${f.name.lowercase()}"))
+            CallieChip(selected = f in setup.focus, onClick = {
+              actions.toggleFocus(f)
+            }, label = { Text("${f.emoji} ${f.label}") }, modifier = Modifier.testTag("focus-${f.name.lowercase()}"))
           }
         }
         if (setup.solos.isNotEmpty()) {
@@ -139,7 +144,9 @@ private fun SessionSetup(ui: PracticeUi, actions: SetupActions) {
           Text("Solo to transcribe", style = MaterialTheme.typography.titleMedium)
           Text("Takes a quarter of the session, 5 to 15 minutes. Sessions under 15 minutes leave it out.", style = MaterialTheme.typography.bodySmall)
           FlowRow(Modifier.padding(vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            CallieChip(selected = setup.soloId == null, onClick = { actions.pickSolo(null) }, label = { Text("None") }, modifier = Modifier.testTag("solo-none"))
+            CallieChip(selected = setup.soloId == null, onClick = {
+              actions.pickSolo(null)
+            }, label = { Text("None") }, modifier = Modifier.testTag("solo-none"))
             setup.solos.forEach { s ->
               CallieChip(
                 selected = setup.soloId == s.id,
@@ -171,7 +178,12 @@ private fun SessionSetup(ui: PracticeUi, actions: SetupActions) {
         if (tune.group != lastGroup) {
           val group = tune.group
           item(key = "group-$group") {
-            Text("${group.emoji} ${group.label}", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = 12.dp))
+            Text(
+              "${group.emoji} ${group.label}",
+              style = MaterialTheme.typography.labelLarge,
+              color = MaterialTheme.colorScheme.primary,
+              modifier = Modifier.padding(top = 12.dp),
+            )
           }
           lastGroup = group
         }
@@ -187,7 +199,11 @@ private fun SessionSetup(ui: PracticeUi, actions: SetupActions) {
       }
     }
     if (setup.instrument == null) {
-      Text("Pick what you're playing to start", color = LocalCallie.current.textMuted, modifier = Modifier.padding(horizontal = 16.dp, vertical = 24.dp).testTag("needs-instrument"))
+      Text(
+        "Pick what you're playing to start",
+        color = LocalCallie.current.textMuted,
+        modifier = Modifier.padding(horizontal = 16.dp, vertical = 24.dp).testTag("needs-instrument"),
+      )
     } else {
       StickerButton(onClick = actions.buildPlan, modifier = Modifier.fillMaxWidth().padding(16.dp).height(64.dp).testTag("build-plan")) {
         Text("🎵 Start shedding", style = MaterialTheme.typography.titleLarge)
@@ -232,7 +248,9 @@ private fun PlanReview(plan: List<PlanItem>, actions: SetupActions) {
     LazyColumn(Modifier.weight(1f).fillMaxWidth()) {
       itemsIndexed(plan) { i, item ->
         Row(
-          Modifier.fillMaxWidth().clickable(enabled = item.exercise != null) { shown = item.exercise }.padding(horizontal = 16.dp, vertical = 8.dp).testTag("plan-$i"),
+          Modifier.fillMaxWidth().clickable(enabled = item.exercise != null) {
+            shown = item.exercise
+          }.padding(horizontal = 16.dp, vertical = 8.dp).testTag("plan-$i"),
           verticalAlignment = Alignment.CenterVertically,
         ) {
           Text("${item.block.minutes} min", style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(72.dp))
@@ -292,7 +310,12 @@ fun SessionScreen(
       onDismissRequest = { confirmEnd = false },
       title = { Text("End this session?") },
       text = { Text("Blocks you've finished stay logged.") },
-      confirmButton = { TextButton(onClick = { confirmEnd = false; onStop() }, modifier = Modifier.testTag("confirm-end")) { Text("End session") } },
+      confirmButton = {
+        TextButton(onClick = {
+          confirmEnd = false
+          onStop()
+        }, modifier = Modifier.testTag("confirm-end")) { Text("End session") }
+      },
       dismissButton = { TextButton(onClick = { confirmEnd = false }) { Text("Keep going") } },
     )
   }
@@ -333,13 +356,18 @@ fun SessionScreen(
           }
           if (step.description.contains("drone", ignoreCase = true)) DroneButton("🔊 Drone", null)
         }
+
         is StepView.Solo -> {
           Text("🎧 ${step.title}", style = MaterialTheme.typography.displaySmall, modifier = Modifier.testTag("solo-title"))
           Text("Transcribe ${step.soloist}", style = MaterialTheme.typography.titleMedium)
           step.notes?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
-          if (step.embedUrl != null) PracticePlayer(step.embedUrl, step.soloStart)
-          else OutlinedButton(onClick = { uris.openUri(step.url) }) { Text("Open the recording ↗") }
+          if (step.embedUrl != null) {
+            PracticePlayer(step.embedUrl, step.soloStart)
+          } else {
+            OutlinedButton(onClick = { uris.openUri(step.url) }) { Text("Open the recording ↗") }
+          }
         }
+
         is StepView.Tune -> {
           val card = step.card
           Text(card.title, style = MaterialTheme.typography.displaySmall, modifier = Modifier.testTag("card-title"))
@@ -357,10 +385,12 @@ fun SessionScreen(
         StickerButton(onClick = onNext, modifier = Modifier.fillMaxWidth().padding(16.dp).height(64.dp).testTag("step-done")) {
           Text("✅ Done", style = MaterialTheme.typography.titleLarge)
         }
+
       is StepView.Tune -> {
         TextButton(onClick = onNext, modifier = Modifier.align(Alignment.End).testTag("step-skip")) { Text("Skip without grading") }
         GradeButtons(step.card.buttons, onGrade, Modifier.fillMaxHeight(0.3f))
       }
+
       is StepView.Solo -> {
         TextButton(onClick = onNext, modifier = Modifier.align(Alignment.End).testTag("step-skip")) { Text("Skip without grading") }
         GradeButtons(step.buttons, onGrade, Modifier.fillMaxHeight(0.22f))

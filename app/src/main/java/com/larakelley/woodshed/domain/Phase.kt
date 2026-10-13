@@ -6,7 +6,8 @@ enum class Phase(val categories: List<String>) {
   FUNDAMENTALS(listOf("Technique", "Scales & Patterns", "Rhythm & Time", "Etudes")),
   VOCABULARY(listOf("Licks", "ii-V-I & Progressions")),
   REPERTOIRE(listOf("Standards")),
-  COOLDOWN(listOf("Improvisation", "Transcription", "Ear Training", "Reading"));
+  COOLDOWN(listOf("Improvisation", "Transcription", "Ear Training", "Reading")),
+  ;
 
   companion object {
     /** Every category in session order; unknown categories sort last. */
@@ -17,5 +18,4 @@ enum class Phase(val categories: List<String>) {
 }
 
 /** Sorts titles the way a fake book indexes them: ignoring a leading article and punctuation. */
-fun titleSortKey(title: String): String =
-  title.lowercase().trimStart('\'').removePrefix("the ").removePrefix("a ").filter { it.isLetterOrDigit() || it == ' ' }
+fun titleSortKey(title: String): String = title.lowercase().trimStart('\'').removePrefix("the ").removePrefix("a ").filter { it.isLetterOrDigit() || it == ' ' }

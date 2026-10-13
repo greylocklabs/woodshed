@@ -54,7 +54,8 @@ fun DroneScreen(state: DroneState, transposition: Transposition, a4: Int, action
     Spacer(Modifier.height(24.dp))
     Text(noteName(written), style = MaterialTheme.typography.displayLarge, modifier = Modifier.align(Alignment.CenterHorizontally).testTag("drone-note"))
     Text(
-      (if (transposition == Transposition.C) "" else "Concert ${noteName(state.pitchClass)}, ") + "%.1f Hz".format(pitchHz(state.pitchClass, state.octave, a4.toDouble())),
+      (if (transposition == Transposition.C) "" else "Concert ${noteName(state.pitchClass)}, ") +
+        "%.1f Hz".format(pitchHz(state.pitchClass, state.octave, a4.toDouble())),
       style = MaterialTheme.typography.bodyMedium,
       color = callie.textMuted,
       modifier = Modifier.align(Alignment.CenterHorizontally),
@@ -77,7 +78,13 @@ fun DroneScreen(state: DroneState, transposition: Transposition, a4: Int, action
     }
     SectionLabel("Range")
     PillChoice(listOf("Low" to 3, "Middle" to 4, "High" to 5), state.octave, actions.setOctave, tagPrefix = "drone-octave")
-    SwitchRow("Add the fifth", state.fifth, actions.setFifth, helper = "A root and fifth, for hearing thirds and sevenths against", modifier = Modifier.testTag("drone-fifth"))
+    SwitchRow(
+      "Add the fifth",
+      state.fifth,
+      actions.setFifth,
+      helper = "A root and fifth, for hearing thirds and sevenths against",
+      modifier = Modifier.testTag("drone-fifth"),
+    )
     SectionLabel("Volume")
     Slider(
       value = state.volume,

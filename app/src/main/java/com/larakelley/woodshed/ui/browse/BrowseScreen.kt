@@ -134,11 +134,13 @@ fun BrowseScreen(
   var settingsOpen by rememberSaveable { mutableStateOf(false) }
   var tab by rememberSaveable { mutableIntStateOf(0) }
   var openSlug by rememberSaveable { mutableStateOf<String?>(null) }
+
   /** A tune's slug while editing it, [NEW_TUNE] while adding one, or null. */
   var editing by rememberSaveable { mutableStateOf<String?>(null) }
   var playlistsOpen by rememberSaveable { mutableStateOf(false) }
   var openPlaylist by rememberSaveable { mutableStateOf<Long?>(null) }
   var openExercise by rememberSaveable { mutableStateOf<Long?>(null) }
+
   /** An exercise's id while editing it, [NEW_EXERCISE] while adding one, or null. */
   var editingExercise by rememberSaveable { mutableStateOf<Long?>(null) }
   val tabs = buildList {
@@ -167,6 +169,7 @@ fun BrowseScreen(
         openSlug = (state.allTunes.ifEmpty { state.tunes }).firstOrNull { it.id == to.id }?.slug
         tab = tabs.indexOf("Tunes")
       }
+
       // The Transcribe tab takes the request once it is showing.
       is Destination.Solo -> tabs.indexOf("Transcribe").takeIf { it >= 0 }?.let { tab = it } ?: navigation.take()
     }
@@ -174,12 +177,16 @@ fun BrowseScreen(
 
   Scaffold(
     modifier = modifier,
-    topBar = { TopAppBar(title = { AppTitle() }, actions = {
+    topBar = {
+      TopAppBar(title = { AppTitle() }, actions = {
         TranspositionPicker(state.transposition, onSelectTransposition)
         if (settings != null) {
-          TextButton(onClick = { settingsOpen = true }, modifier = Modifier.testTag("open-settings")) { Text("⚙️", style = MaterialTheme.typography.titleLarge) }
+          TextButton(onClick = {
+            settingsOpen = true
+          }, modifier = Modifier.testTag("open-settings")) { Text("⚙️", style = MaterialTheme.typography.titleLarge) }
         }
-      }) },
+      })
+    },
   ) { padding ->
     if (settingsOpen && settings != null) {
       settings({ settingsOpen = false }, Modifier.padding(padding))
@@ -189,9 +196,21 @@ fun BrowseScreen(
       val tune = state.tunes.firstOrNull { it.slug == target }
       TuneEditor(
         tune,
-        onSave = { draft -> actions.saveTune(tune?.id, draft) { slug -> openSlug = slug; editing = null } },
-        onDelete = { tune?.let { actions.deleteTune(it.id) }; openSlug = null; editing = null },
-        onReset = { tune?.let { actions.resetTune(it.id) }; editing = null },
+        onSave = { draft ->
+          actions.saveTune(tune?.id, draft) { slug ->
+            openSlug = slug
+            editing = null
+          }
+        },
+        onDelete = {
+          tune?.let { actions.deleteTune(it.id) }
+          openSlug = null
+          editing = null
+        },
+        onReset = {
+          tune?.let { actions.resetTune(it.id) }
+          editing = null
+        },
         onBack = { editing = null },
         modifier = Modifier.padding(padding),
       )
@@ -221,7 +240,9 @@ fun BrowseScreen(
       return@Scaffold
     }
     if (playlistsOpen) {
-      PlaylistsScreen(state.playlists, playlistActions, onOpen = { openPlaylist = it }, onBack = { playlistsOpen = false }, modifier = Modifier.padding(padding))
+      PlaylistsScreen(state.playlists, playlistActions, onOpen = {
+        openPlaylist = it
+      }, onBack = { playlistsOpen = false }, modifier = Modifier.padding(padding))
       return@Scaffold
     }
     editingExercise?.let { target ->
@@ -230,9 +251,21 @@ fun BrowseScreen(
         editing,
         categories = state.categories,
         takenNames = state.allExercises.map { it.name.lowercase() }.toSet(),
-        onSave = { draft -> exerciseActions.save(editing?.id, draft) { id -> openExercise = id; editingExercise = null } },
-        onDelete = { editing?.let { exerciseActions.delete(it.id) }; openExercise = null; editingExercise = null },
-        onReset = { editing?.let { exerciseActions.reset(it.id) }; editingExercise = null },
+        onSave = { draft ->
+          exerciseActions.save(editing?.id, draft) { id ->
+            openExercise = id
+            editingExercise = null
+          }
+        },
+        onDelete = {
+          editing?.let { exerciseActions.delete(it.id) }
+          openExercise = null
+          editingExercise = null
+        },
+        onReset = {
+          editing?.let { exerciseActions.reset(it.id) }
+          editingExercise = null
+        },
         onBack = { editingExercise = null },
         modifier = Modifier.padding(padding),
       )
@@ -250,16 +283,24 @@ fun BrowseScreen(
       }
       PrimaryScrollableTabRow(selectedTabIndex = tab, edgePadding = 8.dp) {
         tabs.forEachIndexed { i, label ->
-          Tab(selected = tab == i, onClick = { tab = i }, text = { Text("${TAB_EMOJI[label].orEmpty()} $label".trim()) }, modifier = Modifier.testTag("tab-$label"))
+          Tab(selected = tab == i, onClick = {
+            tab = i
+          }, text = { Text("${TAB_EMOJI[label].orEmpty()} $label".trim()) }, modifier = Modifier.testTag("tab-$label"))
         }
       }
       when (tabs[tab]) {
         "Practice" -> practiceTab?.invoke()
+
         "Random" -> diceTab?.invoke()
+
         "Transcribe" -> transcribeTab?.invoke()
+
         "Metronome" -> metronomeTab?.invoke()
+
         "Drone" -> droneTab?.invoke()
+
         "Tuner" -> tunerTab?.invoke()
+
         "Tunes" -> {
           TuneFilters(state, onTuneFilter, onAdd = { editing = NEW_TUNE }, onPlaylists = { playlistsOpen = true })
           if (state.tunes.isEmpty()) {
@@ -275,6 +316,7 @@ fun BrowseScreen(
             TuneList(state.tunes, alphabetical = state.tuneFilter.sort == TuneSort.TITLE && state.tuneFilter.playlistId == null, onOpen = { openSlug = it })
           }
         }
+
         else -> {
           ExerciseFilters(state, onExerciseFilter, onAdd = { editingExercise = NEW_EXERCISE })
           if (state.exercises.isEmpty()) {
@@ -301,7 +343,12 @@ private fun TuneSolos(solos: List<SoloLink>, onOpen: (Long) -> Unit) {
   if (solos.isEmpty()) return
   SectionLabel("🎧 Solos to transcribe")
   solos.forEach { s ->
-    Row(Modifier.fillMaxWidth().clickable { onOpen(s.id) }.padding(vertical = 8.dp).testTag("tune-solo-${s.id}"), verticalAlignment = Alignment.CenterVertically) {
+    Row(
+      Modifier.fillMaxWidth().clickable {
+        onOpen(s.id)
+      }.padding(vertical = 8.dp).testTag("tune-solo-${s.id}"),
+      verticalAlignment = Alignment.CenterVertically,
+    ) {
       Column(Modifier.weight(1f)) {
         Text(s.soloist, style = MaterialTheme.typography.titleMedium)
         if (s.detail.isNotEmpty()) Text(s.detail, style = MaterialTheme.typography.bodySmall, color = LocalCallie.current.textMuted)
@@ -334,8 +381,18 @@ fun <T> DropdownChip(
   Box {
     CallieChip(selected = open, onClick = { open = true }, label = { Text("$name: $current") }, modifier = Modifier.testTag("chip-$name"))
     DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
-      if (allowAny) DropdownMenuItem(text = { Text(anyLabel) }, onClick = { onSelect(null); open = false })
-      options.forEach { (label, value) -> DropdownMenuItem(text = { Text(label) }, onClick = { onSelect(value); open = false }) }
+      if (allowAny) {
+        DropdownMenuItem(text = { Text(anyLabel) }, onClick = {
+          onSelect(null)
+          open = false
+        })
+      }
+      options.forEach { (label, value) ->
+        DropdownMenuItem(text = { Text(label) }, onClick = {
+          onSelect(value)
+          open = false
+        })
+      }
     }
   }
 }
@@ -365,7 +422,14 @@ private fun TuneFilters(state: BrowseState, onFilter: ((TuneFilter) -> TuneFilte
       onFilter { it.copy(minComfort = c) }
     }
     if (state.playlists.isNotEmpty()) {
-      DropdownChip("Playlist", state.playlists.firstOrNull { it.id == f.playlistId }?.name ?: "Any", state.playlists.map { it.name to it.id }, allowAny = true) { id ->
+      DropdownChip(
+        "Playlist",
+        state.playlists.firstOrNull {
+          it.id == f.playlistId
+        }?.name ?: "Any",
+        state.playlists.map { it.name to it.id },
+        allowAny = true,
+      ) { id ->
         onFilter { it.copy(playlistId = id) }
       }
     }
@@ -379,7 +443,12 @@ private fun TuneFilters(state: BrowseState, onFilter: ((TuneFilter) -> TuneFilte
       style = MaterialTheme.typography.labelLarge,
       modifier = Modifier.weight(1f).testTag("tune-count"),
     )
-    StickerButton(onClick = onPlaylists, sticker = neutralSticker, modifier = Modifier.height(40.dp).padding(end = 8.dp).testTag("open-playlists"), contentPadding = PaddingValues(horizontal = 12.dp)) {
+    StickerButton(
+      onClick = onPlaylists,
+      sticker = neutralSticker,
+      modifier = Modifier.height(40.dp).padding(end = 8.dp).testTag("open-playlists"),
+      contentPadding = PaddingValues(horizontal = 12.dp),
+    ) {
       Text("📋 Playlists", style = MaterialTheme.typography.labelLarge)
     }
     StickerButton(onClick = onAdd, modifier = Modifier.height(40.dp).testTag("add-tune"), contentPadding = PaddingValues(horizontal = 14.dp)) {
@@ -427,7 +496,10 @@ private fun TranspositionPicker(selected: Transposition, onSelect: (Transpositio
               Text(transposition.examples, style = MaterialTheme.typography.bodySmall)
             }
           },
-          onClick = { onSelect(transposition); open = false },
+          onClick = {
+            onSelect(transposition)
+            open = false
+          },
         )
       }
     }
@@ -483,12 +555,25 @@ private fun TuneDetail(
     Row(verticalAlignment = Alignment.CenterVertically) {
       BackButton("Back to tunes", onBack, Modifier.weight(1f, fill = false))
       Spacer(Modifier.weight(1f))
-      StickerButton(onClick = onEdit, sticker = neutralSticker, modifier = Modifier.height(40.dp).testTag("edit-tune")) { Text("✏️ Edit", style = MaterialTheme.typography.labelLarge) }
+      StickerButton(onClick = onEdit, sticker = neutralSticker, modifier = Modifier.height(40.dp).testTag("edit-tune")) {
+        Text("✏️ Edit", style = MaterialTheme.typography.labelLarge)
+      }
     }
     Text(tune.title, style = MaterialTheme.typography.headlineMedium)
     when {
-      tune.userCreated -> Text("🪵 Your tune", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary, modifier = Modifier.testTag("your-tune"))
-      tune.edited -> Text("✏️ Edited by you", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary, modifier = Modifier.testTag("edited-tune"))
+      tune.userCreated -> Text(
+        "🪵 Your tune",
+        style = MaterialTheme.typography.labelLarge,
+        color = MaterialTheme.colorScheme.primary,
+        modifier = Modifier.testTag("your-tune"),
+      )
+
+      tune.edited -> Text(
+        "✏️ Edited by you",
+        style = MaterialTheme.typography.labelLarge,
+        color = MaterialTheme.colorScheme.primary,
+        modifier = Modifier.testTag("edited-tune"),
+      )
     }
     if (tune.credit.isNotEmpty()) Text(tune.credit)
     if (tune.shape.isNotEmpty()) Text(tune.shape)
@@ -512,10 +597,12 @@ private fun TuneDetail(
         OutlinedButton(onClick = { actions.startLearning(id) }, Modifier.fillMaxWidth()) { Text("🌱 Start learning now") }
         OutlinedButton(onClick = { actions.markKnown(id) }, Modifier.fillMaxWidth()) { Text("I already know it") }
       }
+
       Lifecycle.WISHLIST -> {
         StickerButton(onClick = { actions.startLearning(id) }, Modifier.fillMaxWidth()) { Text("🌱 Start learning now") }
         OutlinedButton(onClick = { actions.markKnown(id) }, Modifier.fillMaxWidth()) { Text("I already know it") }
       }
+
       Lifecycle.LEARNING, Lifecycle.REPERTOIRE -> {
         if (tune.homeKey != null) {
           Row(verticalAlignment = Alignment.CenterVertically) {
@@ -532,6 +619,7 @@ private fun TuneDetail(
         }
         OutlinedButton(onClick = { actions.retire(id) }, Modifier.fillMaxWidth()) { Text("Retire") }
       }
+
       Lifecycle.RETIRED -> StickerButton(onClick = { actions.restore(id) }, Modifier.fillMaxWidth()) { Text("Bring back") }
     }
     if (state != null) {
@@ -562,7 +650,14 @@ private fun TuneDetail(
       id = tune.slug,
       details = listOfNotNull(
         // Data is kept in concert pitch, so the report names the concert key whatever the user reads in.
-        "Key" to (tune.homeKey?.let { "concert ${it.displayName}" + if (tune.transposition != Transposition.C) ", shown as ${tune.key} for ${tune.transposition.name}" else "" } ?: "unknown"),
+        "Key" to
+          (
+            tune.homeKey?.let {
+              "concert ${it.displayName}" +
+                if (tune.transposition != Transposition.C) ", shown as ${tune.key} for ${tune.transposition.name}" else ""
+            }
+              ?: "unknown"
+            ),
         tune.credit.takeIf { it.isNotEmpty() }?.let { "Credit" to it },
         tune.shape.takeIf { it.isNotEmpty() }?.let { "Form" to it },
         "Collection" to tune.collection,
@@ -576,7 +671,12 @@ private fun TuneDetail(
       onDismissRequest = { confirmRemove = false },
       title = { Text("Remove ${tune.title}?") },
       text = { Text("It goes back to the library and its schedule resets. Your review history, comfort and known keys are kept.") },
-      confirmButton = { TextButton(onClick = { actions.removeFromMyTunes(id); confirmRemove = false }, modifier = Modifier.testTag("confirm-remove")) { Text("Remove") } },
+      confirmButton = {
+        TextButton(onClick = {
+          actions.removeFromMyTunes(id)
+          confirmRemove = false
+        }, modifier = Modifier.testTag("confirm-remove")) { Text("Remove") }
+      },
       dismissButton = { TextButton(onClick = { confirmRemove = false }) { Text("Cancel") } },
     )
   }
@@ -593,7 +693,9 @@ private fun KnownKeys(tune: TuneRow, onToggle: (Int) -> Unit) {
     Key.CIRCLE_OF_FOURTHS.forEach { written ->
       val concert = Math.floorMod(written - transposition.offset, 12)
       val label = Key(written, minor).displayName.removeSuffix(" minor") + if (minor) "m" else ""
-      CallieChip(selected = KeyMask.contains(mask, concert), onClick = { onToggle(concert) }, label = { Text(label) }, modifier = Modifier.testTag("key-$concert"))
+      CallieChip(selected = KeyMask.contains(mask, concert), onClick = {
+        onToggle(concert)
+      }, label = { Text(label) }, modifier = Modifier.testTag("key-$concert"))
     }
   }
 }
@@ -603,7 +705,9 @@ private fun statusLine(state: TuneStateEntity?, now: Long): String {
   val due = state.dueAt
   return when (state.lifecycle) {
     Lifecycle.WISHLIST -> "On my wishlist"
+
     Lifecycle.RETIRED -> "Retired"
+
     else -> buildString {
       append(state.lifecycle.label)
       when {

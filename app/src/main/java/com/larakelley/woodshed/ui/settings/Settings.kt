@@ -56,9 +56,6 @@ import com.larakelley.woodshed.theme.StickerButton
 import com.larakelley.woodshed.theme.SwitchRow
 import com.larakelley.woodshed.theme.neutralSticker
 import com.larakelley.woodshed.ui.report.ReportButton
-import java.text.DateFormat
-import java.time.LocalDate
-import java.util.Date
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -68,6 +65,9 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.text.DateFormat
+import java.time.LocalDate
+import java.util.Date
 
 data class SettingsUi(
   val instrument: Instrument? = null,
@@ -188,9 +188,9 @@ fun SettingsScreen(ui: SettingsUi, actions: SettingsActions, onBack: () -> Unit,
 @Composable
 private fun GeneralTab(ui: SettingsUi, actions: SettingsActions) {
   Padded {
-      SectionLabel("Appearance")
-      PillChoice(ThemeMode.entries.map { it.label to it }, ui.themeMode, actions.setThemeMode, tagPrefix = "theme")
-      Helper("System follows the phone's light or dark setting.")
+    SectionLabel("Appearance")
+    PillChoice(ThemeMode.entries.map { it.label to it }, ui.themeMode, actions.setThemeMode, tagPrefix = "theme")
+    Helper("System follows the phone's light or dark setting.")
   }
 }
 
@@ -202,13 +202,13 @@ private fun Padded(content: @Composable ColumnScope.() -> Unit) = Column(Modifie
 private fun InstrumentsTab(ui: SettingsUi, actions: SettingsActions) {
   val offered = Instrument.entries.filter { ui.myInstruments.isEmpty() || it in ui.myInstruments }
   Padded {
-      SectionLabel("Playing now")
-      if (offered.isNotEmpty()) {
-        PillChoice(offered.map { it.label to it }, ui.instrument, { it?.let(actions.setInstrument) }, tagPrefix = "now")
-      }
-      Helper("Sets the key music is written in and which exercises sessions suggest. You can also change it when you start a session.")
-      SectionLabel("Instruments I play")
-      Helper("Only these are offered when you start a session.")
+    SectionLabel("Playing now")
+    if (offered.isNotEmpty()) {
+      PillChoice(offered.map { it.label to it }, ui.instrument, { it?.let(actions.setInstrument) }, tagPrefix = "now")
+    }
+    Helper("Sets the key music is written in and which exercises sessions suggest. You can also change it when you start a session.")
+    SectionLabel("Instruments I play")
+    Helper("Only these are offered when you start a session.")
   }
   InstrumentGroup.entries.forEach { group ->
     Padded { SectionLabel(group.label) }
@@ -242,10 +242,13 @@ private fun BackupTab(ui: SettingsUi, actions: SettingsActions) {
       style = MaterialTheme.typography.bodyMedium,
     )
     Helper(
-      ui.lastBackupAt?.let { "Last saved ${DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT).format(Date(it))}" } ?: "Not backed up from this phone yet",
+      ui.lastBackupAt?.let { "Last saved ${DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT).format(Date(it))}" }
+        ?: "Not backed up from this phone yet",
       Modifier.padding(vertical = 8.dp).testTag("last-backup"),
     )
-    StickerButton(onClick = { saveFile.launch("woodshed-backup-${LocalDate.now()}.json") }, modifier = Modifier.fillMaxWidth().height(52.dp).testTag("export")) {
+    StickerButton(onClick = {
+      saveFile.launch("woodshed-backup-${LocalDate.now()}.json")
+    }, modifier = Modifier.fillMaxWidth().height(52.dp).testTag("export")) {
       Text("Save a backup")
     }
     StickerButton(
@@ -264,7 +267,10 @@ private fun BackupTab(ui: SettingsUi, actions: SettingsActions) {
       title = { Text("Restore from a backup?") },
       text = { Text("Your tunes, comfort, known keys and review history on this phone are replaced by the backup's.") },
       confirmButton = {
-        TextButton(onClick = { confirmRestore = false; openFile.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) }, modifier = Modifier.testTag("confirm-restore")) {
+        TextButton(onClick = {
+          confirmRestore = false
+          openFile.launch(arrayOf("application/json", "text/plain", "application/octet-stream"))
+        }, modifier = Modifier.testTag("confirm-restore")) {
           Text("Choose file")
         }
       },
@@ -309,7 +315,7 @@ private fun AboutTab(ui: SettingsUi) {
     SectionLabel("Credits")
     Helper(
       "Tune data draws on standardrepertoire.com by David Miller, jazzstandards.com, Wikipedia, iReal Pro charts and the " +
-        "Jazz Chord Progressions Corpus. The Nunito and Fraunces typefaces are used under the SIL Open Font License."
+        "Jazz Chord Progressions Corpus. The Nunito and Fraunces typefaces are used under the SIL Open Font License.",
     )
   }
 }

@@ -75,9 +75,13 @@ private fun MediaItem(m: TuneMediaEntity, onRemove: () -> Unit) {
         Text(link?.host ?: m.url, style = MaterialTheme.typography.bodySmall, color = callie.textMuted, maxLines = 1)
       }
       if (link?.kind?.inline == true && !playing) {
-        StickerButton(onClick = { playing = true }, modifier = Modifier.height(36.dp).testTag("play-${m.id}")) { Text("▶ Play", style = MaterialTheme.typography.labelLarge) }
+        StickerButton(onClick = {
+          playing = true
+        }, modifier = Modifier.height(36.dp).testTag("play-${m.id}")) { Text("▶ Play", style = MaterialTheme.typography.labelLarge) }
       } else if (link?.kind?.inline != true) {
-        StickerButton(onClick = { uris.openUri(m.url) }, sticker = neutralSticker, modifier = Modifier.height(36.dp).testTag("open-${m.id}")) { Text("Open ↗", style = MaterialTheme.typography.labelLarge) }
+        StickerButton(onClick = {
+          uris.openUri(m.url)
+        }, sticker = neutralSticker, modifier = Modifier.height(36.dp).testTag("open-${m.id}")) { Text("Open ↗", style = MaterialTheme.typography.labelLarge) }
       }
       TextButton(onClick = { confirmRemove = true }, modifier = Modifier.size(40.dp).testTag("remove-media-${m.id}")) { Text("✕", color = callie.textMuted) }
     }
@@ -89,7 +93,12 @@ private fun MediaItem(m: TuneMediaEntity, onRemove: () -> Unit) {
       onDismissRequest = { confirmRemove = false },
       title = { Text("Remove this link?") },
       text = { Text(m.title ?: m.url) },
-      confirmButton = { TextButton(onClick = { confirmRemove = false; onRemove() }, modifier = Modifier.testTag("confirm-remove-media")) { Text("Remove", color = callie.danger) } },
+      confirmButton = {
+        TextButton(onClick = {
+          confirmRemove = false
+          onRemove()
+        }, modifier = Modifier.testTag("confirm-remove-media")) { Text("Remove", color = callie.danger) }
+      },
       dismissButton = { TextButton(onClick = { confirmRemove = false }) { Text("Cancel") } },
     )
   }
@@ -116,8 +125,13 @@ private fun AddMediaDialog(onDismiss: () -> Unit, onAdd: (String, String?, (Bool
     title = { Text("Add a recording or video") },
     text = {
       Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        OutlinedTextField(value = url, onValueChange = { url = it; error = false }, label = { Text("Link") }, singleLine = true, modifier = Modifier.fillMaxWidth().testTag("media-url"))
-        OutlinedTextField(value = title, onValueChange = { title = it }, label = { Text("Name (optional)") }, singleLine = true, modifier = Modifier.fillMaxWidth().testTag("media-title"))
+        OutlinedTextField(value = url, onValueChange = {
+          url = it
+          error = false
+        }, label = { Text("Link") }, singleLine = true, modifier = Modifier.fillMaxWidth().testTag("media-url"))
+        OutlinedTextField(value = title, onValueChange = {
+          title = it
+        }, label = { Text("Name (optional)") }, singleLine = true, modifier = Modifier.fillMaxWidth().testTag("media-title"))
         when {
           error -> Text("That doesn't look like a web address.", color = LocalCallie.current.danger)
           parsed != null -> Helper(if (parsed.kind.inline) "${parsed.kind.label}: plays here." else "${parsed.kind.label}: opens outside the app.")

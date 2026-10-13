@@ -104,7 +104,16 @@ class TranscribeViewModel(repository: WoodshedRepository, private val service: T
     finish = { launch { service.finish(it) } },
     clear = { launch { service.clear(it) } },
     setNotes = { id, notes -> launch { service.setNotes(id, notes) } },
-    save = { id, draft, saved -> viewModelScope.launch { if (id == null) saved(service.add(draft)) else { service.edit(id, draft); saved(id) } } },
+    save = { id, draft, saved ->
+      viewModelScope.launch {
+        if (id == null) {
+          saved(service.add(draft))
+        } else {
+          service.edit(id, draft)
+          saved(id)
+        }
+      }
+    },
     delete = { launch { service.delete(it) } },
   )
 
@@ -141,8 +150,17 @@ fun TranscribeScreen(ui: TranscribeUi, actions: SoloActions, navigation: AppNavi
     val row = ui.rows.firstOrNull { it.solo.id == target }
     SoloEditor(
       row?.solo,
-      onSave = { draft -> actions.save(row?.solo?.id, draft) { id -> open = id; editing = null } },
-      onDelete = { row?.let { actions.delete(it.solo.id) }; open = null; editing = null },
+      onSave = { draft ->
+        actions.save(row?.solo?.id, draft) { id ->
+          open = id
+          editing = null
+        }
+      },
+      onDelete = {
+        row?.let { actions.delete(it.solo.id) }
+        open = null
+        editing = null
+      },
       onBack = { editing = null },
     )
     return
@@ -156,24 +174,41 @@ fun TranscribeScreen(ui: TranscribeUi, actions: SoloActions, navigation: AppNavi
   Column(Modifier.fillMaxSize()) {
     Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
       Text("Solos to learn by ear", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
-      StickerButton(onClick = { editing = NEW_SOLO }, modifier = Modifier.height(40.dp).testTag("add-solo"), contentPadding = PaddingValues(horizontal = 14.dp)) {
+      StickerButton(onClick = {
+        editing = NEW_SOLO
+      }, modifier = Modifier.height(40.dp).testTag("add-solo"), contentPadding = PaddingValues(horizontal = 14.dp)) {
         Text("+ Add a solo", style = MaterialTheme.typography.labelLarge)
       }
     }
     if (ui.rows.isEmpty()) {
-      EmptyState("🎧", "No solos yet", "Add a solo you want to learn by ear: the tune, who plays it, and a link to the recording.", action = "Add a solo", onAction = { editing = NEW_SOLO }, scrolls = true)
+      EmptyState(
+        "🎧",
+        "No solos yet",
+        "Add a solo you want to learn by ear: the tune, who plays it, and a link to the recording.",
+        action = "Add a solo",
+        onAction = { editing = NEW_SOLO },
+        scrolls = true,
+      )
       return@Column
     }
     LazyColumn(Modifier.fillMaxSize()) {
       soloGroups(ui.rows).forEach { (label, rows) ->
         item(key = "group-$label") {
-          Text(label, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(start = 16.dp, top = 12.dp, bottom = 4.dp))
+          Text(
+            label,
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(start = 16.dp, top = 12.dp, bottom = 4.dp),
+          )
         }
         rows.forEach { r ->
           item(key = r.solo.id) {
             Column(Modifier.fillMaxWidth().clickable { open = r.solo.id }.padding(horizontal = 16.dp, vertical = 10.dp).testTag("solo-${r.solo.slug}")) {
               Text(r.solo.title, style = MaterialTheme.typography.titleMedium)
-              Text(listOfNotNull("${r.solo.soloist}, ${r.solo.instrument.lowercase()}", r.solo.context, r.solo.recorded?.let(::recordedLabel)).joinToString(" · "), style = MaterialTheme.typography.bodySmall)
+              Text(
+                listOfNotNull("${r.solo.soloist}, ${r.solo.instrument.lowercase()}", r.solo.context, r.solo.recorded?.let(::recordedLabel)).joinToString(" · "),
+                style = MaterialTheme.typography.bodySmall,
+              )
             }
             HorizontalDivider()
           }
@@ -184,7 +219,14 @@ fun TranscribeScreen(ui: TranscribeUi, actions: SoloActions, navigation: AppNavi
 }
 
 @Composable
-private fun SoloDetail(row: SoloRow, transposition: Transposition, actions: SoloActions, onBack: () -> Unit, onEdit: () -> Unit, onOpenTune: (() -> Unit)? = null) {
+private fun SoloDetail(
+  row: SoloRow,
+  transposition: Transposition,
+  actions: SoloActions,
+  onBack: () -> Unit,
+  onEdit: () -> Unit,
+  onOpenTune: (() -> Unit)? = null,
+) {
   BackHandler(onBack = onBack)
   val solo = row.solo
   val id = solo.id
@@ -197,7 +239,9 @@ private fun SoloDetail(row: SoloRow, transposition: Transposition, actions: Solo
       BackButton("Solos", onBack)
       Spacer(Modifier.weight(1f))
       if (solo.userCreated) {
-        StickerButton(onClick = onEdit, sticker = neutralSticker, modifier = Modifier.height(40.dp).testTag("edit-solo")) { Text("✏️ Edit", style = MaterialTheme.typography.labelLarge) }
+        StickerButton(onClick = onEdit, sticker = neutralSticker, modifier = Modifier.height(40.dp).testTag("edit-solo")) {
+          Text("✏️ Edit", style = MaterialTheme.typography.labelLarge)
+        }
       }
     }
     Text(solo.title, style = MaterialTheme.typography.headlineMedium)
@@ -207,12 +251,25 @@ private fun SoloDetail(row: SoloRow, transposition: Transposition, actions: Solo
     }
     soloKey(solo, transposition)?.let { Text(it, style = MaterialTheme.typography.titleLarge, modifier = Modifier.testTag("solo-key")) }
     if (onOpenTune != null) {
-      StickerButton(onClick = onOpenTune, sticker = neutralSticker, modifier = Modifier.height(40.dp).testTag("solo-tune"), contentPadding = PaddingValues(horizontal = 14.dp)) {
+      StickerButton(
+        onClick = onOpenTune,
+        sticker = neutralSticker,
+        modifier = Modifier.height(40.dp).testTag("solo-tune"),
+        contentPadding = PaddingValues(horizontal = 14.dp),
+      ) {
         Text("🎵 Open the tune ›", style = MaterialTheme.typography.labelLarge)
       }
     }
     if (solo.startSeconds != null) {
-      Text("Solo ${clock(solo.startSeconds)}" + (solo.endSeconds?.let { " to ${clock(it)}" } ?: ""), color = callie.textMuted, modifier = Modifier.testTag("solo-times"))
+      Text(
+        "Solo ${clock(solo.startSeconds)}" + (
+          solo.endSeconds?.let {
+            " to ${clock(it)}"
+          } ?: ""
+          ),
+        color = callie.textMuted,
+        modifier = Modifier.testTag("solo-times"),
+      )
     }
 
     val pad = TranscriptionService.PADDING_SECONDS
@@ -243,11 +300,22 @@ private fun SoloDetail(row: SoloRow, transposition: Transposition, actions: Solo
         StickerButton(onClick = { actions.start(id) }, modifier = Modifier.fillMaxWidth().testTag("start-solo")) { Text("🎧 Start transcribing") }
         OutlinedButton(onClick = { actions.wishlist(id) }, modifier = Modifier.fillMaxWidth().testTag("wishlist-solo")) { Text("💭 Add to wishlist") }
       }
-      TranscriptionStatus.WISHLIST -> StickerButton(onClick = { actions.start(id) }, modifier = Modifier.fillMaxWidth().testTag("start-solo")) { Text("🎧 Start transcribing") }
-      TranscriptionStatus.ACTIVE -> StickerButton(onClick = { actions.finish(id) }, modifier = Modifier.fillMaxWidth().testTag("finish-solo")) { Text("✅ Mark as done") }
-      TranscriptionStatus.DONE -> OutlinedButton(onClick = { actions.start(id) }, modifier = Modifier.fillMaxWidth().testTag("restart-solo")) { Text("Work on it again") }
+
+      TranscriptionStatus.WISHLIST -> StickerButton(onClick = {
+        actions.start(id)
+      }, modifier = Modifier.fillMaxWidth().testTag("start-solo")) { Text("🎧 Start transcribing") }
+
+      TranscriptionStatus.ACTIVE -> StickerButton(onClick = {
+        actions.finish(id)
+      }, modifier = Modifier.fillMaxWidth().testTag("finish-solo")) { Text("✅ Mark as done") }
+
+      TranscriptionStatus.DONE -> OutlinedButton(onClick = {
+        actions.start(id)
+      }, modifier = Modifier.fillMaxWidth().testTag("restart-solo")) { Text("Work on it again") }
     }
-    if (row.status != null) TextButton(onClick = { actions.clear(id) }, modifier = Modifier.testTag("clear-solo")) { Text("Remove from my list", color = callie.textMuted) }
+    if (row.status != null) {
+      TextButton(onClick = { actions.clear(id) }, modifier = Modifier.testTag("clear-solo")) { Text("Remove from my list", color = callie.textMuted) }
+    }
 
     if (row.status != null) {
       SectionLabel("Notes")
@@ -259,7 +327,9 @@ private fun SoloDetail(row: SoloRow, transposition: Transposition, actions: Solo
         modifier = Modifier.fillMaxWidth().testTag("solo-notes"),
       )
       if (notes != row.state?.notes.orEmpty()) {
-        StickerButton(onClick = { actions.setNotes(id, notes) }, sticker = neutralSticker, modifier = Modifier.height(40.dp).testTag("save-notes")) { Text("Save notes") }
+        StickerButton(onClick = {
+          actions.setNotes(id, notes)
+        }, sticker = neutralSticker, modifier = Modifier.height(40.dp).testTag("save-notes")) { Text("Save notes") }
       }
     }
 
@@ -304,7 +374,14 @@ private fun SoloEditor(solo: TranscriptionEntity?, onSave: (TranscriptionDraft) 
       Field("Solo ends (5:29)", draft.end, "solo-end", capitalize = false, modifier = Modifier.weight(1f)) { draft = draft.copy(end = it) }
     }
     SectionLabel("Key played in, concert")
-    PillChoice(listOf<Pair<String, String?>>("Unknown" to null) + Key.MAJOR_SPELLING.map { it to it }, draft.keyName, { draft = draft.copy(keyName = it) }, tagPrefix = "solo-key")
+    PillChoice(
+      listOf<Pair<String, String?>>("Unknown" to null) + Key.MAJOR_SPELLING.map {
+        it to it
+      },
+      draft.keyName,
+      { draft = draft.copy(keyName = it) },
+      tagPrefix = "solo-key",
+    )
     PillChoice(Tonality.entries.map { it.label to it }, draft.tonality ?: Tonality.MAJOR, { draft = draft.copy(tonality = it) }, tagPrefix = "solo-tonality")
     OutlinedTextField(
       value = draft.performers,
@@ -315,24 +392,41 @@ private fun SoloEditor(solo: TranscriptionEntity?, onSave: (TranscriptionDraft) 
     )
     Helper("Playback starts ${TranscriptionService.PADDING_SECONDS} seconds before the solo and stops ${TranscriptionService.PADDING_SECONDS} after it.")
     if (tried) problems.forEach { Text(it, color = callie.danger) }
-    StickerButton(onClick = { tried = true; if (problems.isEmpty()) onSave(draft) }, modifier = Modifier.fillMaxWidth().height(56.dp).testTag("solo-save")) {
+    StickerButton(onClick = {
+      tried = true
+      if (problems.isEmpty()) onSave(draft)
+    }, modifier = Modifier.fillMaxWidth().height(56.dp).testTag("solo-save")) {
       Text(if (solo == null) "Add solo" else "Save")
     }
-    if (solo?.userCreated == true) TextButton(onClick = { confirm = true }, modifier = Modifier.testTag("solo-delete")) { Text("Delete this solo", color = callie.danger) }
+    if (solo?.userCreated == true) {
+      TextButton(onClick = { confirm = true }, modifier = Modifier.testTag("solo-delete")) { Text("Delete this solo", color = callie.danger) }
+    }
   }
   if (confirm) {
     AlertDialog(
       onDismissRequest = { confirm = false },
       title = { Text("Delete this solo?") },
       text = { Text("Your progress and notes on it go too. Its practice history is kept.") },
-      confirmButton = { TextButton(onClick = { confirm = false; onDelete() }) { Text("Delete", color = callie.danger) } },
+      confirmButton = {
+        TextButton(onClick = {
+          confirm = false
+          onDelete()
+        }) { Text("Delete", color = callie.danger) }
+      },
       dismissButton = { TextButton(onClick = { confirm = false }) { Text("Cancel") } },
     )
   }
 }
 
 @Composable
-private fun Field(label: String, value: String, tag: String, capitalize: Boolean = true, modifier: Modifier = Modifier.fillMaxWidth(), onChange: (String) -> Unit) {
+private fun Field(
+  label: String,
+  value: String,
+  tag: String,
+  capitalize: Boolean = true,
+  modifier: Modifier = Modifier.fillMaxWidth(),
+  onChange: (String) -> Unit,
+) {
   OutlinedTextField(
     value = value,
     onValueChange = onChange,

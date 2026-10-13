@@ -73,10 +73,24 @@ fun TuneEditor(tune: TuneRow?, onSave: (TuneDraft) -> Unit, onDelete: () -> Unit
     }
 
     SectionLabel("Key, in concert pitch")
-    PillChoice(listOf<Pair<String, String?>>("Unknown" to null) + Key.MAJOR_SPELLING.map { it to it }, draft.keyName, { draft = draft.copy(keyName = it) }, tagPrefix = "editor-key")
+    PillChoice(
+      listOf<Pair<String, String?>>("Unknown" to null) + Key.MAJOR_SPELLING.map {
+        it to it
+      },
+      draft.keyName,
+      { draft = draft.copy(keyName = it) },
+      tagPrefix = "editor-key",
+    )
     PillChoice(Tonality.entries.map { it.label to it }, draft.tonality ?: Tonality.MAJOR, { draft = draft.copy(tonality = it) }, tagPrefix = "editor-tonality")
     SectionLabel("Meter")
-    PillChoice(listOf<Pair<String, String?>>("Unknown" to null) + METERS.map { it to it }, draft.timeSignature, { draft = draft.copy(timeSignature = it) }, tagPrefix = "editor-meter")
+    PillChoice(
+      listOf<Pair<String, String?>>("Unknown" to null) + METERS.map {
+        it to it
+      },
+      draft.timeSignature,
+      { draft = draft.copy(timeSignature = it) },
+      tagPrefix = "editor-meter",
+    )
     SectionLabel("Collection")
     PillChoice(SeedValidator.COLLECTIONS.map { it to it }, draft.collection, { draft = draft.copy(collection = it) }, tagPrefix = "editor-collection")
 
@@ -94,6 +108,7 @@ fun TuneEditor(tune: TuneRow?, onSave: (TuneDraft) -> Unit, onDelete: () -> Unit
     when {
       tune?.userCreated == true ->
         TextButton(onClick = { confirm = "delete" }, modifier = Modifier.testTag("editor-delete")) { Text("Delete this tune", color = callie.danger) }
+
       tune?.edited == true ->
         TextButton(onClick = { confirm = "reset" }, modifier = Modifier.testTag("editor-reset")) { Text("Reset to the original", color = callie.danger) }
     }
@@ -105,12 +120,18 @@ fun TuneEditor(tune: TuneRow?, onSave: (TuneDraft) -> Unit, onDelete: () -> Unit
       title = { Text(if (what == "delete") "Delete ${tune?.title}?" else "Reset ${tune?.title}?") },
       text = {
         Text(
-          if (what == "delete") "It leaves your tunes and practice. Its review history is kept."
-          else "Your edits are dropped and the tune shows its original details again."
+          if (what == "delete") {
+            "It leaves your tunes and practice. Its review history is kept."
+          } else {
+            "Your edits are dropped and the tune shows its original details again."
+          },
         )
       },
       confirmButton = {
-        TextButton(onClick = { confirm = null; if (what == "delete") onDelete() else onReset() }, modifier = Modifier.testTag("editor-confirm")) {
+        TextButton(onClick = {
+          confirm = null
+          if (what == "delete") onDelete() else onReset()
+        }, modifier = Modifier.testTag("editor-confirm")) {
           Text(if (what == "delete") "Delete" else "Reset", color = callie.danger)
         }
       },

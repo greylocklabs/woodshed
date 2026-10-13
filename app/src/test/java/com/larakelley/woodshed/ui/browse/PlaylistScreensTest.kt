@@ -42,7 +42,8 @@ class PlaylistScreensTest {
   fun aPlaylistReordersRemovesAndDeletes() {
     val calls = mutableListOf<String>()
     var back = 0
-    val actions = PlaylistActions(move = { p, a, b -> calls += "move $p $a $b" }, remove = { p, t -> calls += "remove $p $t" }, delete = { calls += "delete $it" })
+    val actions =
+      PlaylistActions(move = { p, a, b -> calls += "move $p $a $b" }, remove = { p, t -> calls += "remove $p $t" }, delete = { calls += "delete $it" })
     val tunes = mapOf(5L to row(5, "Solar"), 6L to row(6, "Nardis"))
     compose.setContent { PlaylistScreen(Playlist(1, "Gig", listOf(5L, 6L)), tunes, actions, onOpenTune = {}, onBack = { back++ }) }
     compose.onNodeWithText("Nardis").assertExists()

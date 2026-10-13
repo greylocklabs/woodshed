@@ -8,8 +8,8 @@ import com.larakelley.woodshed.data.db.clearedFields
 import com.larakelley.woodshed.data.seed.SeedValidator
 import com.larakelley.woodshed.domain.Key
 import com.larakelley.woodshed.domain.Tonality
-import java.text.Normalizer
 import kotlinx.serialization.Serializable
+import java.text.Normalizer
 
 /** A tune as the editor fills it in. Blank text means unknown. */
 @Serializable
@@ -139,8 +139,7 @@ class TuneLibrary(private val db: WoodshedDatabase, private val now: () -> Long 
 
   companion object {
     /** Lowercase ASCII words joined by hyphens, as the seed's slugs are. */
-    fun slugify(title: String): String =
-      Normalizer.normalize(title, Normalizer.Form.NFD).replace(Regex("\\p{M}+"), "").lowercase()
-        .replace("'", "").replace("&", " and ").replace(Regex("[^a-z0-9]+"), "-").trim('-')
+    fun slugify(title: String): String = Normalizer.normalize(title, Normalizer.Form.NFD).replace(Regex("\\p{M}+"), "").lowercase()
+      .replace("'", "").replace("&", " and ").replace(Regex("[^a-z0-9]+"), "-").trim('-')
   }
 }

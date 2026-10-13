@@ -48,7 +48,11 @@ class MediaSectionTest {
   @Test
   fun addingReportsABadLinkAndSavesAGoodOne() {
     val added = mutableListOf<String>()
-    val actions = MediaActions(add = { _, url, _, done -> val ok = url.startsWith("https://"); if (ok) added += url; done(ok) })
+    val actions = MediaActions(add = { _, url, _, done ->
+      val ok = url.startsWith("https://")
+      if (ok) added += url
+      done(ok)
+    })
     compose.setContent { Column { MediaSection(7, emptyList(), actions) } }
     compose.onNodeWithTag("add-media").performClick()
     compose.onNodeWithTag("media-url").performTextInput("nope")

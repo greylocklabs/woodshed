@@ -18,8 +18,6 @@ import com.larakelley.woodshed.domain.Lifecycle
 import com.larakelley.woodshed.domain.PlanBlock
 import com.larakelley.woodshed.domain.Sm2Scheduler
 import com.larakelley.woodshed.domain.Transposition
-import java.time.ZoneOffset
-import kotlin.random.Random
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
@@ -37,6 +35,8 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
+import java.time.ZoneOffset
+import kotlin.random.Random
 
 /** The practice loop against a real database seeded from the bundled assets. */
 @RunWith(RobolectricTestRunner::class)

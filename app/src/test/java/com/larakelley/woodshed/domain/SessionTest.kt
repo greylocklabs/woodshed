@@ -1,9 +1,9 @@
 package com.larakelley.woodshed.domain
 
-import kotlin.random.Random
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import kotlin.random.Random
 
 class SessionTest {
   private var nextId = 0L

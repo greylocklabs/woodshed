@@ -3,7 +3,8 @@ package com.larakelley.woodshed.domain
 /** Whether a tune's home key is major or minor. A tune has one tonality; only its key changes. */
 enum class Tonality(val label: String) {
   MAJOR("Major"),
-  MINOR("Minor");
+  MINOR("Minor"),
+  ;
 
   companion object {
     fun fromSeedName(name: String?): Tonality? = entries.firstOrNull { it.name.equals(name, ignoreCase = true) }

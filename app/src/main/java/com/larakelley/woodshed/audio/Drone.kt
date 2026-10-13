@@ -28,7 +28,7 @@ class Drone(private val prefs: SharedPreferences, private val a4: () -> Int) {
       octave = prefs.getInt(OCTAVE, 4).coerceIn(OCTAVES),
       fifth = prefs.getBoolean(FIFTH, false),
       volume = prefs.getFloat(VOLUME, 0.6f).coerceIn(0f, 1f),
-    )
+    ),
   )
   val state: StateFlow<DroneState> = _state.asStateFlow()
   private var thread: Thread? = null
@@ -73,7 +73,9 @@ class Drone(private val prefs: SharedPreferences, private val a4: () -> Int) {
     val minBuffer = AudioTrack.getMinBufferSize(SAMPLE_RATE, AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT)
     val audio = AudioTrack.Builder()
       .setAudioAttributes(AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_MEDIA).setContentType(AudioAttributes.CONTENT_TYPE_MUSIC).build())
-      .setAudioFormat(AudioFormat.Builder().setSampleRate(SAMPLE_RATE).setEncoding(AudioFormat.ENCODING_PCM_16BIT).setChannelMask(AudioFormat.CHANNEL_OUT_MONO).build())
+      .setAudioFormat(
+        AudioFormat.Builder().setSampleRate(SAMPLE_RATE).setEncoding(AudioFormat.ENCODING_PCM_16BIT).setChannelMask(AudioFormat.CHANNEL_OUT_MONO).build(),
+      )
       .setBufferSizeInBytes(minBuffer * 4)
       .setTransferMode(AudioTrack.MODE_STREAM)
       .build()
@@ -98,8 +100,10 @@ class Drone(private val prefs: SharedPreferences, private val a4: () -> Int) {
 
   private companion object {
     const val SAMPLE_RATE = 48_000
+
     /** Each buffer is also one fade step, about 40 ms. */
     const val CHUNK_FRAMES = 2_048
+
     /** Phone speakers lose most of a note below about 150 Hz, so the middle range starts at C4 rather than C3. */
     val OCTAVES = 3..5
     const val PITCH = "drone_pitch"
