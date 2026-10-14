@@ -74,7 +74,8 @@ on PRs into main, nightly and on demand. Dependabot opens weekly update PRs.
 ## Website
 
 `www/` is [woodshedapp.org](https://woodshedapp.org): the landing page, privacy policy and terms, styled like
-the app. The pages workflow publishes it to GitHub Pages whenever `www/` changes on main. Its screenshots are
+the app. `make www` serves it locally at http://localhost:8000. The pages workflow publishes it to GitHub Pages
+whenever `www/` changes on main. Its screenshots are
 copies of the screenshot tests' images in `app/src/test/screenshots`. DNS for the domain, including Resend's
 mail records, is in Route 53.
 
