@@ -5,6 +5,15 @@ published as that release's GitHub notes, so the headings must stay
 `## <version>`. Write the section for a version before running
 `make release`, which refuses to release without one.
 
+## 0.2.0
+
+### Added
+
+- **reports:** reports are sent straight from the app and filed as GitHub
+  issues by the woodshed-reports app, so reporting no longer needs a GitHub
+  account. The dialog says where the report was filed, and can still open it
+  on GitHub instead.
+
 ## 0.1.0
 
 The first release: a practice app for jazz horn players, built around the
