@@ -36,6 +36,7 @@ import com.larakelley.woodshed.domain.Report
 import com.larakelley.woodshed.domain.ReportSubject
 import com.larakelley.woodshed.theme.Helper
 import com.larakelley.woodshed.theme.LocalCallie
+import com.larakelley.woodshed.ui.jsonSaver
 import kotlinx.coroutines.launch
 
 /** The installed version, shown in reports. Provided once at the top of the app. */
@@ -73,8 +74,9 @@ fun ReportDialog(subject: ReportSubject, item: String?, id: String?, details: Li
   var problem by rememberSaveable { mutableStateOf<String?>(null) }
   var note by rememberSaveable { mutableStateOf("") }
   var sending by remember { mutableStateOf(false) }
-  var filed by remember { mutableStateOf<FiledReport?>(null) }
-  var failure by remember { mutableStateOf<String?>(null) }
+  // Kept across rotation, so the thanks stays up instead of reopening a form that would file the report again.
+  var filed by rememberSaveable(stateSaver = jsonSaver()) { mutableStateOf<FiledReport?>(null) }
+  var failure by rememberSaveable { mutableStateOf<String?>(null) }
   val report = problem?.let { Report(subject, it, item, id, details, note.trim()) }
   val openOnGitHub = {
     report?.let { uris.openUri(it.issueUrl(version, android)) }

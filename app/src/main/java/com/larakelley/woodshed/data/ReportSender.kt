@@ -4,6 +4,7 @@ import com.larakelley.woodshed.domain.Report
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import java.io.IOException
 import java.net.HttpURLConnection
@@ -40,6 +41,8 @@ class HttpReportSender(private val endpoint: String = Report.SERVICE) : ReportSe
       }
     } catch (e: IOException) {
       Result.failure(IOException("Couldn't reach the report service. Check your connection.", e))
+    } catch (e: SerializationException) {
+      Result.failure(IOException("The report service sent an answer the app couldn't read.", e))
     }
   }
 }

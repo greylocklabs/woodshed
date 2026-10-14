@@ -8,6 +8,7 @@ import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.assertTextEquals
+import androidx.compose.ui.test.junit4.StateRestorationTester
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
@@ -97,5 +98,27 @@ class ReportDialogTest {
     compose.onNodeWithTag("send-report").assertTextEquals("Try again").performClick()
     compose.onNodeWithTag("report-filed").assertExists()
     assertEquals(2, attempts)
+  }
+
+  @Test
+  fun theThanksSurvivesRotationInsteadOfReopeningTheForm() {
+    val restore = StateRestorationTester(compose)
+    var sends = 0
+    val sender = ReportSender { _, _, _ ->
+      sends++
+      Result.success(FiledReport(42, "https://example.org/42"))
+    }
+    restore.setContent {
+      CompositionLocalProvider(LocalReportSender provides sender) { ReportButton(ReportSubject.APP) }
+    }
+    compose.onNodeWithTag("report").performClick()
+    compose.onNodeWithTag("problem-An idea").performClick()
+    compose.onNodeWithTag("send-report").performClick()
+    compose.onNodeWithTag("report-filed").assertExists()
+
+    restore.emulateSavedInstanceStateRestore()
+    compose.onNodeWithTag("report-filed").assertExists()
+    compose.onNodeWithTag("send-report").assertDoesNotExist()
+    assertEquals(1, sends)
   }
 }
