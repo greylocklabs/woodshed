@@ -22,25 +22,25 @@ jobs:
     timeout-minutes: 45
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       # The Android app arrives partway up the first stack; branches before it have nothing to run.
       - name: Setup Java
         if: hashFiles('gradlew') != ''
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: 21
 
       - name: Setup Android SDK
         if: hashFiles('gradlew') != ''
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v4
         with:
           packages: platform-tools
 
       - name: Setup Gradle
         if: hashFiles('gradlew') != ''
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
 
       # Hardware acceleration for the emulator.
       - name: Enable KVM
@@ -56,7 +56,7 @@ jobs:
 
       - name: Upload test reports
         if: failure() && hashFiles('gradlew') != ''
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: e2e-reports
           path: app/build/reports/androidTests

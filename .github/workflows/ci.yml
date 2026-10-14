@@ -17,26 +17,26 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       # The Android app arrives partway up the first stack; branches before it have only the Python tools.
       - name: Setup Java
         if: hashFiles('gradlew') != ''
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: 21
 
       - name: Setup Android SDK
         if: hashFiles('gradlew') != ''
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v4
         with:
           # The default also asks for "tools", which current command-line tools no longer ship.
           packages: platform-tools
 
       - name: Setup Gradle
         if: hashFiles('gradlew') != ''
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
 
       - name: Changelog has the current version
         if: hashFiles('scripts/release-notes.sh') != ''
@@ -54,10 +54,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       - name: Setup Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: "3.13"
 
@@ -67,21 +67,21 @@ jobs:
 
       - name: Setup Java
         if: hashFiles('gradlew') != ''
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: 21
 
       - name: Setup Android SDK
         if: hashFiles('gradlew') != ''
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v4
         with:
           # The default also asks for "tools", which current command-line tools no longer ship.
           packages: platform-tools
 
       - name: Setup Gradle
         if: hashFiles('gradlew') != ''
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
 
       # Runs every unit and Robolectric test, comparing the screenshot tests against app/src/test/screenshots.
       - name: Unit, Robolectric and screenshot tests
@@ -90,7 +90,7 @@ jobs:
 
       - name: Upload screenshot differences
         if: failure() && hashFiles('gradlew') != ''
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: screenshot-diffs
           path: app/build/outputs/roborazzi
@@ -99,7 +99,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
