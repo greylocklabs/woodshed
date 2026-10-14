@@ -52,6 +52,14 @@ if [ "$part" != "current" ]; then
   git commit -m "chore(release): bump to ${version}"
 fi
 git tag -a "v${version}" -m "v${version}"
-# Atomic, so the tag cannot land without main and start a release from a commit main does not have.
-git push --atomic origin main "refs/tags/v${version}"
+# Atomic, so the tag cannot land without main and start a release from a commit main does not have. If the push
+# fails, nothing reached origin, so the local tag and bump are undone and the release can simply be run again.
+if ! git push --atomic origin main "refs/tags/v${version}"; then
+  git tag -d "v${version}" > /dev/null
+  if [ "$part" != "current" ] && [ "$(git log -1 --format=%s)" = "chore(release): bump to ${version}" ]; then
+    git reset --quiet --hard HEAD~1
+  fi
+  echo "release: the push failed, so the local tag and version bump were undone; fix the problem and run it again" >&2
+  exit 1
+fi
 echo "released v${version}"
