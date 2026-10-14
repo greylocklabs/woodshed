@@ -5,7 +5,7 @@ GRADLE := ./gradlew
 EMULATOR_GPU ?= swiftshader_indirect
 
 .DEFAULT_GOAL := help
-.PHONY: help build apk test record-screenshots e2e format lint check clean version release-notes bump release
+.PHONY: help build apk test tools-test record-screenshots e2e format lint check clean version release-notes bump release
 
 help: ## List the tasks
 	@awk 'BEGIN { FS = ":.*## " } /^[a-z0-9-]+:.*## / { printf "  %-20s %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
@@ -44,7 +44,10 @@ lint: ## Check formatting, run Android lint and check the changelog has the curr
 	$(GRADLE) spotlessCheck :app:lintDebug
 	@scripts/release-notes.sh > /dev/null
 
-check: lint test ## Everything CI runs on a pull request
+tools-test: ## Run the card prototype tests in tools/
+	cd tools && python3 -m unittest test_cards
+
+check: lint test tools-test ## CI's lint and test jobs; commitlint runs in CI only
 
 # Releasing
 # ---------
