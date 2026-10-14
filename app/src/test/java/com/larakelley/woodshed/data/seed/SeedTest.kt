@@ -3,6 +3,7 @@ package com.larakelley.woodshed.data.seed
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonArray
@@ -18,6 +19,7 @@ class SeedTest {
   private val dataDir = generateSequence(File("").absoluteFile) { it.parentFile }.map { File(it, "data") }.first { File(it, "standards.json").exists() }
   private val standards = File(dataDir, "standards.json").readText()
   private val exercises = File(dataDir, "exercises.json").readText()
+  private val transcriptions = File(dataDir, "transcriptions.json").readText()
 
   @Test
   fun realSeedIsValid() {
@@ -69,6 +71,48 @@ class SeedTest {
       it + ("collection" to JsonPrimitive("Bebop"))
     },
   )
+
+  @Test
+  fun rejectsAKeyItCannotRead() = assertRejected("bad key H", standards = editRow(standards, 0) { it + ("key" to JsonPrimitive("H")) })
+
+  @Test
+  fun rejectsATonalityOtherThanMajorOrMinor() =
+    assertRejected("bad tonality dorian", standards = editRow(standards, 0) { it + ("key" to JsonPrimitive("D")) + ("tonality" to JsonPrimitive("dorian")) })
+
+  @Test
+  fun rejectsAKeyWithoutATonality() =
+    assertRejected("key without a tonality", standards = editRow(standards, 0) { it + ("key" to JsonPrimitive("C")) + ("tonality" to JsonNull) })
+
+  @Test
+  fun rejectsSlugsKeptForTheUsersOwnTunes() =
+    assertRejected("kept for the user's own tunes", standards = editRow(standards, 0) { it + ("slug" to JsonPrimitive("user-blues")) })
+
+  @Test
+  fun realSolosAreValid() {
+    assertTrue(Seed.parse(standards, exercises, transcriptions).transcriptions.size >= 3)
+  }
+
+  @Test
+  fun rejectsSolosThatPointNowhereOrRunBackwards() {
+    val cases = mapOf(
+      "no tune not-a-tune" to ("tune" to JsonPrimitive("not-a-tune")),
+      "bad url" to ("url" to JsonPrimitive("not a link")),
+      "ends before it starts" to ("end_seconds" to JsonPrimitive(1)),
+      "bad recorded date" to ("recorded" to JsonPrimitive("Aug 2022")),
+      "kept for the user's own solos" to ("slug" to JsonPrimitive("user-solo")),
+    )
+    for ((expected, change) in cases) {
+      val broken = editRow(transcriptions, 0) { it + change }
+      val e = try {
+        Seed.parse(standards, exercises, broken)
+        fail("'$expected' was accepted")
+        throw AssertionError()
+      } catch (e: SeedException) {
+        e
+      }
+      assertTrue("expected '$expected' in ${e.problems}", e.problems.any { expected in it })
+    }
+  }
 
   @Test
   fun everyBulkRowIsMarkedUnverified() {
