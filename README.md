@@ -85,7 +85,7 @@ mail records, is in Route 53.
 question about the Ko-fi button. The store listing's text and graphics are in `app/src/main/play/`: the phone
 screenshots are the screenshot tests' `play` set, and `tools/play/render.sh` renders the icon and feature
 graphic. Tagged releases also build a bundle, uploaded to Play's internal testing track once the
-`PLAY_SERVICE_ACCOUNT_JSON` secret exists.
+`PLAY_SERVICE_ACCOUNT_JSON` secret exists, with the version's changelog section as its notes.
 
 ## Report service
 

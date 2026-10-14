@@ -69,8 +69,14 @@ jobs:
             rm -f "$RUNNER_TEMP/release.p12"
           fi
 
-      # Play's API cannot make an app's first upload, so uploading waits until the service account secret exists,
-      # which is set up after the first bundle is uploaded by hand.
+      - name: Publish the release
+        if: github.ref_type == 'tag'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes-file release-notes.md "woodshed-${VERSION}.apk"
+
+      # After the GitHub release, so a Play problem never holds back the APK. Play's API cannot make an app's first
+      # upload, so this waits until the service account secret exists, set up after the first bundle goes up by hand.
       - name: Check for Play upload access
         id: play
         env:
@@ -79,7 +85,7 @@ jobs:
           if [ "${GITHUB_REF_TYPE}" = "tag" ] && [ -n "$PLAY_SERVICE_ACCOUNT_JSON" ]; then
             echo "upload=true" >> "$GITHUB_OUTPUT"
             mkdir -p whatsnew
-            cp app/src/main/play/release-notes/en-US/default.txt whatsnew/whatsnew-en-US
+            scripts/play-notes.sh "$VERSION" > whatsnew/whatsnew-en-US
           fi
 
       - name: Upload to Play's internal testing track
@@ -93,9 +99,3 @@ jobs:
           track: internal
           status: completed
           whatsNewDirectory: whatsnew
-
-      - name: Publish the release
-        if: github.ref_type == 'tag'
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes-file release-notes.md "woodshed-${VERSION}.apk"
