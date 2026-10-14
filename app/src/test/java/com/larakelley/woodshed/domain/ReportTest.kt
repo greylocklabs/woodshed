@@ -1,5 +1,9 @@
 package com.larakelley.woodshed.domain
 
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -40,5 +44,17 @@ class ReportTest {
     assertTrue(idea.body("1.0", "17").contains("(please describe)"))
     assertEquals("enhancement", query(idea.issueUrl("1.0", "17"))["labels"])
     assertEquals("An idea", idea.title)
+  }
+
+  @Test
+  fun theServiceGetsTheReportAsJson() {
+    val json = Json.parseToJsonElement(
+      Report(ReportSubject.TUNE, "Wrong key", "Solar", "solar", listOf("Key" to "Concert C minor"), "").json("0.1.0", "16"),
+    ).jsonObject
+    assertEquals("TUNE", json["subject"]!!.jsonPrimitive.content)
+    assertEquals("Solar", json["item"]!!.jsonPrimitive.content)
+    assertEquals("[[\"Key\",\"Concert C minor\"]]", json["details"].toString())
+    assertEquals(JsonNull, json["note"])
+    assertEquals("16", json["androidVersion"]!!.jsonPrimitive.content)
   }
 }

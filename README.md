@@ -70,6 +70,19 @@ reinstalls the app.
 CI runs formatting, lint, the unit and screenshot tests, and commitlint on every PR. The end-to-end tests run
 on PRs into main, nightly and on demand. Dependabot opens weekly update PRs.
 
+## Report service
+
+`worker/` is a Cloudflare Worker that files problem reports from the app as GitHub issues, signed in as the
+woodshed-reports GitHub App. It runs at `https://woodshed-reports.lararosekelley.workers.dev/report`.
+
+```
+make worker-test    # type-check and test it
+make worker-deploy  # deploy it; needs `npx wrangler login` with the personal Cloudflare account
+```
+
+The app's private key is a Worker secret, stored in the PKCS#8 form Web Crypto needs:
+`openssl pkcs8 -topk8 -nocrypt -in <key>.pem | npx wrangler secret put GITHUB_PRIVATE_KEY` from `worker/`.
+
 ## Releasing
 
 The version lives in `VERSION`, and Play's version code is derived from it. To release:

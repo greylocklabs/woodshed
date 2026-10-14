@@ -417,15 +417,14 @@ research pass, run like the key research: sourced, in batches, never guessed.
 Links rot, so each one carries the date it was last checked.
 
 **M8 — Reporting problems in context.** A "Report a problem" action on a tune,
-exercise, recording or transcription opens a new GitHub issue in the browser,
-prefilled with the item, the field in question (key, link, credit) and the app
-version. It uses GitHub's new-issue URL, so the app holds no token and sends
-nothing until the user submits. It adds no personal details to the report.
-Broken links, wrong keys and missing recordings are the expected bulk. Shipped
-for tunes, exercises, solos and the app itself; seeded recordings get the same
-button when they exist. Reporting needs a GitHub account for now; once the
-project has its own email address, the dialog can offer sending the report by
-email as well.
+exercise, solo or the app sends a report to a small Cloudflare Worker
+(`worker/`), which files it as a GitHub issue through the woodshed-reports
+GitHub App, so no GitHub account is needed. The report carries the item, the
+field in question (key, link, credit), the user's note and the app and Android
+versions, and nothing about the person. The Worker checks every field, limits
+each address to five reports a minute, and labels the issue `from-app`. The
+dialog can also open the same report as a prefilled GitHub issue instead, for
+people who want to follow it. Seeded recordings get the button when they exist.
 
 **Polish, shipped.** Emoji tab names; a quieter metronome readout with common
 tempos last; an A-Z fast-scroll strip on the Tunes list; an exercise filter over
