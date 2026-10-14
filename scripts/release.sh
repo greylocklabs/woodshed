@@ -43,7 +43,7 @@ scripts/release-notes.sh "$version" > /dev/null
 
 if [ -n "${DRY_RUN:-}" ]; then
   [ "$part" != "current" ] && echo "would bump VERSION to ${version} and commit chore(release): bump to ${version}"
-  echo "would tag v${version} and push it to origin with main"
+  echo "would tag v${version} and push it to origin together with main"
   exit 0
 fi
 if [ "$part" != "current" ]; then
@@ -51,7 +51,7 @@ if [ "$part" != "current" ]; then
   git add VERSION
   git commit -m "chore(release): bump to ${version}"
 fi
-# Annotated, since --follow-tags only pushes annotated tags.
 git tag -a "v${version}" -m "v${version}"
-git push --follow-tags origin main
+# Atomic, so the tag cannot land without main and start a release from a commit main does not have.
+git push --atomic origin main "refs/tags/v${version}"
 echo "released v${version}"

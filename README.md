@@ -58,7 +58,7 @@ make record-screenshots  # rewrites the screenshots after a deliberate design ch
 make e2e                 # end-to-end tests on an emulator Gradle downloads (*)
 make format              # formats Kotlin with ktlint
 make lint                # formatting, Android lint (any warning fails) and the changelog
-make check               # everything CI runs on a pull request
+make check               # CI's lint and test jobs, including the card tests in tools/
 ```
 
 `make help` lists every task; each wraps a Gradle command you can also run directly.
