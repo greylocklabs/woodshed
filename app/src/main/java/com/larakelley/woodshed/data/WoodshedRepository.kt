@@ -33,7 +33,13 @@ enum class ThemeMode(val label: String) {
   DARK("Dark"),
 }
 
-class WoodshedRepository(private val db: WoodshedDatabase, private val prefs: SharedPreferences, private val assets: AssetManager) {
+class WoodshedRepository(
+  private val db: WoodshedDatabase,
+  private val prefs: SharedPreferences,
+  assets: AssetManager,
+  /** Reads a bundled seed file by name; tests swap in their own. */
+  private val readSeed: (String) -> String = { name -> assets.open(name).bufferedReader().use { it.readText() } },
+) {
   private val _transposition = MutableStateFlow(enumPref(TRANSPOSITION) ?: Transposition.C)
   val transposition: StateFlow<Transposition> = _transposition.asStateFlow()
 
@@ -153,9 +159,9 @@ class WoodshedRepository(private val db: WoodshedDatabase, private val prefs: Sh
 
   /** Imports the bundled seed when it differs from the last one imported. */
   suspend fun seedIfChanged() {
-    val standardsJson = assets.open("standards.json").bufferedReader().use { it.readText() }
-    val exercisesJson = assets.open("exercises.json").bufferedReader().use { it.readText() }
-    val transcriptionsJson = assets.open("transcriptions.json").bufferedReader().use { it.readText() }
+    val standardsJson = readSeed("standards.json")
+    val exercisesJson = readSeed("exercises.json")
+    val transcriptionsJson = readSeed("transcriptions.json")
     val hash = sha256(standardsJson + "\u0000" + exercisesJson + "\u0000" + transcriptionsJson)
     if (hash == prefs.getString(SEED_HASH, null)) return
     try {
