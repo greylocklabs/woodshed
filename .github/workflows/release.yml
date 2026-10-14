@@ -1,10 +1,18 @@
 name: Release
 
 # Pushing a v<version> tag, as `make release` does, publishes a GitHub release with that version's
-# CHANGELOG.md section as its notes and the app attached.
+# CHANGELOG.md section as its notes and the app attached. Pull requests that touch the release path run
+# every step but publishing, so a broken release is caught before a tag depends on it.
 on:
   push:
     tags: ["v[0-9]+.[0-9]+.[0-9]+"]
+  pull_request:
+    paths:
+      - .github/workflows/release.yml
+      - scripts/**
+      - VERSION
+      - CHANGELOG.md
+      - app/build.gradle.kts
 
 permissions:
   contents: write
@@ -19,7 +27,7 @@ jobs:
       - name: Check the tag matches VERSION
         run: |
           version="$(tr -d '[:space:]' < VERSION)"
-          if [ "${GITHUB_REF_NAME}" != "v${version}" ]; then
+          if [ "${GITHUB_REF_TYPE}" = "tag" ] && [ "${GITHUB_REF_NAME}" != "v${version}" ]; then
             echo "tag ${GITHUB_REF_NAME} does not match VERSION ${version}" >&2
             exit 1
           fi
@@ -49,6 +57,7 @@ jobs:
           cp app/build/outputs/apk/debug/app-debug.apk "woodshed-${VERSION}-debug.apk"
 
       - name: Publish the release
+        if: github.ref_type == 'tag'
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes-file release-notes.md "woodshed-${VERSION}-debug.apk"
