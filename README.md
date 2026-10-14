@@ -71,6 +71,13 @@ reinstalls the app.
 CI runs formatting, lint, the unit and screenshot tests, and commitlint on every PR. The end-to-end tests run
 on PRs into main, nightly and on demand. Dependabot opens weekly update PRs.
 
+## Website
+
+`www/` is [woodshedapp.org](https://woodshedapp.org): the landing page, privacy policy and terms, styled like
+the app. The pages workflow publishes it to GitHub Pages whenever `www/` changes on main. Its screenshots are
+copies of the screenshot tests' images in `app/src/test/screenshots`. DNS for the domain, including Resend's
+mail records, is in Route 53.
+
 ## Report service
 
 `worker/` is a Cloudflare Worker that files problem reports from the app as GitHub issues, signed in as the

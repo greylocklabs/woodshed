@@ -1,0 +1,365 @@
+/* Colors, type and shapes from the app's Callie theme (app/src/main/java/.../theme/Color.kt),
+   so the site looks like the app. */
+
+@font-face {
+    font-family: "Nunito";
+    src: url("fonts/Nunito-Variable.ttf") format("truetype");
+    font-weight: 200 1000;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Fraunces";
+    src: url("fonts/Fraunces-Variable.ttf") format("truetype");
+    font-weight: 100 900;
+    font-display: swap;
+}
+
+:root {
+    color-scheme: dark;
+    --background: #1c1220;
+    --surface: #261a2a;
+    --surface-alt: #33243a;
+    --hairline: #2c2031;
+    --border: #3d2c42;
+    --text: #f6eef5;
+    --text-muted: #c9b7c6;
+    --text-faint: #9a8797;
+    --accent: #f08fb8;
+    --accent-text: #2e0f20;
+    --edge: #140c17;
+    --accent-edge: #a64b7a;
+    --shadow: rgba(0, 0, 0, 0.5);
+    --radius: 11px;
+    --radius-large: 16px;
+}
+
+:root[data-theme="light"] {
+    color-scheme: light;
+    --background: #fbf5f8;
+    --surface: #fffafc;
+    --surface-alt: #f3e7ee;
+    --hairline: #efe2e9;
+    --border: #e0ccd7;
+    --text: #2b1a26;
+    --text-muted: #6b5562;
+    --text-faint: #8f7a87;
+    --accent: #e45f97;
+    --accent-text: #2e0f20;
+    --edge: #dcc8d3;
+    --accent-edge: #a83a6d;
+    --shadow: rgba(92, 42, 71, 0.18);
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    background: var(--background);
+    color: var(--text);
+    font-family: "Nunito", system-ui, sans-serif;
+    font-size: 17px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+}
+
+.wrap {
+    max-width: 60rem;
+    margin: 0 auto;
+    padding: 2rem 1rem 5rem;
+}
+
+.prose {
+    max-width: 42rem;
+}
+
+header.site {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 3.5rem;
+}
+
+header.site a.name {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-family: "Fraunces", Georgia, serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text);
+    text-decoration: none;
+}
+
+header.site a.name img {
+    width: 36px;
+    height: 36px;
+}
+
+header.site .tagline {
+    color: var(--text-faint);
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+header.site .spacer { flex: 1; }
+
+/* A sticker: a raised face over a darker edge, as the app's buttons are. */
+.sticker {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 40px;
+    padding: 0 1.1rem;
+    border: 0;
+    border-radius: var(--radius);
+    background: var(--surface-alt);
+    box-shadow: 0 3px 0 var(--edge);
+    color: var(--text);
+    font: inherit;
+    font-weight: 800;
+    text-decoration: none;
+    cursor: pointer;
+    transition: transform 120ms ease, box-shadow 120ms ease;
+}
+
+.sticker:hover { transform: translateY(-1px); box-shadow: 0 4px 0 var(--edge); }
+.sticker:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--edge); }
+
+.sticker.accent {
+    background: var(--accent);
+    box-shadow: 0 3px 0 var(--accent-edge);
+    color: var(--accent-text);
+}
+
+.sticker.accent:hover { box-shadow: 0 4px 0 var(--accent-edge); }
+.sticker.accent:active { box-shadow: 0 1px 0 var(--accent-edge); }
+
+.sticker:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+}
+
+button.theme {
+    width: 40px;
+    padding: 0;
+}
+
+button.theme svg {
+    width: 20px;
+    height: 20px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+/* The moon offers dark from light; the sun offers light from dark. */
+:root[data-theme="light"] .sun,
+:root:not([data-theme="light"]) .moon { display: none; }
+
+h1, h2 {
+    font-family: "Fraunces", Georgia, serif;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+}
+
+h1 {
+    font-size: clamp(2.2rem, 6vw, 3.4rem);
+    margin: 0 0 1rem;
+}
+
+h1 em {
+    font-style: normal;
+    color: var(--accent);
+}
+
+h2 {
+    font-size: 1.6rem;
+    margin: 3.5rem 0 1rem;
+}
+
+p.lead {
+    font-size: 1.2rem;
+    color: var(--text-muted);
+    margin: 0 0 2rem;
+}
+
+.actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 3rem;
+}
+
+.slides {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    gap: 1.5rem;
+    /* Room inside the scrolling track for the screenshots' shadows. */
+    padding: 0 1rem 2.5rem;
+    margin: 0 -1rem -1.5rem;
+    scroll-padding-inline: 1rem;
+}
+
+.slides::-webkit-scrollbar { display: none; }
+
+.slides:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 4px;
+    border-radius: var(--radius-large);
+}
+
+/* Phone screenshots are tall, so a few sit side by side rather than one filling the width. */
+.slide {
+    flex: 0 0 min(17rem, 78%);
+    margin: 0;
+    scroll-snap-align: start;
+}
+
+.shot {
+    border-radius: 1.6rem;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    box-shadow: 0 14px 36px var(--shadow);
+}
+
+.shot img {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+.slide figcaption {
+    margin-top: 1.1rem;
+    text-align: center;
+    color: var(--text-muted);
+}
+
+/* The arrows and dots need the script, so they show once it has run. */
+.controls {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.carousel.ready .controls { display: flex; }
+
+.controls .sticker {
+    padding: 0 0.6rem;
+}
+
+.controls svg {
+    width: 1.1rem;
+    height: 1.1rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.dots {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.dots button {
+    width: 0.65rem;
+    height: 0.65rem;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: var(--border);
+    cursor: pointer;
+}
+
+.dots button[aria-current="true"] { background: var(--accent); }
+
+.dots button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .slides { scroll-behavior: smooth; }
+}
+
+:root[data-theme="light"] .shot .dark,
+:root:not([data-theme="light"]) .shot .light { display: none; }
+
+.features {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+    gap: 1rem;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+}
+
+.features li {
+    background: var(--surface);
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius-large);
+    padding: 1.1rem 1.25rem;
+}
+
+.features strong {
+    display: block;
+    margin-bottom: 0.25rem;
+    font-weight: 800;
+}
+
+.features span { color: var(--text-muted); }
+
+a { color: var(--accent); }
+
+code, pre {
+    font-family: ui-monospace, "JetBrains Mono", "Fira Code", monospace;
+    font-size: 0.875rem;
+}
+
+pre {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+    overflow-x: auto;
+}
+
+.prose ul { padding-left: 1.25rem; }
+.prose li { margin: 0.35rem 0; }
+
+hr {
+    border: 0;
+    border-top: 1px solid var(--hairline);
+    margin: 3.5rem 0 1.5rem;
+}
+
+footer.site {
+    color: var(--text-faint);
+    font-size: 0.9rem;
+    display: flex;
+    gap: 1.25rem;
+    flex-wrap: wrap;
+}
+
+footer.site a { color: var(--text-muted); }
+
+.meta {
+    color: var(--text-faint);
+    font-size: 0.9rem;
+    margin-top: -0.5rem;
+}
+
+@media (max-width: 40rem) {
+    header.site .tagline { display: none; }
+    header.site { margin-bottom: 2.5rem; }
+}
