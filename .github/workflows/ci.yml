@@ -38,6 +38,10 @@ jobs:
         if: hashFiles('gradlew') != ''
         uses: gradle/actions/setup-gradle@v4
 
+      - name: Changelog has the current version
+        if: hashFiles('scripts/release-notes.sh') != ''
+        run: scripts/release-notes.sh > /dev/null
+
       - name: Kotlin formatting
         if: hashFiles('gradlew') != ''
         run: ./gradlew spotlessCheck

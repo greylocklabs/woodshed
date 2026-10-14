@@ -7,6 +7,16 @@ plugins {
   alias(libs.plugins.roborazzi)
 }
 
+// The version lives in VERSION at the repo root; `make release` bumps it. Play's version code is derived from it,
+// so it always rises with the version: 1.2.3 becomes 10203.
+val appVersion = rootProject.file("VERSION").readText().trim()
+
+fun versionCodeOf(version: String): Int {
+  val (major, minor, patch) = version.split(".").map { it.toInt() }
+  require(minor < 100 && patch < 100) { "version code needs minor and patch below 100: $version" }
+  return major * 10_000 + minor * 100 + patch
+}
+
 android {
   namespace = "com.larakelley.woodshed"
   compileSdk = 36
@@ -14,8 +24,8 @@ android {
     applicationId = "com.larakelley.woodshed"
     minSdk = 26
     targetSdk = 36
-    versionCode = 1
-    versionName = "1.0"
+    versionName = appVersion
+    versionCode = versionCodeOf(appVersion)
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
 

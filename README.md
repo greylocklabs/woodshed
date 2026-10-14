@@ -52,21 +52,34 @@ Needs a JDK and the Android SDK (`android sdk` or Android Studio); Gradle fetche
 the rest, including a Java 21 toolchain.
 
 ```
-./gradlew :app:testDebugUnitTest            # unit, Room and Robolectric UI tests
-./gradlew :app:verifyRoborazziDebug         # the same, comparing screenshots with app/src/test/screenshots
-./gradlew :app:recordRoborazziDebug         # rewrites the screenshots after a deliberate design change
-./gradlew :app:pixel6api34DebugAndroidTest  # end-to-end tests on an emulator Gradle downloads (*)
-./gradlew spotlessApply                     # formats Kotlin with ktlint
-./gradlew :app:lintDebug                    # Android lint; any warning fails
-./gradlew :app:assembleDebug                # app/build/outputs/apk/debug/app-debug.apk
+make build               # app/build/outputs/apk/debug/app-debug.apk
+make test                # unit, Room and Robolectric tests, comparing screenshots with app/src/test/screenshots
+make record-screenshots  # rewrites the screenshots after a deliberate design change
+make e2e                 # end-to-end tests on an emulator Gradle downloads (*)
+make format              # formats Kotlin with ktlint
+make lint                # formatting, Android lint (any warning fails) and the changelog
+make check               # everything CI runs on a pull request
 ```
 
-(*) If the emulator crashes on start, as it does on some Linux hosts with its default software renderer, add
-`-Pandroid.testoptions.manageddevices.emulator.gpu=host`. Never run `connectedAndroidTest` against a phone with
-real practice data: it reinstalls the app.
+`make help` lists every task; each wraps a Gradle command you can also run directly.
+
+(*) If the emulator crashes on start, as it does on some Linux hosts with its default software renderer, use
+`make e2e EMULATOR_GPU=host`. Never run `connectedAndroidTest` against a phone with real practice data: it
+reinstalls the app.
 
 CI runs formatting, lint, the unit and screenshot tests, and commitlint on every PR. The end-to-end tests run
 on PRs into main, nightly and on demand. Dependabot opens weekly update PRs.
+
+## Releasing
+
+The version lives in `VERSION`, and Play's version code is derived from it. To release:
+
+1. Add a `## <version>` section to `CHANGELOG.md` for the version you are about to cut, and merge it to main.
+2. On an up-to-date main, run `make release PART=patch` (or `minor`, `major`). It bumps `VERSION`, commits,
+   tags `v<version>` and pushes. `make release PART=current` tags the version already in `VERSION`, and
+   `DRY_RUN=1` checks everything without changing anything.
+3. The tag starts the release workflow, which publishes a GitHub release with that changelog section as its
+   notes and the app attached. Until release signing is set up, that is the debug build.
 
 ## Trying the cards
 
