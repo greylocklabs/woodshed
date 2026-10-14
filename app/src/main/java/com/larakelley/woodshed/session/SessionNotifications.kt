@@ -52,7 +52,7 @@ object SessionNotifications {
     )
     // A countdown to the block's end that the system keeps ticking; paused, it shows the time left frozen instead.
     if (paused) {
-      builder.setShowWhen(false).setSubText(remaining(ends - (s.pausedAt ?: ends)))
+      builder.setShowWhen(false).setSubText(remaining(ends - s.pausedAt))
     } else {
       builder.setWhen(ends).setShowWhen(true).setUsesChronometer(true).setChronometerCountDown(true)
     }

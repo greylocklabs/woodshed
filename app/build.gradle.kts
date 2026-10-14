@@ -65,6 +65,8 @@ android {
     warningsAsErrors = true
     abortOnError = true
     disable += setOf("GradleDependency", "AndroidGradlePluginVersion", "NewerVersionAvailable")
+    // A newer Android SDK than targetSdk is reported, not fatal: raising it is a deliberate upgrade with its own testing.
+    informational += "OldTargetApi"
   }
 
   packaging {

@@ -79,7 +79,7 @@ class Tuner(private val prefs: SharedPreferences) {
         // Light smoothing steadies the needle; a jump of more than a semitone is a new note and resets it.
         val prev = smoothed
         smoothed = if (prev == null || kotlin.math.abs(12 * kotlin.math.log2(hz / prev)) > 1) hz else prev * 0.6 + hz * 0.4
-        _state.value = _state.value.copy(reading = NoteReading.of(smoothed!!, _state.value.a4.toDouble()))
+        _state.value = _state.value.copy(reading = NoteReading.of(smoothed, _state.value.a4.toDouble()))
       }
     } catch (_: IllegalStateException) {
       fail(me)
