@@ -79,6 +79,14 @@ whenever `www/` changes on main. Its screenshots are
 copies of the screenshot tests' images in `app/src/test/screenshots`. DNS for the domain, including Resend's
 mail records, is in Route 53.
 
+## Google Play
+
+`PLAY.md` holds what to enter in Play Console, from the content rating to the Data Safety form, and the open
+question about the Ko-fi button. The store listing's text and graphics are in `app/src/main/play/`: the phone
+screenshots are the screenshot tests' `play` set, and `tools/play/render.sh` renders the icon and feature
+graphic. Tagged releases also build a bundle, uploaded to Play's internal testing track once the
+`PLAY_SERVICE_ACCOUNT_JSON` secret exists.
+
 ## Report service
 
 `worker/` is a Cloudflare Worker that files problem reports from the app as GitHub issues, signed in as the
