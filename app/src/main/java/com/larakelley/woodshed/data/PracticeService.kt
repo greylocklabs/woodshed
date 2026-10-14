@@ -130,20 +130,6 @@ class PracticeService(
     )
   }
 
-  /** The most overdue tune as a card, or null when nothing is due. */
-  suspend fun nextCard(transposition: Transposition): Card? {
-    val t = now()
-    val exercises = allExercises().filter { it.appliesToTune && it.archivedAt == null }
-    for (state in states.due(t)) {
-      val tune = tune(state.standardId) ?: continue
-      if (tune.archivedAt != null) continue
-      val recent = db.reviewEvents().forItem(ReviewEventEntity.TUNE, tune.id).mapNotNull { it.exerciseId }.reversed()
-      val exercise = pickExercise(exercises, { it.id }, recent.distinct(), random)
-      return Card(tune, state, exercise, concertKeyFor(tune.homeKey, state.keyPolicy, state.cyclePosition), transposition, t)
-    }
-    return null
-  }
-
   /** A session plan including the solo being transcribed, if any; see the full form. */
   suspend fun plan(minutes: Int, focus: Set<Focus>, tuneIds: List<Long>, instrument: Instrument?): List<PlanBlock> =
     plan(minutes, focus, tuneIds, instrument, activeSoloId())

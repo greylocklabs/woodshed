@@ -65,6 +65,13 @@ class PracticeServiceTest {
 
   private suspend fun state(slug: String) = db.tuneStates().get(id(slug))
 
+  /** The most overdue tune, carded as a session would: planned on its own, with the exercise the planner picks. */
+  private suspend fun dueCard(transposition: Transposition): Card? {
+    val due = db.tuneStates().due(clock).firstOrNull { db.standards().byId(it.standardId)?.archivedAt == null } ?: return null
+    val block = practice.plan(30, emptySet(), listOf(due.standardId), null, null).filterIsInstance<PlanBlock.Tune>().single()
+    return practice.cardForBlock(block, transposition)
+  }
+
   @Test
   fun planPairsEachChosenTuneWithATuneExercise() = runTest {
     val tunes = listOf(id("autumn-leaves"), id("solar"))
@@ -116,13 +123,13 @@ class PracticeServiceTest {
   @Test
   fun libraryAndWishlistTunesAreNeverDue() = runTest {
     practice.addToWishlist(id("solar"))
-    assertNull(practice.nextCard(Transposition.Bb))
+    assertNull(dueCard(Transposition.Bb))
   }
 
   @Test
   fun cardComposesTuneExerciseAndWrittenKey() = runTest {
     practice.startLearning(id("autumn-leaves"))
-    val card = practice.nextCard(Transposition.Bb)!!
+    val card = dueCard(Transposition.Bb)!!
     assertEquals("Autumn Leaves", card.tune.title)
     assertTrue(card.exercise.appliesToTune)
     assertEquals("G minor", card.concertKey!!.displayName)
@@ -132,7 +139,7 @@ class PracticeServiceTest {
   @Test
   fun gradingLogsTheSchedulersInputsAndOutputs() = runTest {
     practice.startLearning(id("autumn-leaves"))
-    val card = practice.nextCard(Transposition.Eb)!!
+    val card = dueCard(Transposition.Eb)!!
     clock += 90_000
     practice.grade(card, Grade.GOOD)
 
@@ -147,7 +154,7 @@ class PracticeServiceTest {
     assertEquals("sm2", event.schedulerId)
 
     assertEquals(clock + day, state("autumn-leaves")!!.dueAt)
-    assertNull(practice.nextCard(Transposition.Eb))
+    assertNull(dueCard(Transposition.Eb))
   }
 
   @Test
@@ -156,7 +163,7 @@ class PracticeServiceTest {
     val tuneExercises = db.exercises().all().count { it.appliesToTune }
     val seen = mutableListOf<Long>()
     repeat(tuneExercises) {
-      val card = practice.nextCard(Transposition.C)!!
+      val card = dueCard(Transposition.C)!!
       seen += card.exercise.id
       practice.grade(card, Grade.AGAIN)
       clock += Sm2Scheduler.AGAIN_DELAY_MS
@@ -168,13 +175,13 @@ class PracticeServiceTest {
   fun goodRepsPromoteToRepertoireAndAgainDemotes() = runTest {
     practice.startLearning(id("solar"))
     while (state("solar")!!.lifecycle == Lifecycle.LEARNING) {
-      practice.grade(practice.nextCard(Transposition.C)!!, Grade.GOOD)
+      practice.grade(dueCard(Transposition.C)!!, Grade.GOOD)
       clock = state("solar")!!.dueAt!!
     }
     assertEquals(Lifecycle.REPERTOIRE, state("solar")!!.lifecycle)
     assertTrue(state("solar")!!.intervalDays >= Sm2Scheduler.REPERTOIRE_INTERVAL_DAYS)
 
-    practice.grade(practice.nextCard(Transposition.C)!!, Grade.AGAIN)
+    practice.grade(dueCard(Transposition.C)!!, Grade.AGAIN)
     assertEquals(Lifecycle.LEARNING, state("solar")!!.lifecycle)
     assertEquals(1, state("solar")!!.lapses)
   }
@@ -184,7 +191,7 @@ class PracticeServiceTest {
     practice.startLearning(id("blue-bossa")) // C minor
     practice.setKeyPolicy(id("blue-bossa"), KeyPolicy.CYCLE)
     val keys = (1..3).map {
-      val card = practice.nextCard(Transposition.C)!!
+      val card = dueCard(Transposition.C)!!
       practice.grade(card, Grade.AGAIN)
       clock += Sm2Scheduler.AGAIN_DELAY_MS
       card.concertKey!!.displayName
@@ -195,7 +202,7 @@ class PracticeServiceTest {
   @Test
   fun unknownKeyStillMakesACard() = runTest {
     practice.startLearning(id("think-on-me"))
-    val card = practice.nextCard(Transposition.Bb)!!
+    val card = dueCard(Transposition.Bb)!!
     assertNull(card.writtenKey)
     practice.grade(card, Grade.GOOD)
     assertNull(db.reviewEvents().forItem(ReviewEventEntity.TUNE, card.tune.id).single().keyWrittenPitchClass)
@@ -205,7 +212,7 @@ class PracticeServiceTest {
   fun replayingTheEventLogRebuildsTheCachedState() = runTest {
     practice.startLearning(id("solar"))
     for (grade in listOf(Grade.GOOD, Grade.GOOD, Grade.HARD, Grade.AGAIN, Grade.GOOD, Grade.EASY)) {
-      practice.grade(practice.nextCard(Transposition.C)!!, grade)
+      practice.grade(dueCard(Transposition.C)!!, grade)
       clock = state("solar")!!.dueAt!!
     }
     val events = db.reviewEvents().forItem(ReviewEventEntity.TUNE, id("solar"))
@@ -218,7 +225,7 @@ class PracticeServiceTest {
   @Test
   fun reseedingLeavesPracticeStateAndHistoryAlone() = runTest {
     practice.startLearning(id("solar"))
-    practice.grade(practice.nextCard(Transposition.C)!!, Grade.GOOD)
+    practice.grade(dueCard(Transposition.C)!!, Grade.GOOD)
     val stateBefore = state("solar")
     val eventsBefore = db.reviewEvents().forItem(ReviewEventEntity.TUNE, id("solar"))
 
@@ -237,14 +244,14 @@ class PracticeServiceTest {
   fun knownTunesGoStraightToRepertoireAndAreDueNow() = runTest {
     practice.markKnown(id("blue-bossa"))
     assertEquals(Lifecycle.REPERTOIRE, state("blue-bossa")!!.lifecycle)
-    assertNotNull(practice.nextCard(Transposition.C))
+    assertNotNull(dueCard(Transposition.C))
   }
 
   @Test
   fun removingATuneKeepsHistoryAndKnowledge() = runTest {
     val solar = id("solar")
     practice.startLearning(solar)
-    practice.grade(practice.nextCard(Transposition.C)!!, Grade.GOOD)
+    practice.grade(dueCard(Transposition.C)!!, Grade.GOOD)
     practice.setComfort(solar, Comfort.SHAKY)
     practice.toggleKnownKey(solar, 0)
 
@@ -287,8 +294,8 @@ class PracticeServiceTest {
   fun retiredTunesLeaveTheQueueAndCanComeBack() = runTest {
     practice.startLearning(id("solar"))
     practice.retire(id("solar"))
-    assertNull(practice.nextCard(Transposition.C))
+    assertNull(dueCard(Transposition.C))
     practice.restore(id("solar"))
-    assertNotNull(practice.nextCard(Transposition.C))
+    assertNotNull(dueCard(Transposition.C))
   }
 }

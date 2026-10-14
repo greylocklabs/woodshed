@@ -8,6 +8,7 @@ import com.larakelley.woodshed.data.db.WoodshedDatabase
 import com.larakelley.woodshed.data.seed.Seed
 import com.larakelley.woodshed.data.seed.SeedImporter
 import com.larakelley.woodshed.domain.Lifecycle
+import com.larakelley.woodshed.domain.PlanBlock
 import com.larakelley.woodshed.domain.Tonality
 import com.larakelley.woodshed.domain.Transposition
 import kotlinx.coroutines.flow.first
@@ -109,7 +110,9 @@ class TuneLibraryTest {
     library.edit(solar.id, TuneDraft.of(solar).copy(keyName = "D"))
     val practice = PracticeService(db, random = Random(1))
     practice.startLearning(solar.id)
-    assertEquals("D minor", practice.nextCard(Transposition.C)!!.concertKey!!.displayName)
+    val tuneExercise = db.exercises().all().first { it.appliesToTune }.id
+    val card = practice.cardForBlock(PlanBlock.Tune(solar.id, tuneExercise, 10), Transposition.C)!!
+    assertEquals("D minor", card.concertKey!!.displayName)
   }
 
   @Test
