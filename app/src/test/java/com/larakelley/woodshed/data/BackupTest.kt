@@ -13,6 +13,7 @@ import com.larakelley.woodshed.domain.Grade
 import com.larakelley.woodshed.domain.Instrument
 import com.larakelley.woodshed.domain.KeyPolicy
 import com.larakelley.woodshed.domain.Lifecycle
+import com.larakelley.woodshed.domain.PlanBlock
 import com.larakelley.woodshed.domain.Transposition
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
@@ -55,7 +56,8 @@ class BackupTest {
   fun exportThenRestoreBringsEverythingBack() = runTest {
     practice.startLearning(id("solar"))
     practice.setKeyPolicy(id("solar"), KeyPolicy.CYCLE)
-    practice.grade(practice.nextCard(Transposition.Bb)!!, Grade.GOOD)
+    val tuneExercise = db.exercises().all().first { it.appliesToTune }.id
+    practice.grade(practice.cardForBlock(PlanBlock.Tune(id("solar"), tuneExercise, 10), Transposition.Bb)!!, Grade.GOOD)
     practice.addToWishlist(id("nardis"))
     practice.setComfort(id("solar"), Comfort.SHAKY)
     practice.toggleKnownKey(id("solar"), 0)
