@@ -61,7 +61,8 @@ make lint                # formatting, Android lint (any warning fails) and the 
 make check               # CI's lint and test jobs, including the card tests in tools/
 ```
 
-`make help` lists every task; each wraps a Gradle command you can also run directly.
+`make help` lists every task; each wraps a Gradle command you can also run directly. Debug builds install as
+their own app, "Woodshed (dev)" (`com.larakelley.woodshed.debug`), beside an installed release.
 
 (*) If the emulator crashes on start, as it does on some Linux hosts with its default software renderer, use
 `make e2e EMULATOR_GPU=host`. Never run `connectedAndroidTest` against a phone with real practice data: it

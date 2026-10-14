@@ -49,6 +49,10 @@ android {
   if (e2eRelease) testBuildType = "release"
 
   buildTypes {
+    // Debug builds are a separate app with their own data, so testing never touches an installed release.
+    debug {
+      applicationIdSuffix = ".debug"
+    }
     release {
       isMinifyEnabled = true
       isShrinkResources = true

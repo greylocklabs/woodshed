@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Debug builds install beside the release as their own app, so their name says which is which. -->
+<resources>
+    <string name="app_name">Woodshed (dev)</string>
+</resources>
