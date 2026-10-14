@@ -76,10 +76,10 @@ receive what any website they serve receives.
 
 ## Payments policy
 
-The About screen's Ko-fi button asks for a voluntary tip. Google Play's Payments policy generally requires
-Play's billing for in-app payments for digital goods and services, and may treat tips to the developer as one.
-Decide before the first production release: remove the button from the Play build, replace it with Play billing
-tips, or confirm with Google that the link is allowed. The GitHub build can keep it either way.
+The About screen's Ko-fi button asks for a voluntary tip, and stays in the Play build: decided October 2026,
+knowing Play's Payments policy generally requires Play's billing for in-app payments for digital goods and
+services, and may treat tips to the developer as one. If review rejects the app over it, the fix is to hide the
+button in the Play build; the GitHub build and the website can keep it either way.
 
 ## Releases
 
