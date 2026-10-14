@@ -51,13 +51,25 @@ export function parseReport(input: unknown): Report | string {
   return { subject: r.subject as Report["subject"], problem, item, id, details, note, appVersion, androidVersion };
 }
 
-/** Keeps report text from closing the code span it sits in or pinging people and issues. */
+/**
+ * Keeps reports from notifying anyone or anything: a zero-width space defuses @mentions, #123 and owner/repo#123
+ * issue references, GH-123, and links to GitHub, which would otherwise put a cross-reference on that issue.
+ */
+function defuse(s: string): string {
+  return s
+    .replace(/@/g, "@\u200b")
+    .replace(/#(?=\d)/g, "#\u200b")
+    .replace(/\bGH-(?=\d)/gi, (m) => `${m.slice(0, 2)}\u200b-`)
+    .replace(/github\.com/gi, (m) => `${m.slice(0, 6)}\u200b${m.slice(6)}`);
+}
+
+/** Also keeps text from closing the code span it sits in. */
 function inline(s: string): string {
-  return s.replace(/[`\r\n]/g, " ").replace(/@/g, "@​");
+  return defuse(s.replace(/[`\r\n]/g, " "));
 }
 
 function plain(s: string): string {
-  return s.replace(/\r/g, "").replace(/@/g, "@​");
+  return defuse(s.replace(/\r/g, ""));
 }
 
 /** The issue the report becomes: the same title, body and label as the app's own GitHub link, plus from-app. */

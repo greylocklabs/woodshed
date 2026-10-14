@@ -75,7 +75,17 @@ describe("reports", () => {
     if (typeof parsed === "string") throw new Error(parsed);
     const { body } = issueFor(parsed);
     assert.doesNotMatch(body, /@someone|@evil/);
-    assert.ok(body.includes("(`x  @​evil  y`)"));
+    assert.ok(body.includes("(`x  @\u200bevil  y`)"));
+  });
+
+  it("cannot reference other issues or repositories", () => {
+    const parsed = parseReport({ ...report, note: "Like #12, other/repo#3, GH-4 and https://github.com/a/b/issues/5", item: "See #9" });
+    if (typeof parsed === "string") throw new Error(parsed);
+    const { title, body } = issueFor(parsed);
+    for (const text of [title, body]) {
+      assert.doesNotMatch(text, /#\d|GH-\d|github\.com/i);
+    }
+    assert.ok(body.includes("other/repo#\u200b3"));
   });
 
   it("are refused when malformed or oversized", () => {

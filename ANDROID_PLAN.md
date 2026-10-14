@@ -10,7 +10,7 @@ Decisions already made:
 | --- | --- |
 | Stack | Kotlin, Compose, Room |
 | Shape | Flash cards *and* a timed session mode |
-| Scope | Local-only, single user. No account, no server, no sync; the network is used only to play linked videos |
+| Scope | Local-only, single user. No account, no sync; the network is used only to play linked videos and to send problem reports the user chooses to send |
 | Seed | `data/standards.json` (2,522), `data/exercises.json` (61), shipped as assets |
 
 Kotlin over a Rust core via UniFFI: the two files worth salvaging
