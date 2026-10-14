@@ -5,6 +5,14 @@ published as that release's GitHub notes, so the headings must stay
 `## <version>`. Write the section for a version before running
 `make release`, which refuses to release without one.
 
+## 0.2.2
+
+### Added
+
+- **settings:** About links to the privacy policy, the terms and
+  [woodshedapp.org](https://woodshedapp.org), Woodshed's new website.
+- **license:** Woodshed is now MIT licensed.
+
 ## 0.2.1
 
 ### Changed
