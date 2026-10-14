@@ -50,14 +50,27 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
 
-      # Until release signing is set up, the attached app is the debug build, for installing by hand.
+      # Tags sign with the release key, so each release installs over the last. Pull requests build unsigned.
       - name: Build the app
+        env:
+          KEYSTORE_BASE64: ${{ github.ref_type == 'tag' && secrets.WOODSHED_KEYSTORE_BASE64 || '' }}
+          WOODSHED_KEYSTORE_PASSWORD: ${{ github.ref_type == 'tag' && secrets.WOODSHED_KEYSTORE_PASSWORD || '' }}
         run: |
-          ./gradlew :app:assembleDebug
-          cp app/build/outputs/apk/debug/app-debug.apk "woodshed-${VERSION}-debug.apk"
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.p12"
+            export WOODSHED_KEYSTORE="$RUNNER_TEMP/release.p12"
+          elif [ "${GITHUB_REF_TYPE}" = "tag" ]; then
+            echo "the release key secrets are missing" >&2
+            exit 1
+          fi
+          ./gradlew :app:assembleRelease
+          if [ -n "${WOODSHED_KEYSTORE:-}" ]; then
+            cp app/build/outputs/apk/release/app-release.apk "woodshed-${VERSION}.apk"
+            rm -f "$RUNNER_TEMP/release.p12"
+          fi
 
       - name: Publish the release
         if: github.ref_type == 'tag'
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes-file release-notes.md "woodshed-${VERSION}-debug.apk"
+        run: gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes-file release-notes.md "woodshed-${VERSION}.apk"

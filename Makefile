@@ -5,7 +5,7 @@ GRADLE := ./gradlew
 EMULATOR_GPU ?= swiftshader_indirect
 
 .DEFAULT_GOAL := help
-.PHONY: help build apk test tools-test worker-test worker-deploy record-screenshots e2e format lint check clean version release-notes bump release
+.PHONY: help build apk e2e-release test tools-test worker-test worker-deploy record-screenshots e2e format lint check clean version release-notes bump release
 
 help: ## List the tasks
 	@awk 'BEGIN { FS = ":.*## " } /^[a-z0-9-]+:.*## / { printf "  %-20s %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
@@ -33,6 +33,9 @@ record-screenshots: ## Rewrite the reference screenshots after a deliberate desi
 
 e2e: ## Run the end-to-end tests on an emulator Gradle manages (never a phone with real data)
 	$(GRADLE) :app:pixel6api34DebugAndroidTest -Pandroid.testoptions.manageddevices.emulator.gpu=$(EMULATOR_GPU)
+
+e2e-release: ## Run the end-to-end tests against the shrunk release build
+	$(GRADLE) :app:pixel6api34ReleaseAndroidTest -Pe2eRelease -Pandroid.testoptions.manageddevices.emulator.gpu=$(EMULATOR_GPU)
 
 # Formatting and linting
 # ----------------------

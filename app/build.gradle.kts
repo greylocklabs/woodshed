@@ -29,10 +29,34 @@ android {
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
 
+  // Release builds are signed with the release key when its location and password are in the environment, as in
+  // the release workflow; without them a release build is unsigned. Debug builds keep the local debug key.
+  val releaseKeystore = System.getenv("WOODSHED_KEYSTORE")?.takeIf { it.isNotBlank() }
+  signingConfigs {
+    if (releaseKeystore != null) {
+      create("release") {
+        storeFile = file(releaseKeystore)
+        storeType = "pkcs12"
+        storePassword = System.getenv("WOODSHED_KEYSTORE_PASSWORD")
+        keyAlias = "woodshed"
+        keyPassword = System.getenv("WOODSHED_KEYSTORE_PASSWORD")
+      }
+    }
+  }
+
+  // `-Pe2eRelease` points the end-to-end tests at the shrunk, signed release build, to catch what R8 breaks.
+  val e2eRelease = providers.gradleProperty("e2eRelease").isPresent
+  if (e2eRelease) testBuildType = "release"
+
   buildTypes {
     release {
-      isMinifyEnabled = false
+      isMinifyEnabled = true
+      isShrinkResources = true
       proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+      testProguardFiles("proguard-test-rules.pro")
+      if (e2eRelease) proguardFile("proguard-e2e-rules.pro")
+      // Release tests without the release key, as in CI's end-to-end job, sign with the debug key instead.
+      signingConfig = signingConfigs.findByName("release") ?: if (e2eRelease) signingConfigs.getByName("debug") else null
     }
   }
   compileOptions {

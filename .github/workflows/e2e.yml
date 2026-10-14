@@ -54,6 +54,11 @@ jobs:
         if: hashFiles('gradlew') != ''
         run: ./gradlew pixel6api34DebugAndroidTest -Pandroid.testoptions.manageddevices.emulator.gpu=swiftshader_indirect
 
+      # The same tests on the shrunk release build, signed with the debug key, catch what R8 removes or renames.
+      - name: End-to-end tests on the release build
+        if: hashFiles('gradlew') != ''
+        run: ./gradlew pixel6api34ReleaseAndroidTest -Pe2eRelease -Pandroid.testoptions.manageddevices.emulator.gpu=swiftshader_indirect
+
       - name: Upload test reports
         if: failure() && hashFiles('gradlew') != ''
         uses: actions/upload-artifact@v7

@@ -13,3 +13,9 @@ build/
 /captures
 .externalNativeBuild
 .cxx
+
+# Signing keys live outside the repo; never commit one.
+*.jks
+*.keystore
+*.p12
+*.pem
