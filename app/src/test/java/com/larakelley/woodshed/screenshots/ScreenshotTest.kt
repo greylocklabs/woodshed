@@ -62,17 +62,30 @@ class ScreenshotTest(private val mode: String) {
   companion object {
     @JvmStatic
     @ParameterizedRobolectricTestRunner.Parameters(name = "{0}")
-    fun modes() = listOf(arrayOf("light"), arrayOf("dark"))
+    fun modes() = listOf(arrayOf("light"), arrayOf("dark"), arrayOf("play"))
+
+    /** The Play listing's screenshots, in the order the store shows them. */
+    private val PLAY_ORDER = listOf("session-setup", "plan-review", "session-step", "solos", "drone", "tuner", "metronome")
   }
 
   private fun capture(name: String, content: @Composable () -> Unit) {
-    // The theme follows the system's night mode, as it does in the app.
-    if (mode == "dark") RuntimeEnvironment.setQualifiers("+night")
+    // The theme follows the system's night mode, as it does in the app. The Play set is dark on a 9:16, 1080 x 1920
+    // phone, since Play refuses screenshots more than twice as tall as they are wide.
+    when (mode) {
+      "dark" -> RuntimeEnvironment.setQualifiers("+night")
+      "play" -> RuntimeEnvironment.setQualifiers("+w411dp-h731dp-night-420dpi")
+    }
     compose.mainClock.autoAdvance = false
     // The app draws its background on a Surface behind every tab, so the screens are shot on one too.
     compose.setContent { WoodshedTheme { Surface(color = MaterialTheme.colorScheme.background) { content() } } }
     compose.mainClock.advanceTimeBy(1_000)
-    compose.onRoot().captureRoboImage("src/test/screenshots/$name-$mode.png")
+    val path =
+      if (mode == "play") {
+        "src/main/play/listings/en-US/graphics/phone-screenshots/${PLAY_ORDER.indexOf(name) + 1}-$name.png"
+      } else {
+        "src/test/screenshots/$name-$mode.png"
+      }
+    compose.onRoot().captureRoboImage(path)
   }
 
   private val solo =
@@ -137,7 +150,32 @@ class ScreenshotTest(private val mode: String) {
 
   @Test
   fun solos() = capture("solos") {
-    TranscribeScreen(TranscribeUi(listOf(SoloRow(solo, TranscriptionStateEntity(1, TranscriptionStatus.ACTIVE))), Transposition.Bb), SoloActions())
+    val bartley =
+      solo.copy(
+        id = 2,
+        slug = "singin-in-the-rain-patrick-bartley",
+        title = "Singin' In The Rain",
+        soloist = "Patrick Bartley",
+        instrument = "Alto sax",
+        context = "Emmet's Place",
+        recorded = "2022-08-13",
+      )
+    val miles =
+      solo.copy(
+        id = 3,
+        slug = "blues-by-five-miles-davis",
+        title = "Blues By Five",
+        soloist = "Miles Davis",
+        context = "Cookin' With The Miles Davis Quintet, Van Gelder Studio",
+        recorded = "1956-10-26",
+      )
+    val rows =
+      listOf(
+        SoloRow(solo, TranscriptionStateEntity(1, TranscriptionStatus.ACTIVE)),
+        SoloRow(miles, TranscriptionStateEntity(3, TranscriptionStatus.WISHLIST)),
+        SoloRow(bartley, null),
+      )
+    TranscribeScreen(TranscribeUi(rows, Transposition.Bb), SoloActions())
   }
 
   @Test

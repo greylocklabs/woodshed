@@ -1,0 +1,30 @@
+Time to hit the shed.
+
+Woodshed is a practice app for jazz musicians of all skill levels. It plans your practice around the tunes you are learning: it brings each one back when it is due, in a key and with an exercise to work on, and fills the rest of a session with tone, technique and a solo to transcribe. It is free and open source, with no account, no ads and no tracking.
+
+2,522 STANDARDS
+Real Books 1 to 6 and the Real Dixieland Book, with composers, forms and researched keys. Search and filter them, add your own tunes, and fix anything that is wrong.
+
+SPACED REPETITION
+Each tune comes back when it is due, from the wishlist through learning to repertoire. Woodshed tracks the keys you know each tune in, and can take a tune round the circle of fourths.
+
+PRACTICE SESSIONS
+Pick a length, your instrument and what to focus on: tone, articulation, speed, time, harmony, ear, improvisation or reading. Woodshed plans a warm-up, exercises, a solo and tunes, and you can swap or drop any block. Sessions keep time with the screen off, with a notification to move on, pause or end.
+
+TRANSCRIBE BY EAR
+Keep a list of solos to learn. Each one plays from just before it starts, at half or three-quarter speed, with five-second skips and an A-B loop for the phrase you are working out.
+
+WRITTEN FOR YOUR INSTRUMENT
+Choose from 26 instruments. Keys, the tuner and the drone are named for its transposition, and exercises are picked to suit it.
+
+METRONOME, TUNER AND DRONE
+A sample-accurate metronome with tap tempo, jazz tempo presets and clicks on 2 and 4; a tuner; and a drone with an optional fifth. The metronome and drone keep playing during a session.
+
+AND MORE
+Roll a random tune, exercise and key when you would rather not plan. Make playlists for a gig or a lesson. Attach recordings to any tune, with YouTube and Vimeo playing in place.
+
+YOUR DATA STAYS YOURS
+Everything lives on your phone. Back it up to a file wherever you like and restore it on another phone. Woodshed goes online only to play a video you tap and to send a problem report you choose to send.
+
+Source code: https://github.com/lararosekelley/woodshed
+Privacy policy: https://woodshedapp.org/privacy.html
