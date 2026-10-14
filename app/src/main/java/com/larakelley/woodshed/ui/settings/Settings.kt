@@ -161,6 +161,9 @@ enum class SettingsTab(val label: String) {
 const val KO_FI = "https://ko-fi.com/sayonara_lara"
 const val AUTHOR_SITE = "https://larakelley.com"
 const val SOURCE = "https://github.com/lararosekelley/woodshed"
+const val WEBSITE = "https://woodshedapp.org"
+const val PRIVACY_POLICY = "https://woodshedapp.org/privacy.html"
+const val TERMS = "https://woodshedapp.org/terms.html"
 
 /** Laid out like Callie's settings: a back sticker and title, pill tabs, then labelled sections. */
 @Composable
@@ -312,6 +315,20 @@ private fun AboutTab(ui: SettingsUi) {
     StickerButton(onClick = { uris.openUri(KO_FI) }, modifier = Modifier.fillMaxWidth().height(52.dp).padding(top = 8.dp).testTag("donate")) {
       Text("\u2615 Donate on Ko-fi")
     }
+    SectionLabel("Privacy")
+    Text(
+      buildAnnotatedString {
+        append("Everything stays on your phone, apart from videos you play and reports you send. Read the ")
+        withLink(LinkAnnotation.Url(PRIVACY_POLICY, TextLinkStyles(SpanStyle(color = accent, fontWeight = FontWeight.Bold)))) { append("privacy policy") }
+        append(" and ")
+        withLink(LinkAnnotation.Url(TERMS, TextLinkStyles(SpanStyle(color = accent, fontWeight = FontWeight.Bold)))) { append("terms") }
+        append(" at ")
+        withLink(LinkAnnotation.Url(WEBSITE, TextLinkStyles(SpanStyle(color = accent, fontWeight = FontWeight.Bold)))) { append("woodshedapp.org") }
+        append(".")
+      },
+      style = MaterialTheme.typography.bodyLarge,
+      modifier = Modifier.testTag("privacy"),
+    )
     SectionLabel("Credits")
     Helper(
       "Tune data draws on standardrepertoire.com by David Miller, jazzstandards.com, Wikipedia, iReal Pro charts and the " +
