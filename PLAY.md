@@ -87,5 +87,5 @@ New personal developer accounts must run a closed test with at least 12 testers 
 they can apply for production. The first upload to a new app must be made by hand in Play Console; later
 uploads can come from the release workflow.
 
-The release notes for each upload are in `app/src/main/play/release-notes/en-US/default.txt`, kept to Play's
-500 characters.
+Each upload's "What's new" is the version's CHANGELOG.md section as plain text, cut to Play's 500 characters;
+`scripts/play-notes.sh <version>` prints it.
