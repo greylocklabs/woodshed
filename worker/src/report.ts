@@ -19,7 +19,7 @@ export const LIMITS = { body: 16_000, problem: 100, item: 200, id: 200, details:
 export function parseReport(input: unknown): Report | string {
   if (typeof input !== "object" || input === null) return "expected a JSON object";
   const r = input as Record<string, unknown>;
-  if (typeof r.subject !== "string" || !(r.subject in SUBJECT_LABELS)) return "unknown subject";
+  if (typeof r.subject !== "string" || !Object.hasOwn(SUBJECT_LABELS, r.subject)) return "unknown subject";
   const text = (key: string, max: number, required = false): string | undefined | null => {
     const v = r[key];
     if (v === undefined || v === null) return required ? null : undefined;

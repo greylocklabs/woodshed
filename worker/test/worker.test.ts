@@ -91,6 +91,8 @@ describe("reports", () => {
   it("are refused when malformed or oversized", () => {
     assert.equal(typeof parseReport(null), "string");
     assert.equal(parseReport({ ...report, subject: "PLAYLIST" }), "unknown subject");
+    // Names every object inherits are not subjects either.
+    for (const subject of ["constructor", "toString", "__proto__"]) assert.equal(parseReport({ ...report, subject }), "unknown subject");
     assert.equal(parseReport({ ...report, problem: "" }), "missing or overlong problem");
     assert.equal(parseReport({ ...report, note: "x".repeat(1_501) }), "overlong item, id or note");
     assert.equal(parseReport({ ...report, details: [["only one"]] }), "details must be [label, value] pairs");
