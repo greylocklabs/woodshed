@@ -95,6 +95,29 @@ jobs:
           name: screenshot-diffs
           path: app/build/outputs/roborazzi
 
+  worker:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      # The report service arrives after the app; earlier branches have no worker/ to check.
+      - name: Setup Node
+        if: hashFiles('worker/package-lock.json') != ''
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: worker/package-lock.json
+
+      - name: Type-check and test the report service
+        if: hashFiles('worker/package-lock.json') != ''
+        working-directory: worker
+        run: |
+          npm ci --no-audit --no-fund
+          npx tsc --noEmit
+          npm test
+
   commitlint:
     runs-on: ubuntu-latest
     steps:
