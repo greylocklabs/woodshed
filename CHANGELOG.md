@@ -5,6 +5,15 @@ published as that release's GitHub notes, so the headings must stay
 `## <version>`. Write the section for a version before running
 `make release`, which refuses to release without one.
 
+## 0.2.1
+
+### Changed
+
+- **release:** the app attached to each release is now a shrunk build signed
+  with the release key, so later releases install over it. Copies installed
+  from 0.1.0 or 0.2.0, which were debug builds, need uninstalling once first;
+  back up from Settings beforehand and restore afterwards to keep your data.
+
 ## 0.2.0
 
 ### Added

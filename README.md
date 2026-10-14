@@ -92,7 +92,23 @@ The version lives in `VERSION`, and Play's version code is derived from it. To r
    tags `v<version>` and pushes. `make release PART=current` tags the version already in `VERSION`, and
    `DRY_RUN=1` checks everything without changing anything.
 3. The tag starts the release workflow, which publishes a GitHub release with that changelog section as its
-   notes and the app attached. Until release signing is set up, that is the debug build.
+   notes and the app attached, signed with the release key so each release installs over the last.
+
+Release builds are shrunk with R8. `make e2e-release` runs the end-to-end tests against the shrunk build, as CI
+does nightly and on PRs into main.
+
+### The release key
+
+The release key is a PKCS#12 keystore (alias `woodshed`) whose password is also its key password. The release
+workflow reads it from the `WOODSHED_KEYSTORE_BASE64` and `WOODSHED_KEYSTORE_PASSWORD` repository secrets. To
+build a signed release locally:
+
+```
+WOODSHED_KEYSTORE=/path/to/release.p12 WOODSHED_KEYSTORE_PASSWORD=... ./gradlew :app:assembleRelease
+```
+
+Keep a backup of the keystore and its password somewhere safe, such as a password manager. Without them, no
+later release can update an installed copy.
 
 ## Trying the cards
 
