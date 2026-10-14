@@ -3,6 +3,7 @@ package com.larakelley.woodshed.ui.settings
 import android.app.Application
 import androidx.compose.ui.test.assertIsOff
 import androidx.compose.ui.test.assertIsOn
+import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -70,6 +71,8 @@ class SettingsScreenTest {
     compose.onNodeWithTag("donate").assertExists()
     compose.onNodeWithTag("source").assertExists()
     compose.onNodeWithText("buy me a coffee", substring = true).assertExists()
+    // Play requires the privacy policy to be reachable from inside the app.
+    compose.onNodeWithTag("privacy").performScrollTo().assertTextContains("privacy policy", substring = true)
     compose.onNodeWithTag("close-settings").performClick()
     assertEquals(true, closed)
   }
