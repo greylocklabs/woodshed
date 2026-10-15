@@ -101,4 +101,17 @@ class SessionTest {
     assertEquals(60, blocks.sumOf { it.minutes })
     assertEquals(55, (blocks.last() as PlanBlock.Tune).minutes)
   }
+
+  @Test
+  fun fillSharesTheShortfallButKeepsTheWarmupAndSolo() {
+    val blocks = listOf(PlanBlock.Exercise(1, 5), PlanBlock.Solo(9, 7), PlanBlock.Exercise(2, 6), PlanBlock.Tune(3, 4, 7))
+    val filled = fill(blocks, 30, keepFirst = true)
+    assertEquals(listOf(5, 7, 9, 9), filled.map { it.minutes })
+    // Without a warm-up the first block stretches too.
+    assertEquals(listOf(7, 7, 8, 8), fill(blocks, 30, keepFirst = false).map { it.minutes })
+    // A warm-up on its own takes the time rather than leave the session short.
+    assertEquals(listOf(30), fill(listOf(PlanBlock.Exercise(1, 5)), 30, keepFirst = true).map { it.minutes })
+    // A plan already at length is left alone.
+    assertEquals(blocks, fill(blocks, 25, keepFirst = true))
+  }
 }
