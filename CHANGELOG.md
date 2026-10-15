@@ -5,6 +5,25 @@ published as that release's GitHub notes, so the headings must stay
 `## <version>`. Write the section for a version before running
 `make release`, which refuses to release without one.
 
+## 0.3.0
+
+### Added
+
+- **practice:** Shuffle, Replace and Drop on each planned block. A dropped
+  block's minutes go to the rest, so the plan still fills the session.
+- **practice:** go back a block, and control the metronome and drone without
+  leaving the session.
+- **practice:** drone exercises name the drone's note and play it.
+- **random:** roll an exercise.
+- **exercises:** filter by difficulty.
+
+### Changed
+
+- **app:** a new logo: a pink shed whose siding is a staff.
+- **app:** reading in C, keys show without "Concert".
+- **practice:** past five instruments, pick yours from a dropdown.
+- **reports:** reports about the app need a description.
+
 ## 0.2.4
 
 ### Added
