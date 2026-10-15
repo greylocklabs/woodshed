@@ -5,6 +5,15 @@ published as that release's GitHub notes, so the headings must stay
 `## <version>`. Write the section for a version before running
 `make release`, which refuses to release without one.
 
+## 0.2.3
+
+### Added
+
+- **release:** Woodshed is on Google Play for testers, and each release is now
+  uploaded there as well as attached to its GitHub release. Both are signed
+  with the same key, so a copy installed from either one updates from the
+  other.
+
 ## 0.2.2
 
 ### Added
