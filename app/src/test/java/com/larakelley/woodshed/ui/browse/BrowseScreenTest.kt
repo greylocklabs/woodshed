@@ -107,13 +107,13 @@ class BrowseScreenTest {
   @Test
   fun pickingATranspositionRewritesTheKeys() {
     showWithLiveState()
-    compose.onNodeWithText("Concert Db").assertExists()
+    compose.onNodeWithText("Db").assertExists()
 
     compose.onNodeWithTag("transposition-picker").performClick()
     compose.onNodeWithText("Bb").performClick()
 
     compose.onNodeWithText("Eb").assertExists()
-    compose.onNodeWithText("Concert Db").assertDoesNotExist()
+    compose.onNodeWithText("Db").assertDoesNotExist()
     compose.onNodeWithText("Key unknown").assertExists()
   }
 

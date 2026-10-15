@@ -18,8 +18,8 @@ class BrowseModelTest {
   @Test
   fun keyLabelTransposesForTheHorn() {
     assertEquals("C", keyLabel(Key(3, false), Tonality.MAJOR, Transposition.Eb))
-    assertEquals("Concert Eb", keyLabel(Key(3, false), Tonality.MAJOR, Transposition.C))
-    assertEquals("Concert C minor", keyLabel(Key(0, true), Tonality.MINOR, Transposition.C))
+    assertEquals("Eb", keyLabel(Key(3, false), Tonality.MAJOR, Transposition.C))
+    assertEquals("C minor", keyLabel(Key(0, true), Tonality.MINOR, Transposition.C))
   }
 
   @Test

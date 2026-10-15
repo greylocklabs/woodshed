@@ -86,7 +86,7 @@ fun soloGroups(rows: List<SoloRow>): List<Pair<String, List<SoloRow>>> = listOf(
 /** The key a solo is played in: concert, and written for the user's transposition. */
 fun soloKey(solo: TranscriptionEntity, transposition: Transposition): String? {
   val key = Key.of(solo.keyName, solo.tonality) ?: return null
-  return if (transposition == Transposition.C) "Concert ${key.displayName}" else "${key.writtenFor(transposition).displayName} (Concert ${key.displayName})"
+  return if (transposition == Transposition.C) key.displayName else "${key.writtenFor(transposition).displayName} (Concert ${key.displayName})"
 }
 
 data class TranscribeUi(val rows: List<SoloRow> = emptyList(), val transposition: Transposition = Transposition.C)

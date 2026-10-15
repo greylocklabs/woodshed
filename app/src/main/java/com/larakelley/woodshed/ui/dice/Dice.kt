@@ -162,7 +162,7 @@ class DiceViewModel(
     val written = r.concertKey?.writtenFor(transposition)
     val key = when {
       written == null -> "Key unknown"
-      transposition == Transposition.C -> "Concert ${written.displayName}"
+      transposition == Transposition.C -> written.displayName
       else -> "Written ${written.displayName}"
     }
     val known = practice.knownKeys(r.tune.id)
