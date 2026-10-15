@@ -186,6 +186,9 @@ class PracticeService(
   )
 
   /** A random solo within [constraints]; see [rollSolo]. */
+  suspend fun rollExercise(constraints: DiceConstraints, instrument: Instrument?): ExerciseEntity? =
+    rollExercise(allExercises(), instrument, constraints, random)
+
   suspend fun rollSolo(constraints: DiceConstraints): TranscriptionEntity? =
     rollSolo(db.transcriptions().all(), db.transcriptions().states().associateBy { it.transcriptionId }, constraints.soloPool, random)
 

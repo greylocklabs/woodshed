@@ -19,6 +19,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.larakelley.woodshed.data.ThemeMode
 import com.larakelley.woodshed.data.recordedLabel
 import com.larakelley.woodshed.domain.ChangelogRelease
+import com.larakelley.woodshed.domain.Phase
 import com.larakelley.woodshed.theme.WoodshedTheme
 import com.larakelley.woodshed.ui.AppNavigation
 import com.larakelley.woodshed.ui.Destination
@@ -93,8 +94,9 @@ class MainActivity : ComponentActivity() {
           val droning by app.drone.state.collectAsStateWithLifecycle()
 
           LaunchedEffect(browseState.styles) {
-            val tuneExercises = app.repository.exercises.first().filter { it.appliesToTune }.map { it.name }
-            dice.setOptions(browseState.styles, tuneExercises)
+            val exercises = app.repository.exercises.first()
+            val categories = exercises.map { it.category }.distinct().sortedBy { Phase.categoryRank(it) }
+            dice.setOptions(browseState.styles, exercises.filter { it.appliesToTune }.map { it.name }, categories)
           }
           val setupActions = SetupActions(
             setInstrument = practice::setInstrument,

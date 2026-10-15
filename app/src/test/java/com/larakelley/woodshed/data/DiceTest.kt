@@ -7,6 +7,8 @@ import com.larakelley.woodshed.data.db.TranscriptionStateEntity
 import com.larakelley.woodshed.data.db.TranscriptionStatus
 import com.larakelley.woodshed.data.db.TuneKnowledgeEntity
 import com.larakelley.woodshed.data.db.TuneStateEntity
+import com.larakelley.woodshed.domain.Family
+import com.larakelley.woodshed.domain.Instrument
 import com.larakelley.woodshed.domain.Key
 import com.larakelley.woodshed.domain.KeyMask
 import com.larakelley.woodshed.domain.Lifecycle
@@ -114,5 +116,20 @@ class DiceTest {
   @Test
   fun nothingMatchesGivesNull() {
     assertNull(roll(tunes, states, emptyMap(), exercises, DiceConstraints(pool = TunePool.WISHLIST, style = "Ballad"), Random(0)))
+  }
+
+  @Test
+  fun anExerciseRollSuitsTheInstrumentAndTheLimits() {
+    val pool = exercises + listOf(
+      ExerciseEntity(4, "Overtones", "Tone", "", 10, 4, null, listOf(Family.SAXOPHONE), false),
+      ExerciseEntity(5, "Lip slurs", "Tone", "", 10, 3, null, listOf(Family.BRASS), false),
+    )
+    fun names(instrument: Instrument?, c: DiceConstraints = DiceConstraints(kind = RollKind.EXERCISE)) =
+      (1..200).mapNotNull { rollExercise(pool, instrument, c, Random(it))?.name }.toSet()
+
+    assertEquals(setOf("Melody from memory", "Guide-tone solo", "Long tones", "Overtones"), names(Instrument.TENOR_SAX))
+    assertEquals(setOf("Long tones", "Overtones"), names(Instrument.ALTO_SAX, DiceConstraints(kind = RollKind.EXERCISE, exerciseCategory = "Tone")))
+    assertEquals(setOf("Overtones"), names(Instrument.ALTO_SAX, DiceConstraints(kind = RollKind.EXERCISE, exerciseCategory = "Tone", exerciseDifficulty = 4)))
+    assertNull(rollExercise(pool, Instrument.TRUMPET, DiceConstraints(exerciseDifficulty = 5), Random(0)))
   }
 }

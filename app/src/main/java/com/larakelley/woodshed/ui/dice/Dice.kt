@@ -61,6 +61,9 @@ data class RolledCard(
   val keyKnown: Boolean,
 )
 
+/** A rolled exercise and what it asks for. */
+data class RolledExercise(val name: String, val detail: String, val instructions: String)
+
 /** A rolled solo, with its key for the user's horn. */
 data class RolledSolo(val id: Long, val title: String, val soloist: String, val key: String?, val times: String?)
 
@@ -68,9 +71,12 @@ data class DiceUi(
   val constraints: DiceConstraints = DiceConstraints(),
   val card: RolledCard? = null,
   val solo: RolledSolo? = null,
+  val exercise: RolledExercise? = null,
   val nothingMatches: Boolean = false,
   val styles: List<String> = emptyList(),
   val exercises: List<String> = emptyList(),
+  /** Exercise categories to roll from, in session order. */
+  val categories: List<String> = emptyList(),
   val graded: Grade? = null,
   /** Playlists to roll from, by id and name. */
   val playlists: List<Pair<Long, String>> = emptyList(),
@@ -100,27 +106,44 @@ class DiceViewModel(
     }
   }
 
-  fun setOptions(styles: List<String>, exercises: List<String>) = _ui.update { it.copy(styles = styles, exercises = exercises) }
+  fun setOptions(styles: List<String>, exercises: List<String>, categories: List<String> = emptyList()) =
+    _ui.update { it.copy(styles = styles, exercises = exercises, categories = categories) }
 
   fun constrain(change: (DiceConstraints) -> DiceConstraints) = _ui.update { ui ->
     val next = change(ui.constraints)
     // A result from the other kind of roll would show under the wrong heading.
     if (next.kind != ui.constraints.kind) {
       roll = null
-      ui.copy(constraints = next, card = null, solo = null, nothingMatches = false, graded = null)
+      ui.copy(constraints = next, card = null, solo = null, exercise = null, nothingMatches = false, graded = null)
     } else {
       ui.copy(constraints = next)
     }
   }
 
   fun roll() {
-    if (_ui.value.constraints.kind == RollKind.SOLO) return rollSolo()
+    when (_ui.value.constraints.kind) {
+      RollKind.SOLO -> return rollSolo()
+      RollKind.EXERCISE -> return rollExercise()
+      RollKind.TUNE -> Unit
+    }
     viewModelScope.launch {
       val r = practice.roll(_ui.value.constraints)
       roll = r
       rolledAt = now()
       val card = r?.let { present(it) }
-      _ui.update { it.copy(card = card, solo = null, nothingMatches = r == null, graded = null) }
+      _ui.update { it.copy(card = card, solo = null, exercise = null, nothingMatches = r == null, graded = null) }
+    }
+  }
+
+  private fun rollExercise() {
+    roll = null
+    viewModelScope.launch {
+      val e = practice.rollExercise(_ui.value.constraints, repository.instrument.value)
+      val exercise = e?.let {
+        val detail = listOfNotNull(it.category, "${it.minutes} min", "difficulty ${it.difficulty}", it.tempoBpm?.let { bpm -> "$bpm bpm" })
+        RolledExercise(it.name, detail.joinToString(", "), it.description)
+      }
+      _ui.update { it.copy(card = null, solo = null, exercise = exercise, nothingMatches = e == null, graded = null) }
     }
   }
 
@@ -132,7 +155,7 @@ class DiceViewModel(
         val times = it.startSeconds?.let { start -> "Solo ${clock(start)}" + (it.endSeconds?.let { end -> " to ${clock(end)}" } ?: "") }
         RolledSolo(it.id, it.title, "${it.soloist}, ${it.instrument.lowercase()}", soloKey(it, repository.transposition.value), times)
       }
-      _ui.update { it.copy(card = null, solo = solo, nothingMatches = s == null, graded = null) }
+      _ui.update { it.copy(card = null, solo = solo, exercise = null, nothingMatches = s == null, graded = null) }
     }
   }
 
@@ -191,13 +214,28 @@ fun DiceScreen(
 ) {
   val c = ui.constraints
   val solos = c.kind == RollKind.SOLO
+  val exercises = c.kind == RollKind.EXERCISE
   Column(Modifier.fillMaxSize()) {
     Column(
       Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(16.dp),
       verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
       PillChoice(RollKind.entries.map { it.label to it }, c.kind, { k -> onConstrain { it.copy(kind = k) } }, tagPrefix = "roll-kind")
-      if (solos) {
+      if (exercises) {
+        FlowRow(Modifier.padding(vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+          DropdownChip(
+            "Category",
+            c.exerciseCategory ?: "Any",
+            ui.categories.map {
+              it to it
+            },
+            allowAny = true,
+          ) { v -> onConstrain { it.copy(exerciseCategory = v) } }
+          DropdownChip("Difficulty", c.exerciseDifficulty?.toString() ?: "Any", (1..5).map { it.toString() to it }, allowAny = true) { d ->
+            onConstrain { it.copy(exerciseDifficulty = d) }
+          }
+        }
+      } else if (solos) {
         DropdownChip("Solos", c.soloPool.label, SoloPool.entries.map { it.label to it }) { p -> onConstrain { it.copy(soloPool = p ?: SoloPool.MINE) } }
       } else {
         FlowRow(Modifier.padding(vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -230,14 +268,21 @@ fun DiceScreen(
         }
       }
       StickerButton(onClick = onRoll, modifier = Modifier.fillMaxWidth().height(64.dp).testTag("roll")) {
-        Text(if (ui.card == null && ui.solo == null) "🎲 Roll" else "🎲 Roll again", style = MaterialTheme.typography.titleLarge)
+        Text(if (ui.card == null && ui.solo == null && ui.exercise == null) "🎲 Roll" else "🎲 Roll again", style = MaterialTheme.typography.titleLarge)
       }
       if (ui.nothingMatches) {
-        if (solos) {
+        if (exercises) {
+          EmptyState("💪", "Nothing to roll", "No exercises for your instrument fit these choices. Loosen them.")
+        } else if (solos) {
           EmptyState("🎧", "Nothing to roll", "No solos fit. Pick a wider set, or add solos to your list from the Transcribe tab.")
         } else {
           EmptyState("🎲", "Nothing to roll", "No tunes fit these choices. Loosen them, or add tunes to your list from the Tunes tab.")
         }
+      }
+      ui.exercise?.takeIf { exercises }?.let { e ->
+        Text(e.name, style = MaterialTheme.typography.displaySmall, modifier = Modifier.testTag("dice-exercise-title"))
+        Text(e.detail, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
+        Text(e.instructions, style = MaterialTheme.typography.titleMedium)
       }
       ui.solo?.takeIf { solos }?.let { s ->
         Text(s.title, style = MaterialTheme.typography.displaySmall, modifier = Modifier.testTag("dice-solo-title"))
@@ -248,7 +293,7 @@ fun DiceScreen(
           Text("🎧 Open solo", style = MaterialTheme.typography.titleMedium)
         }
       }
-      ui.card?.takeIf { !solos }?.let { card ->
+      ui.card?.takeIf { c.kind == RollKind.TUNE }?.let { card ->
         Text(card.title, style = MaterialTheme.typography.displaySmall, modifier = Modifier.testTag("dice-title"))
         Text(card.key, style = MaterialTheme.typography.displayMedium, color = MaterialTheme.colorScheme.primary)
         if (card.shape.isNotEmpty()) Text(card.shape, style = MaterialTheme.typography.titleMedium)
@@ -262,6 +307,6 @@ fun DiceScreen(
         ui.graded?.let { Text("Logged as ${it.name.lowercase()}.") }
       }
     }
-    ui.card?.takeIf { !solos }?.buttons?.let { GradeButtons(it, onGrade, Modifier.fillMaxHeight(0.25f)) }
+    ui.card?.takeIf { c.kind == RollKind.TUNE }?.buttons?.let { GradeButtons(it, onGrade, Modifier.fillMaxHeight(0.25f)) }
   }
 }

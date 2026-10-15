@@ -23,6 +23,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -78,5 +79,17 @@ class DiceViewModelTest {
     dice.grade(Grade.GOOD)
     dice.grade(Grade.GOOD)
     assertEquals(1, db.reviewEvents().all().count { it.itemKind == ReviewEventEntity.TUNE })
+  }
+
+  @Test
+  fun anExerciseRollShowsTheExerciseAndClearsWhenSwitchingBack() {
+    dice.constrain { it.copy(kind = RollKind.EXERCISE, exerciseCategory = "Tone") }
+    dice.roll()
+    val exercise = dice.ui.value.exercise
+    assertNotNull(exercise)
+    assertTrue(exercise!!.detail.startsWith("Tone, "))
+    assertNull(dice.ui.value.card)
+    dice.constrain { it.copy(kind = RollKind.TUNE) }
+    assertNull(dice.ui.value.exercise)
   }
 }

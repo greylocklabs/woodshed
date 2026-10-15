@@ -8,6 +8,7 @@ import com.larakelley.woodshed.data.db.TranscriptionStatus
 import com.larakelley.woodshed.data.db.TuneKnowledgeEntity
 import com.larakelley.woodshed.data.db.TuneStateEntity
 import com.larakelley.woodshed.data.db.homeKey
+import com.larakelley.woodshed.domain.Instrument
 import com.larakelley.woodshed.domain.Key
 import com.larakelley.woodshed.domain.KeyMask
 import com.larakelley.woodshed.domain.Lifecycle
@@ -22,9 +23,10 @@ enum class TunePool(val label: String) {
   ANY("Any tune"),
 }
 
-/** What the dice roll: a tune to play over, or a solo to transcribe. */
+/** What the dice roll: a tune to play over, an exercise, or a solo to transcribe. */
 enum class RollKind(val label: String) {
   TUNE("🎵 Tune"),
+  EXERCISE("💪 Exercise"),
   SOLO("🎧 Solo"),
 }
 
@@ -54,6 +56,10 @@ data class DiceConstraints(
   val keyChoice: KeyChoice = KeyChoice.USUAL,
   /** Roll only from this playlist's tunes, whatever [pool] says. */
   val playlistId: Long? = null,
+  /** For an exercise roll: a category, or null for any. */
+  val exerciseCategory: String? = null,
+  /** For an exercise roll: a difficulty from 1 to 5, or null for any. */
+  val exerciseDifficulty: Int? = null,
 )
 
 data class Roll(
@@ -75,6 +81,14 @@ fun rollSolo(solos: List<TranscriptionEntity>, states: Map<Long, TranscriptionSt
       SoloPool.ANY -> true
     }
   }.randomOrNull(random)
+
+/** Draws an exercise that suits [instrument] and [c]'s category and difficulty, or null when none qualifies. */
+fun rollExercise(exercises: List<ExerciseEntity>, instrument: Instrument?, c: DiceConstraints, random: Random): ExerciseEntity? = exercises.filter { e ->
+  e.archivedAt == null &&
+    (instrument == null || instrument.suits(e.families, e.category)) &&
+    (c.exerciseCategory == null || e.category == c.exerciseCategory) &&
+    (c.exerciseDifficulty == null || e.difficulty == c.exerciseDifficulty)
+}.randomOrNull(random)
 
 /** Draws a tune, an exercise and a key that satisfy [c], or null when no tune qualifies. */
 fun roll(
