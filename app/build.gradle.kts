@@ -41,11 +41,11 @@ androidComponents {
 
 android {
   namespace = "com.larakelley.woodshed"
-  compileSdk = 36
+  compileSdk = 37
   defaultConfig {
     applicationId = "com.larakelley.woodshed"
     minSdk = 26
-    targetSdk = 36
+    targetSdk = 37
     versionName = appVersion
     versionCode = versionCodeOf(appVersion)
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -116,6 +116,12 @@ android {
           apiLevel = 34
           systemImageSource = "aosp-atd"
         }
+        // The target SDK's level, for checking an SDK upgrade: `./gradlew pixel6api37DebugAndroidTest`.
+        create("pixel6api37") {
+          device = "Pixel 6"
+          apiLevel = 37
+          systemImageSource = "google"
+        }
       }
     }
   }
@@ -154,6 +160,9 @@ dependencies {
   val composeBom = platform(libs.androidx.compose.bom)
   implementation(composeBom)
   androidTestImplementation(composeBom)
+  // Compose's test library brings in an Espresso too old to sync with Android 17; pin a newer one.
+  androidTestImplementation(libs.androidx.test.espresso.core)
+  testImplementation(libs.androidx.test.espresso.core)
 
   // Core Android dependencies
   implementation(libs.androidx.core.ktx)
