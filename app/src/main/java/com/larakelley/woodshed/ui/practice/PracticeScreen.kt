@@ -7,6 +7,7 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -333,6 +334,10 @@ fun SessionScreen(
   onStopDrone: () -> Unit = {},
   /** Back to the previous block, for a Done tapped too early. */
   onPrevious: () -> Unit = {},
+  metronomeRunning: Boolean = false,
+  bpm: Int = 100,
+  onToggleMetronome: () -> Unit = {},
+  onSetBpm: (Int) -> Unit = {},
 ) {
   @Composable
   fun DroneButton(label: String, pitchClass: Int?) {
@@ -401,7 +406,6 @@ fun SessionScreen(
               Text("⏱️ Metronome at $bpm bpm", style = MaterialTheme.typography.labelLarge)
             }
           }
-          if (step.description.contains("drone", ignoreCase = true)) DroneButton("🔊 Drone", null)
         }
 
         is StepView.Solo -> {
@@ -423,9 +427,22 @@ fun SessionScreen(
           Spacer(Modifier.height(8.dp))
           Text(card.exercise, style = MaterialTheme.typography.headlineSmall)
           Text(card.instructions, style = MaterialTheme.typography.titleMedium)
-          card.concertPitchClass?.let { DroneButton("🔊 Drone on the key", it) }
         }
       }
+    }
+    // The metronome and drone stay in reach on every block, so stopping one never means leaving the session.
+    Row(
+      Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 4.dp).testTag("session-tools"),
+      horizontalArrangement = Arrangement.spacedBy(8.dp),
+      verticalAlignment = Alignment.CenterVertically,
+    ) {
+      StickerButton(onClick = onToggleMetronome, sticker = neutralSticker, modifier = Modifier.height(44.dp).testTag("session-metronome")) {
+        Text(if (metronomeRunning) "◼ $bpm bpm" else "⏱️ $bpm bpm", style = MaterialTheme.typography.labelLarge)
+      }
+      OutlinedButton(onClick = { onSetBpm(bpm - 5) }, modifier = Modifier.testTag("session-slower")) { Text("-5") }
+      OutlinedButton(onClick = { onSetBpm(bpm + 5) }, modifier = Modifier.testTag("session-faster")) { Text("+5") }
+      val tuneKey = (step as? StepView.Tune)?.card?.concertPitchClass
+      DroneButton(if (tuneKey != null) "🔊 Drone on the key" else "🔊 Drone", tuneKey)
     }
     when (step) {
       is StepView.Exercise ->

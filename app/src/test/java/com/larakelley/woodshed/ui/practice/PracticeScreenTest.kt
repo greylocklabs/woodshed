@@ -78,6 +78,56 @@ class PracticeScreenTest {
   }
 
   @Test
+  fun theMetronomeAndDroneAreControlledFromTheSession() {
+    var toggled = 0
+    val bpms = mutableListOf<Int>()
+    val drones = mutableListOf<Int?>()
+    var droneStopped = false
+    var ui by mutableStateOf(PracticeUi(running = true, step = tuneStep.copy(card = card.copy(concertPitchClass = 7)), stepCount = 3))
+    var running by mutableStateOf(false)
+    var droning by mutableStateOf(false)
+    compose.mainClock.autoAdvance = false
+    compose.setContent {
+      SessionScreen(
+        ui,
+        onGrade = {},
+        onNext = {},
+        onStop = {},
+        dronePlaying = droning,
+        onDrone = {
+          drones += it
+          droning = true
+        },
+        onStopDrone = { droneStopped = true },
+        metronomeRunning = running,
+        bpm = 120,
+        onToggleMetronome = {
+          toggled++
+          running = !running
+        },
+        onSetBpm = { bpms += it },
+      )
+    }
+    compose.mainClock.advanceTimeByFrame()
+
+    compose.onNodeWithText("⏱️ 120 bpm").performClick()
+    compose.mainClock.advanceTimeByFrame()
+    compose.mainClock.advanceTimeBy(500)
+    compose.onNodeWithText("◼ 120 bpm").assertExists()
+    compose.onNodeWithTag("session-faster").performClick()
+    compose.onNodeWithTag("session-slower").performClick()
+    assertEquals(1, toggled)
+    assertEquals(listOf(125, 115), bpms)
+
+    // On a tune, the drone sounds the card's key; a second tap stops it.
+    compose.onNodeWithTag("use-drone").performClick()
+    compose.mainClock.advanceTimeByFrame()
+    compose.onNodeWithTag("use-drone").performClick()
+    assertEquals(listOf<Int?>(7), drones)
+    assertTrue(droneStopped)
+  }
+
+  @Test
   fun theFirstStepHasNoBack() {
     session(PracticeUi(running = true, step = tuneStep, stepCount = 3))
     compose.onNodeWithTag("step-previous").assertDoesNotExist()

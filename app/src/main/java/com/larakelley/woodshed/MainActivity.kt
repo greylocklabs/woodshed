@@ -149,6 +149,10 @@ class MainActivity : ComponentActivity() {
                     },
                     onStopDrone = app.drone::stop,
                     onPrevious = practice::previous,
+                    metronomeRunning = click.running,
+                    bpm = click.bpm,
+                    onToggleMetronome = metronome::toggle,
+                    onSetBpm = metronome::setBpm,
                   )
                 } else {
                   LaunchedEffect(Unit) { practice.refresh() }
