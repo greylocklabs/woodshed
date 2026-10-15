@@ -164,6 +164,7 @@ const val SOURCE = "https://github.com/lararosekelley/woodshed"
 const val WEBSITE = "https://woodshedapp.org"
 const val PRIVACY_POLICY = "https://woodshedapp.org/privacy.html"
 const val TERMS = "https://woodshedapp.org/terms.html"
+const val CHANGELOG = "$SOURCE/blob/main/CHANGELOG.md"
 
 /** Laid out like Callie's settings: a back sticker and title, pill tabs, then labelled sections. */
 @Composable
@@ -296,6 +297,16 @@ private fun AboutTab(ui: SettingsUi) {
       },
       style = MaterialTheme.typography.bodyLarge,
       modifier = Modifier.testTag("made-by"),
+    )
+    SectionLabel("What's new")
+    Text(
+      buildAnnotatedString {
+        append("See what changed in each release in the ")
+        withLink(LinkAnnotation.Url(CHANGELOG, TextLinkStyles(SpanStyle(color = accent, fontWeight = FontWeight.Bold)))) { append("changelog") }
+        append(".")
+      },
+      style = MaterialTheme.typography.bodyLarge,
+      modifier = Modifier.testTag("changelog"),
     )
     SectionLabel("Source")
     Text(

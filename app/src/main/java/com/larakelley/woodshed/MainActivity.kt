@@ -11,15 +11,19 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.larakelley.woodshed.data.ThemeMode
 import com.larakelley.woodshed.data.recordedLabel
+import com.larakelley.woodshed.domain.ChangelogRelease
 import com.larakelley.woodshed.theme.WoodshedTheme
 import com.larakelley.woodshed.ui.AppNavigation
 import com.larakelley.woodshed.ui.Destination
 import com.larakelley.woodshed.ui.SoloLink
+import com.larakelley.woodshed.ui.WhatsNewDialog
 import com.larakelley.woodshed.ui.browse.BrowseScreen
 import com.larakelley.woodshed.ui.browse.BrowseViewModel
 import com.larakelley.woodshed.ui.dice.DiceScreen
@@ -40,7 +44,9 @@ import com.larakelley.woodshed.ui.tools.TunerActions
 import com.larakelley.woodshed.ui.tools.TunerScreen
 import com.larakelley.woodshed.ui.transcribe.TranscribeScreen
 import com.larakelley.woodshed.ui.transcribe.TranscribeViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withContext
 
 class MainActivity : ComponentActivity() {
   private val app get() = application as WoodshedApplication
@@ -50,7 +56,9 @@ class MainActivity : ComponentActivity() {
     val metronome = app.metronome
 
     enableEdgeToEdge()
-    val version = packageManager.getPackageInfo(packageName, 0).versionName ?: ""
+    val info = packageManager.getPackageInfo(packageName, 0)
+    val version = info.versionName ?: ""
+    val freshInstall = info.firstInstallTime == info.lastUpdateTime
     setContent {
       val themeMode by app.repository.themeMode.collectAsStateWithLifecycle()
       val dark = when (themeMode) {
@@ -101,6 +109,15 @@ class MainActivity : ComponentActivity() {
             remove = practice::removeBlock,
             start = practice::start,
           )
+
+          var whatsNew by remember { mutableStateOf(emptyList<ChangelogRelease>()) }
+          LaunchedEffect(Unit) { whatsNew = withContext(Dispatchers.IO) { app.whatsNew.pending(version, freshInstall) } }
+          if (whatsNew.isNotEmpty()) {
+            WhatsNewDialog(whatsNew) {
+              app.whatsNew.markSeen(version)
+              whatsNew = emptyList()
+            }
+          }
 
           Surface(color = MaterialTheme.colorScheme.background) {
             BrowseScreen(

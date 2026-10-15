@@ -17,6 +17,28 @@ fun versionCodeOf(version: String): Int {
   return major * 10_000 + minor * 100 + patch
 }
 
+/** Copies CHANGELOG.md into the app's assets, where the What's new dialog reads it. */
+abstract class CopyChangelog : DefaultTask() {
+  @get:InputFile
+  abstract val changelog: RegularFileProperty
+
+  @get:OutputDirectory
+  abstract val outputDir: DirectoryProperty
+
+  @TaskAction
+  fun copy() {
+    changelog.get().asFile.copyTo(outputDir.get().file("CHANGELOG.md").asFile, overwrite = true)
+  }
+}
+
+val copyChangelog = tasks.register<CopyChangelog>("copyChangelog") {
+  changelog.set(rootProject.layout.projectDirectory.file("CHANGELOG.md"))
+}
+
+androidComponents {
+  onVariants { variant -> variant.sources.assets?.addGeneratedSourceDirectory(copyChangelog, CopyChangelog::outputDir) }
+}
+
 android {
   namespace = "com.larakelley.woodshed"
   compileSdk = 36

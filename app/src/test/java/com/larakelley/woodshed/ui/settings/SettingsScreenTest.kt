@@ -70,6 +70,7 @@ class SettingsScreenTest {
     compose.onNodeWithText("Lara Kelley", substring = true).assertExists()
     compose.onNodeWithTag("donate").assertExists()
     compose.onNodeWithTag("source").assertExists()
+    compose.onNodeWithTag("changelog").assertTextContains("changelog", substring = true)
     compose.onNodeWithText("buy me a coffee", substring = true).assertExists()
     // Play requires the privacy policy to be reachable from inside the app.
     compose.onNodeWithTag("privacy").performScrollTo().assertTextContains("privacy policy", substring = true)
