@@ -5,6 +5,13 @@ published as that release's GitHub notes, so the headings must stay
 `## <version>`. Write the section for a version before running
 `make release`, which refuses to release without one.
 
+## 0.2.4
+
+### Added
+
+- **app:** a What's new dialog after each update, showing the changes since
+  the version you last opened, and a link to the full changelog in About.
+
 ## 0.2.3
 
 ### Added
