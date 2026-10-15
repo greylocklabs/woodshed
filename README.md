@@ -33,7 +33,7 @@ Play is in testing.
 | `worker/` | The report service, a Cloudflare Worker |
 | `www/` | The website |
 | `scripts/` | Release, version and changelog scripts behind the Makefile |
-| `tools/logo.py` | Generates `assets/logo.svg` and the launcher icon from one shape list |
+| `tools/logo.py` | Generates `assets/logo.svg`, the website logo and the launcher, themed and notification icons from one shape list |
 | `tools/play/` | Renders the Play icon and feature graphic |
 
 ## Design notes

@@ -1,14 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img" aria-labelledby="t">
   <title id="t">Woodshed</title>
-  <defs><linearGradient id="bark" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c99269"/><stop offset="1" stop-color="#8c5735"/></linearGradient><linearGradient id="knob" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b87d55"/><stop offset="1" stop-color="#7b4a2c"/></linearGradient><linearGradient id="cut" x1="0" y1="0" x2="0.4" y2="1"><stop offset="0" stop-color="#f7e4cb"/><stop offset="1" stop-color="#e9c9a1"/></linearGradient><linearGradient id="leaf" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#a8dd8f"/><stop offset="1" stop-color="#5faa6a"/></linearGradient></defs>
-  <!-- a brown log on its side: cut end to the right, a leaf on top, a sawn-off knob on its side -->
-  <path d="M38 48 H96 V108 H38 Q8 108 8 78 Q8 48 38 48 Z" fill="url(#bark)"/>
-  <path d="M45.0 94.7 A10 8.0 -32 0 1 62.0 84.1 L70.5 97.7 L53.5 108.3 Z" fill="url(#knob)"/>
-  <path d="M53.52 108.30 A10 6 -32 1 0 70.48 97.70 A10 6 -32 1 0 53.52 108.30 Z" fill="#6e4026"/>
-  <path d="M55.39 107.13 A7.8 4.4 -32 1 0 68.61 98.87 A7.8 4.4 -32 1 0 55.39 107.13 Z" fill="url(#cut)"/>
-  <ellipse cx="96" cy="78" rx="23" ry="30" fill="#6e4026"/>
-  <ellipse cx="96" cy="78" rx="19" ry="26" fill="url(#cut)"/>
-  <g fill="none" stroke="#c69a6e" stroke-width="2" opacity="0.55"><ellipse cx="96" cy="78" rx="14" ry="19.5"/><ellipse cx="96" cy="78" rx="9" ry="12.5"/><ellipse cx="96" cy="78" rx="4" ry="5.5"/></g>
-  <path d="M58 49 Q57 41 62 36" fill="none" stroke="#5faa6a" stroke-width="4" stroke-linecap="round"/>
-  <path d="M61 37 Q66 16 92 18 Q86 42 61 37 Z" fill="url(#leaf)"/>
+  <defs><linearGradient id="body" gradientUnits="userSpaceOnUse" x1="20" y1="24" x2="46.4" y2="110"><stop offset="0" stop-color="#f7aed0"/><stop offset="1" stop-color="#d8639c"/></linearGradient></defs>
+  <!-- a pink shed raised on a plum edge, its siding a staff with two beamed eighth notes -->
+  <path d="M58 35 Q64 30 70 35 L104 63 Q108 66 108 72 V104 Q108 116 96 116 H32 Q20 116 20 104 V72 Q20 66 24 63 Z" fill="#a23f72"/>
+  <path d="M58 29 Q64 24 70 29 L104 57 Q108 60 108 66 V98 Q108 110 96 110 H32 Q20 110 20 98 V66 Q20 60 24 57 Z" fill="url(#body)"/>
+  <g stroke="#f9c9de" stroke-width="2.4" opacity="0.85"><path d="M20 70 H108"/><path d="M20 77 H108"/><path d="M20 84 H108"/><path d="M20 91 H108"/><path d="M20 98 H108"/></g>
+  <g fill="#3a1630"><path d="M48.99 89.69 A6.4 4.8 -20 1 0 61.01 85.31 A6.4 4.8 -20 1 0 48.99 89.69 Z"/><path d="M69.99 82.69 A6.4 4.8 -20 1 0 82.01 78.31 A6.4 4.8 -20 1 0 69.99 82.69 Z"/><path d="M57.8 61 H61.2 V86.6 H57.8 Z"/><path d="M78.8 54 H82.2 V79.6 H78.8 Z"/><path d="M57.8 58.8 L82.2 50.7 L82.2 57.7 L57.8 65.8 Z"/></g>
 </svg>
