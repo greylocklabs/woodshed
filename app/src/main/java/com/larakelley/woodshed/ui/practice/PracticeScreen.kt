@@ -77,7 +77,11 @@ data class SetupActions(
   val pickSolo: (Long?) -> Unit = {},
   val buildPlan: () -> Unit = {},
   val discardPlan: () -> Unit = {},
-  val swap: (Int) -> Unit = {},
+  /** A random different exercise for a block. */
+  val shuffle: (Int) -> Unit = {},
+  /** The exercises a block's could be replaced with, for choosing one. */
+  val replacements: (Int) -> List<ExerciseRow> = { emptyList() },
+  val replace: (Int, Long) -> Unit = { _, _ -> },
   val remove: (Int) -> Unit = {},
   val start: () -> Unit = {},
 )
@@ -239,6 +243,30 @@ private fun PlanReview(plan: List<PlanItem>, actions: SetupActions) {
   }
   BackHandler(onBack = actions.discardPlan)
   var shown by remember { mutableStateOf<ExerciseRow?>(null) }
+  var replacing by remember { mutableStateOf<Int?>(null) }
+  replacing?.let { index ->
+    val options = remember(index, plan) { actions.replacements(index) }
+    AlertDialog(
+      onDismissRequest = { replacing = null },
+      title = { Text("Replace ${plan.getOrNull(index)?.let { if (it.block is PlanBlock.Tune) it.detail else it.title } ?: "exercise"}") },
+      text = {
+        LazyColumn(Modifier.testTag("replacements")) {
+          itemsIndexed(options) { _, option ->
+            Column(
+              Modifier.fillMaxWidth().clickable {
+                actions.replace(index, option.id)
+                replacing = null
+              }.padding(vertical = 8.dp).testTag("replacement-${option.id}"),
+            ) {
+              Text(option.name, style = MaterialTheme.typography.titleMedium)
+              Text(option.summary, style = MaterialTheme.typography.bodySmall)
+            }
+          }
+        }
+      },
+      confirmButton = { TextButton(onClick = { replacing = null }) { Text("Cancel") } },
+    )
+  }
   shown?.let { exercise ->
     AlertDialog(
       onDismissRequest = { shown = null },
@@ -267,9 +295,15 @@ private fun PlanReview(plan: List<PlanItem>, actions: SetupActions) {
           Column(Modifier.weight(1f)) {
             Text(item.title, style = MaterialTheme.typography.titleMedium)
             Text(if (item.block is PlanBlock.Tune) "Tune: ${item.detail}" else item.detail, style = MaterialTheme.typography.bodySmall)
+            Row {
+              // A solo block has no exercise to change, only to drop.
+              if (item.block !is PlanBlock.Solo) {
+                TextButton(onClick = { actions.shuffle(i) }, modifier = Modifier.testTag("shuffle-$i")) { Text("Shuffle") }
+                TextButton(onClick = { replacing = i }, modifier = Modifier.testTag("replace-$i")) { Text("Replace") }
+              }
+              TextButton(onClick = { actions.remove(i) }, modifier = Modifier.testTag("remove-$i")) { Text("Drop") }
+            }
           }
-          TextButton(onClick = { actions.swap(i) }, modifier = Modifier.testTag("swap-$i")) { Text("Swap") }
-          TextButton(onClick = { actions.remove(i) }, modifier = Modifier.testTag("remove-$i")) { Text("Drop") }
         }
         HorizontalDivider()
       }

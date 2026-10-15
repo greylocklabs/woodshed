@@ -129,4 +129,30 @@ class PracticeViewModelTest {
     assertFalse(vm.ui.value.running)
     assertNull(vm.ui.value.setup.plan)
   }
+
+  @Test
+  fun aPlannedExerciseCanBeReplacedWithAnotherOfItsKindNotAlreadyPlanned() = runTest {
+    practice.startLearning(id("solar"))
+    val vm = PracticeViewModel(repository, practice, sessions)
+    vm.setInstrument(Instrument.ALTO_SAX)
+    vm.setMinutes(60)
+    vm.buildPlan()
+    val plan = vm.ui.value.setup.plan!!
+    val index = plan.indexOfFirst { it.block is PlanBlock.Exercise }
+    val block = plan[index].block as PlanBlock.Exercise
+    val planned = plan.mapNotNull { (it.block as? PlanBlock.Exercise)?.exerciseId }.toSet()
+
+    val options = vm.replacements(index)
+    assertTrue(options.isNotEmpty())
+    assertTrue(options.all { it.category == plan[index].exercise!!.category && it.id !in planned })
+
+    vm.replace(index, options.first().id)
+    val replaced = vm.ui.value.setup.plan!![index]
+    assertEquals(options.first().id, (replaced.block as PlanBlock.Exercise).exerciseId)
+    assertEquals(block.minutes, replaced.block.minutes)
+
+    // A solo block has nothing to replace.
+    vm.pickSolo(null)
+    assertTrue(vm.replacements(99).isEmpty())
+  }
 }

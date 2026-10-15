@@ -107,7 +107,9 @@ class MainActivity : ComponentActivity() {
             pickSolo = practice::pickSolo,
             buildPlan = practice::buildPlan,
             discardPlan = practice::discardPlan,
-            swap = practice::swap,
+            shuffle = practice::shuffle,
+            replacements = practice::replacements,
+            replace = practice::replace,
             remove = practice::removeBlock,
             start = practice::start,
           )

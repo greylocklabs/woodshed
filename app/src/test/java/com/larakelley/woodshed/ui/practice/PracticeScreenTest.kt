@@ -177,20 +177,36 @@ class PracticeScreenTest {
       PlanItem(PlanBlock.Exercise(1, 5), "Long tones", "Tone", longTones),
       PlanItem(PlanBlock.Tune(7, 2, 25), "Solar", "Guide-tone solo"),
     )
-    val swapped = mutableListOf<Int>()
+    val shuffled = mutableListOf<Int>()
+    val replaced = mutableListOf<Pair<Int, Long>>()
+    val melody = ExerciseRow("Melody from memory", "Standards", "Standards, 10 min, difficulty 3", "", id = 11, appliesToTune = true)
     var started = false
     // With notifications allowed, Start goes straight to the session rather than asking first.
     shadowOf(ApplicationProvider.getApplicationContext<Application>()).grantPermissions(Manifest.permission.POST_NOTIFICATIONS)
-    compose.setContent { PracticeHome(PracticeUi(setup = SetupUi(plan = plan)), SetupActions(swap = { swapped += it }, start = { started = true })) }
+    compose.setContent {
+      PracticeHome(
+        PracticeUi(setup = SetupUi(plan = plan)),
+        SetupActions(
+          shuffle = { shuffled += it },
+          replacements = { if (it == 1) listOf(melody) else emptyList() },
+          replace = { i, id -> replaced += i to id },
+          start = { started = true },
+        ),
+      )
+    }
 
     compose.onNodeWithText("30 min planned").assertExists()
     compose.onNodeWithText("Tune: Guide-tone solo").assertExists()
     compose.onNodeWithTag("plan-0").performClick()
     compose.onNodeWithText("All instruments").assertExists()
     compose.onNodeWithText("Close").performClick()
-    compose.onNodeWithTag("swap-1").performClick()
+    compose.onNodeWithTag("shuffle-1").performClick()
+    compose.onNodeWithTag("replace-1").performClick()
+    compose.onNodeWithTag("replacement-11").performClick()
+    compose.onNodeWithTag("replacements").assertDoesNotExist()
     compose.onNodeWithTag("start").performClick()
-    assertEquals(listOf(1), swapped)
+    assertEquals(listOf(1), shuffled)
+    assertEquals(listOf(1 to 11L), replaced)
     assertTrue(started)
   }
 }
