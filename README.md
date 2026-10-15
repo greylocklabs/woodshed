@@ -2,36 +2,73 @@
 
 # woodshed
 
-Notes, data, and a build plan for **Woodshed**, an Android practice app for
-horn players. Carried out of an abandoned attempt to build jazz practice tools
-into [larakelley.com](https://github.com/lararosekelley/larakelley.com).
+**Woodshed** is an Android practice app for jazz musicians: the standards repertoire, spaced repetition and
+timed practice sessions, with a metronome, tuner and drone on the stand. It is free and MIT licensed, with no
+account, ads or analytics. The website is [woodshedapp.org](https://woodshedapp.org).
 
-The app is at milestone M1 of `ANDROID_PLAN.md`: search and filter 2,522 tunes
-with keys written for your transposition, pick tunes to learn, and plan sessions
-by length, focus and tunes, with spaced-repetition grading and a metronome on the
-stand. The Random tab rolls a card within constraints. Each tune can carry a
-comfort rating and a checklist of keys you know it in. Every graded rep is
-logged, and Settings saves and restores a backup file through the system file
-picker, so it can live in Google Drive, Dropbox or local storage.
+- **Tunes:** 2,522 standards from the Hal Leonard Real Books 1-6 and the Real Dixieland Book, searchable and
+  filterable, with keys written for any of 26 instruments. Add your own tunes, edit seeded ones, and keep
+  playlists.
+- **Spaced repetition:** tunes move from the wishlist through learning to repertoire and come back when due,
+  each with a key and an exercise. Every graded rep is logged.
+- **Sessions:** pick a length, an instrument, focus areas, tunes and a solo; review the plan, then step
+  through it with a timer that keeps running with the screen off.
+- **Transcribe:** solos to learn by ear, played at half or three-quarter speed with an A-B loop.
+- **Tools:** metronome with tap tempo and 2-and-4 clicks, a tuner and a drone, all named for your instrument.
+- **Dice:** a random tune, exercise and key, or a solo.
+- **Backup and reports:** everything stays on the phone, backed up to a file of your choosing. Problem reports
+  go through the report service below, without a GitHub account.
+
+Install it from the [latest release](https://github.com/lararosekelley/woodshed/releases/latest) APK. Google
+Play is in testing.
 
 ## What is here
 
 | Path | What |
 | --- | --- |
-| `DESIGN.md` | The decisions worth keeping, and the traps that cost time |
-| `ANDROID_PLAN.md` | How this becomes the app: stack, domain model, build order |
-| `data/standards.json` | 2,522 tunes: every title in the Hal Leonard Real Books 1-6 and Real Dixieland Book, with composer, year, bars, meter, form, style, key where known |
-| `data/exercises.json` | 61 instrument-scoped practice exercises |
-| `app/` | The Android app (Kotlin, Compose, Room); `data/` ships as its assets |
-| `tools/logo.py` | Generates `assets/logo.svg` and the app's launcher icon from one shape list |
+| `app/` | The Android app (Kotlin, Compose, Room) |
+| `data/` | The seed, shipped as the app's assets: `standards.json` (2,522 tunes with composer, year, bars, meter, form, style and key where known), `exercises.json` (61 practice exercises) and `transcriptions.json` (seeded solos) |
+| `CHANGELOG.md` | Notable changes per release |
+| `PLAY.md` | What to enter in Google Play Console |
+| `worker/` | The report service, a Cloudflare Worker |
+| `www/` | The website |
+| `scripts/` | Release, version and changelog scripts behind the Makefile |
+| `tools/logo.py` | Generates `assets/logo.svg` and the launcher icon from one shape list |
+| `tools/play/` | Renders the Play icon and feature graphic |
+
+## Design notes
+
+The rules that are easy to get wrong:
+
+- **Transposition.** Tunes are stored in concert pitch and practice history in written keys, so a ii-V-I in
+  written G counts toward G on any instrument. Written key is concert key plus the instrument's offset (Bb +2,
+  Eb +9, F +7, G +5), mod 12. A wrong offset makes every displayed key silently wrong.
+- **Key spelling.** Major keys prefer flats and minor keys prefer sharps, so C# minor never shows as Db minor.
+  A tune's key is its tonic plus a separate tonality; an unknown key stays null and shows as unknown rather
+  than guessed. Practising round the keys walks the circle of fourths.
+- **Cards and scheduling.** A tune is scheduled whole with SM-2 behind a `Scheduler` interface. Each time it
+  comes up it is paired with the tune exercise used longest ago on it, in its usual key or the next one round
+  the circle. Only learning and repertoire tunes are due; a tune becomes repertoire at a 21-day interval. Every
+  rep is logged with the scheduler's inputs and outputs, so history can be replayed under another algorithm.
+- **Sessions.** Five phases (warm-up, fundamentals, vocabulary, repertoire, cool-down) map the exercise
+  categories. The phase shares are a guess that has not been checked against real practice.
+- **Seeding.** The seed is upserted by natural key (tune slug, exercise name) and never deleted and reinserted,
+  since history points at rows by id. Anything dropped is archived. The seed owns the metadata; lifecycle,
+  notes and edits belong to the user and are never touched. User tunes use slugs starting `user-`.
+- **Data.** Every field but title, slug and collection may be absent, and absent is kept distinct from empty.
+  `verified` tunes were sourced field by field; the rest were filled from iReal Pro and the corpus below. An
+  exercise with no `families` applies to every instrument.
+
+Not built yet: a vocabulary deck of licks practised in all twelve keys, stats and reminders, Bluetooth pedal
+support, and seeded classic recordings for each standard.
 
 ## Credit
 
 `data/standards.json` started as factual metadata scraped from
 [standardrepertoire.com](https://standardrepertoire.com), a jazz standards
-reference by **David Miller**. Only factual fields were taken — composer, year,
-bars, meter, form, style, common key — deliberately not lyrics and not chord
-charts. If any of this ships, that credit ships with it. Corrections and the
+reference by **David Miller**. Only factual fields were taken: composer, year,
+bars, meter, form, style, common key, and deliberately not lyrics and not chord
+charts, and the app credits it in About. Corrections and the
 verified additions were checked against [jazzstandards.com](https://www.jazzstandards.com),
 Wikipedia and the iReal Pro jazz playlist. Bulk rows take key and style from the
 iReal Pro main playlists and composer, meter and bars from the
@@ -80,11 +117,10 @@ mail records, is in Route 53.
 
 ## Google Play
 
-`PLAY.md` holds what to enter in Play Console, from the content rating to the Data Safety form, and the open
-question about the Ko-fi button. The store listing's text and graphics are in `app/src/main/play/`: the phone
+`PLAY.md` holds what to enter in Play Console, from the content rating to the Data Safety form, and the decision
+to keep the Ko-fi button. The store listing's text and graphics are in `app/src/main/play/`: the phone
 screenshots are the screenshot tests' `play` set, and `tools/play/render.sh` renders the icon and feature
-graphic. Tagged releases also build a bundle, uploaded to Play's internal testing track once the
-`PLAY_SERVICE_ACCOUNT_JSON` secret exists, with the version's changelog section as its notes.
+graphic. Play signs with the same key as the GitHub releases, so either install updates from the other.
 
 ## Report service
 
@@ -107,8 +143,11 @@ The version lives in `VERSION`, and Play's version code is derived from it. To r
 2. On an up-to-date main, run `make release PART=patch` (or `minor`, `major`). It bumps `VERSION`, commits,
    tags `v<version>` and pushes. `make release PART=current` tags the version already in `VERSION`, and
    `DRY_RUN=1` checks everything without changing anything.
-3. The tag starts the release workflow, which publishes a GitHub release with that changelog section as its
-   notes and the app attached, signed with the release key so each release installs over the last.
+3. The tag starts the release workflow. It publishes a GitHub release with that changelog section as its notes
+   and the app attached, signed with the release key so each release installs over the last. It then uploads
+   the bundle to Play's internal testing track, with the section as plain text for its notes
+   (`scripts/play-notes.sh <version>` prints them), using the service account in the
+   `PLAY_SERVICE_ACCOUNT_JSON` secret.
 
 Release builds are shrunk with R8. `make e2e-release` runs the end-to-end tests against the shrunk build, as CI
 does nightly and on PRs into main.
@@ -126,37 +165,9 @@ WOODSHED_KEYSTORE=/path/to/release.p12 WOODSHED_KEYSTORE_PASSWORD=... ./gradlew 
 Keep a backup of the keystore and its password somewhere safe, such as a password manager. Without them, no
 later release can update an installed copy.
 
-## The earlier web version
+## History
 
-It lives in ten closed-but-undeleted branches on the site repo,
-`feat/practice-*`, stacked in this order:
-
-```
-scraper -> schema -> vocab -> library-pages -> seed
-        -> recordings -> roller -> log -> e2e -> form-polish
-```
-
-Roughly 11,500 lines of Rust, Maud templates, and CSS, with 241 tests. It was
-finished and green, not half-built: the reason it is not merged is that the
-feature belongs in a phone app, not on a website.
-
-Worth reading if you want it: `src/practice/roller.rs` (the session planner) and
-`src/practice/keys.rs` (transposition) are the two files with real thinking in
-them and no web coupling.
-
-## Still open on the site repo
-
-Issue #73, unrelated to practice: a production environment-detection bug, found
-while working on this. Details are in the issue. Independent of whether any of
-this ever gets built.
-
-Three fixes were made to shared site CSS during this work and died with the
-branches. Each stands alone if it is ever worth redoing:
-
-- `header nav` has no `flex-wrap`, so with the admin-only links visible the page
-  scrolls sideways at 768px.
-- `.btn` has no `text-align`, so an `<a class="btn">` inherits its cell's
-  alignment while a real `<button>` centres. They look different side by side in
-  a right-aligned table cell.
-- A `<select>` sizes to its widest option and ignores `line-height` in Chromium,
-  so selects render shorter than text inputs and can overflow a narrow container.
+Woodshed started as jazz practice tools on [larakelley.com](https://github.com/lararosekelley/larakelley.com),
+finished but never merged because the feature belongs in a phone app. That version lives in the closed
+`feat/practice-*` branches on the site repo; its session planner (`src/practice/roller.rs`) and transposition
+(`src/practice/keys.rs`) are the parts worth reading.
