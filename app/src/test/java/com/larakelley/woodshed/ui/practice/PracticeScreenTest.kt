@@ -7,6 +7,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.assertTextContains
+import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
@@ -24,6 +25,7 @@ import com.larakelley.woodshed.domain.Focus
 import com.larakelley.woodshed.domain.Grade
 import com.larakelley.woodshed.domain.Instrument
 import com.larakelley.woodshed.domain.PlanBlock
+import com.larakelley.woodshed.domain.Transposition
 import com.larakelley.woodshed.ui.browse.ExerciseRow
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -125,6 +127,25 @@ class PracticeScreenTest {
     compose.onNodeWithTag("use-drone").performClick()
     assertEquals(listOf<Int?>(7), drones)
     assertTrue(droneStopped)
+  }
+
+  @Test
+  fun aDroneExerciseNamesItsNotesAndDronesOnThem() {
+    val drones = mutableListOf<Int?>()
+    val step = StepView.Exercise("Long tones", "Tone", "Eight counts a note against a drone.", null, 5, droneNote(5, "Tone", Transposition.Bb))
+    compose.mainClock.autoAdvance = false
+    compose.setContent {
+      SessionScreen(PracticeUi(running = true, step = step, stepCount = 3), onGrade = {}, onNext = {}, onStop = {}, onDrone = { drones += it })
+    }
+    compose.mainClock.advanceTimeByFrame()
+
+    compose.onNodeWithTag("step-drone").assertTextEquals("Drone on written G (concert F)")
+    compose.onNodeWithText("Start on G, the drone's note, then hold each note of the G major scale above it.").assertExists()
+    compose.onNodeWithTag("use-drone").performClick()
+    assertEquals(listOf<Int?>(5), drones)
+
+    // Reading in C there is no written key to give, and only tone work lists notes to hold.
+    assertEquals(DroneNote(5, "Drone on F", null), droneNote(5, "Ear Training", Transposition.C))
   }
 
   @Test

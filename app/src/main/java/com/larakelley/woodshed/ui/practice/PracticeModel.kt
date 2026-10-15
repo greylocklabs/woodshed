@@ -16,11 +16,13 @@ import com.larakelley.woodshed.domain.ClickTrack
 import com.larakelley.woodshed.domain.Focus
 import com.larakelley.woodshed.domain.Grade
 import com.larakelley.woodshed.domain.Instrument
+import com.larakelley.woodshed.domain.Key
 import com.larakelley.woodshed.domain.Lifecycle
 import com.larakelley.woodshed.domain.PlanBlock
 import com.larakelley.woodshed.domain.Transposition
 import com.larakelley.woodshed.domain.delayLabel
 import com.larakelley.woodshed.domain.titleSortKey
+import com.larakelley.woodshed.domain.usesDrone
 import com.larakelley.woodshed.session.SessionRunner
 import com.larakelley.woodshed.ui.browse.ExerciseRow
 import com.larakelley.woodshed.ui.browse.exerciseRow
@@ -30,6 +32,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlin.random.Random
 
 /** What the review screen shows for one card. */
 data class CardView(
@@ -130,11 +133,34 @@ data class SetupUi(
   val plan: List<PlanItem>? = null,
 )
 
+/** The drone's note for an exercise block, named for the user's transposition. */
+data class DroneNote(val concertPitchClass: Int, val label: String, val notes: String?)
+
+/**
+ * Names the drone's [concertPitchClass] as the user reads it. Long tones and other tone work also say which notes to
+ * hold: the drone's own note, then its major scale.
+ */
+fun droneNote(concertPitchClass: Int, category: String, transposition: Transposition): DroneNote {
+  val concert = Key(concertPitchClass, minor = false).displayName
+  val written = Key(concertPitchClass, minor = false).writtenFor(transposition).displayName
+  val label = if (transposition == Transposition.C) "Drone on $concert" else "Drone on written $written (concert $concert)"
+  val notes = if (category == "Tone") "Start on $written, the drone's note, then hold each note of the $written major scale above it." else null
+  return DroneNote(concertPitchClass, label, notes)
+}
+
 /** The block being worked through in a running session. */
 sealed interface StepView {
   val minutes: Int
 
-  data class Exercise(val name: String, val category: String, val description: String, val tempoBpm: Int?, override val minutes: Int) : StepView
+  data class Exercise(
+    val name: String,
+    val category: String,
+    val description: String,
+    val tempoBpm: Int?,
+    override val minutes: Int,
+    /** What to play against the drone, for an exercise that uses one. */
+    val drone: DroneNote? = null,
+  ) : StepView
 
   data class Tune(val card: CardView, override val minutes: Int) : StepView
 
@@ -327,8 +353,13 @@ class PracticeViewModel(
   fun replace(index: Int, exerciseId: Long) {
     val plan = _ui.value.setup.plan ?: return
     val replaced = when (val block = plan.getOrNull(index)?.block) {
-      is PlanBlock.Exercise -> block.copy(exerciseId = exerciseId)
+      is PlanBlock.Exercise -> {
+        val droned = exercises[exerciseId]?.description?.let(::usesDrone) == true
+        block.copy(exerciseId = exerciseId, dronePitchClass = if (droned) block.dronePitchClass ?: Random.nextInt(12) else null)
+      }
+
       is PlanBlock.Tune -> block.copy(exerciseId = exerciseId)
+
       is PlanBlock.Solo, null -> return
     }
     _ui.update { it.copy(setup = it.setup.copy(plan = plan.toMutableList().also { p -> p[index] = planItem(replaced) })) }

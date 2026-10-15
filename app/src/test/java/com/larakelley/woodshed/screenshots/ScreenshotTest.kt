@@ -31,6 +31,7 @@ import com.larakelley.woodshed.ui.practice.SetupActions
 import com.larakelley.woodshed.ui.practice.SetupUi
 import com.larakelley.woodshed.ui.practice.StepView
 import com.larakelley.woodshed.ui.practice.TuneGroup
+import com.larakelley.woodshed.ui.practice.droneNote
 import com.larakelley.woodshed.ui.tools.DroneActions
 import com.larakelley.woodshed.ui.tools.DroneScreen
 import com.larakelley.woodshed.ui.tools.MetronomeActions
@@ -135,7 +136,14 @@ class ScreenshotTest(private val mode: String) {
     SessionScreen(
       PracticeUi(
         running = true,
-        step = StepView.Exercise("Long tones", "Tone", "Low to mid range, eight counts a note against a drone.", 60, 5),
+        step = StepView.Exercise(
+          "Long tones",
+          "Tone",
+          "Low to mid range, eight counts a note against a drone.",
+          60,
+          5,
+          droneNote(5, "Tone", Transposition.Eb),
+        ),
         stepIndex = 0,
         stepCount = 3,
         // Paused, so the block timer shows the same time on every run.

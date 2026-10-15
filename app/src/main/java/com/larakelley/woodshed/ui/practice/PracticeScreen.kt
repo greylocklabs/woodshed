@@ -401,6 +401,15 @@ fun SessionScreen(
           Text(step.name, style = MaterialTheme.typography.displaySmall, modifier = Modifier.testTag("step-title"))
           Text(step.category, style = MaterialTheme.typography.titleMedium)
           Text(step.description, style = MaterialTheme.typography.titleMedium)
+          step.drone?.let { drone ->
+            Text(
+              drone.label,
+              style = MaterialTheme.typography.titleMedium,
+              color = MaterialTheme.colorScheme.primary,
+              modifier = Modifier.testTag("step-drone"),
+            )
+            drone.notes?.let { Text(it, style = MaterialTheme.typography.titleMedium) }
+          }
           step.tempoBpm?.let { bpm ->
             StickerButton(onClick = { onUseTempo(bpm) }, sticker = neutralSticker, modifier = Modifier.height(44.dp).testTag("use-tempo")) {
               Text("⏱️ Metronome at $bpm bpm", style = MaterialTheme.typography.labelLarge)
@@ -441,8 +450,11 @@ fun SessionScreen(
       }
       OutlinedButton(onClick = { onSetBpm(bpm - 5) }, modifier = Modifier.testTag("session-slower")) { Text("-5") }
       OutlinedButton(onClick = { onSetBpm(bpm + 5) }, modifier = Modifier.testTag("session-faster")) { Text("+5") }
-      val tuneKey = (step as? StepView.Tune)?.card?.concertPitchClass
-      DroneButton(if (tuneKey != null) "🔊 Drone on the key" else "🔊 Drone", tuneKey)
+      when {
+        step is StepView.Tune && step.card.concertPitchClass != null -> DroneButton("🔊 Drone on the key", step.card.concertPitchClass)
+        step is StepView.Exercise && step.drone != null -> DroneButton("🔊 Drone", step.drone.concertPitchClass)
+        else -> DroneButton("🔊 Drone", null)
+      }
     }
     when (step) {
       is StepView.Exercise ->
