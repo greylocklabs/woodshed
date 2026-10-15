@@ -184,7 +184,7 @@ data class BrowseState(
 /** The key to show for a tune, written for the transposition. */
 fun keyLabel(key: Key?, tonality: Tonality?, transposition: Transposition): String {
   if (key == null) return tonality?.let { "${it.label}, key unknown" } ?: "Key unknown"
-  return if (transposition == Transposition.C) "Concert ${key.displayName}" else key.writtenFor(transposition).displayName
+  return key.writtenFor(transposition).displayName
 }
 
 fun tuneRows(

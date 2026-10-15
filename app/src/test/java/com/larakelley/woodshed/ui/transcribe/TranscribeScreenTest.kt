@@ -33,7 +33,7 @@ class TranscribeScreenTest {
   fun groupsByProgressAndNamesTheKeyForTheHorn() {
     val rows = listOf(SoloRow(solo, TranscriptionStateEntity(1, TranscriptionStatus.ACTIVE)), SoloRow(solo.copy(id = 2, slug = "t", title = "Donna Lee"), null))
     assertEquals(listOf("🎧 Transcribing", "Solos to try"), soloGroups(rows).map { it.first })
-    assertEquals("Concert Db", soloKey(solo, Transposition.C))
+    assertEquals("Db", soloKey(solo, Transposition.C))
     assertEquals("Bb (Concert Db)", soloKey(solo, Transposition.Eb))
   }
 

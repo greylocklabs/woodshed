@@ -47,7 +47,7 @@ data class CardView(
 fun cardView(card: Card, preview: Map<Grade, Long>, now: Long): CardView {
   val key = when {
     card.writtenKey == null -> "Key unknown"
-    card.transposition == Transposition.C -> "Concert ${card.writtenKey!!.displayName}"
+    card.transposition == Transposition.C -> card.writtenKey!!.displayName
     else -> "Written ${card.writtenKey!!.displayName}"
   }
   val shape = listOfNotNull(card.tune.form, card.tune.bars?.let { "$it bars" }, card.tune.style.takeIf { it != card.tune.form }).joinToString(", ")
