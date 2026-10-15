@@ -91,6 +91,28 @@ class SessionRunnerTest {
   }
 
   @Test
+  fun aStepCanGoBackToThePreviousBlock() {
+    val r = runner()
+    r.start(plan)
+    // Nothing comes before the first block.
+    r.previous()
+    assertEquals(0, r.state.value.stepIndex)
+    r.next()
+    clock += 60_000
+    r.previous()
+    assertEquals(0, r.state.value.stepIndex)
+    assertTrue(r.state.value.step is StepView.Exercise)
+    assertEquals(clock, r.state.value.stepStartedAt)
+    assertEquals(0, store.load()!!.index)
+    // From the end, back to the last block.
+    r.next()
+    r.next()
+    assertNull(r.state.value.step)
+    r.previous()
+    assertTrue(r.state.value.step is StepView.Tune)
+  }
+
+  @Test
   fun pausingStopsTheBlockClock() {
     val r = runner()
     r.start(plan)

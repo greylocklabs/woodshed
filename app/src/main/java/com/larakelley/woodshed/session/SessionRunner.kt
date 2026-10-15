@@ -109,6 +109,20 @@ class SessionRunner(
     show(_state.value.stepIndex + 1)
   }
 
+  /** Goes back to the block before this one, or from the end to the last block, skipping any that have gone. */
+  fun previous() = serially {
+    val s = _state.value
+    if (!s.running) return@serially
+    for (index in s.stepIndex - 1 downTo 0) {
+      card = null
+      solo = null
+      val step = view(blocks[index]) ?: continue
+      _state.value = s.copy(step = step, stepIndex = index, stepStartedAt = now(), pausedAt = null)
+      save()
+      return@serially
+    }
+  }
+
   /** Grades the current tune or solo block and moves on. A grade with nothing to grade, such as a second tap, does nothing. */
   fun grade(grade: Grade) = serially {
     val soloId = solo
