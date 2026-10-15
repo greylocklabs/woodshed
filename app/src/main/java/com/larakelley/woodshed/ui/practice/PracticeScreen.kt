@@ -118,7 +118,7 @@ private fun SessionSetup(ui: PracticeUi, actions: SetupActions) {
           }
         }
         Spacer(Modifier.height(16.dp))
-        Text("How long", style = MaterialTheme.typography.titleMedium)
+        Text("How long?", style = MaterialTheme.typography.titleMedium)
         FlowRow(Modifier.padding(vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
           LENGTHS.forEach { m ->
             CallieChip(selected = setup.minutes == m, onClick = { actions.setMinutes(m) }, label = { Text("$m min") }, modifier = Modifier.testTag("length-$m"))
