@@ -36,6 +36,18 @@ class BrowseModelTest {
   }
 
   @Test
+  fun exercisesFilterByDifficulty() {
+    val exercises = listOf(
+      exercise(1, "Long tones", emptyList()).copy(difficulty = 1),
+      exercise(2, "Altissimo", emptyList()).copy(difficulty = 5),
+      exercise(3, "Scales", emptyList()).copy(difficulty = 1),
+    )
+    assertEquals(listOf("Long tones", "Scales"), exerciseRows(exercises, ExerciseFilter(difficulty = 1)).map { it.name })
+    assertEquals(listOf("Altissimo"), exerciseRows(exercises, ExerciseFilter(difficulty = 5)).map { it.name })
+    assertEquals(3, exerciseRows(exercises, ExerciseFilter(difficulty = null)).size)
+  }
+
+  @Test
   fun exercisesFilterByInstrumentAndKeepUnscopedOnes() {
     val exercises = listOf(
       exercise(1, "Long tones", emptyList()),

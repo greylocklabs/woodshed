@@ -148,6 +148,8 @@ data class ExerciseFilter(
   val category: String? = null,
   /** Show only exercises that suit this instrument; null shows all. */
   val instrument: Instrument? = null,
+  /** Show only exercises at this difficulty, 1 to 5; null shows all. */
+  val difficulty: Int? = null,
   val sort: ExerciseSort = ExerciseSort.CATEGORY,
 )
 
@@ -277,6 +279,7 @@ fun exerciseRows(
   return exercises
     .filter { e -> if (chosen != null) chosen.suits(e.families, e.category) else mine.isEmpty() || mine.any { it.suits(e.families, e.category) } }
     .filter { filter.category == null || it.category == filter.category }
+    .filter { filter.difficulty == null || it.difficulty == filter.difficulty }
     .filter { matchesQuery(filter.query, it.name, it.description) }
     .sortedWith(
       when (filter.sort) {
