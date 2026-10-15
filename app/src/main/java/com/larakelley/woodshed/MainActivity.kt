@@ -148,6 +148,7 @@ class MainActivity : ComponentActivity() {
                       app.drone.start()
                     },
                     onStopDrone = app.drone::stop,
+                    onPrevious = practice::previous,
                   )
                 } else {
                   LaunchedEffect(Unit) { practice.refresh() }

@@ -355,6 +355,8 @@ class PracticeViewModel(
   /** Finishes an exercise block, or moves past a tune block without grading it. */
   fun next() = sessions.next()
 
+  fun previous() = sessions.previous()
+
   fun grade(grade: Grade) = sessions.grade(grade)
 
   fun pause() = sessions.pause()

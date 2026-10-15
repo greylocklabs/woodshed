@@ -331,6 +331,8 @@ fun SessionScreen(
   /** Starts the drone, on a concert pitch class when given and on its last note otherwise. */
   onDrone: (Int?) -> Unit = {},
   onStopDrone: () -> Unit = {},
+  /** Back to the previous block, for a Done tapped too early. */
+  onPrevious: () -> Unit = {},
 ) {
   @Composable
   fun DroneButton(label: String, pitchClass: Int?) {
@@ -367,6 +369,7 @@ fun SessionScreen(
   Column(Modifier.fillMaxSize()) {
     val step = ui.step
     Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+      if (ui.stepIndex > 0) TextButton(onClick = onPrevious, modifier = Modifier.testTag("step-previous")) { Text("‹ Back") }
       Text(if (step == null) "Done" else "${ui.stepIndex + 1} of ${ui.stepCount}", modifier = Modifier.weight(1f).padding(start = 8.dp))
       if (step != null) {
         StepTimer(ui.stepStartedAt, step.minutes, ui.pausedAt)

@@ -51,9 +51,9 @@ class PracticeScreenTest {
   private val tuneStep = StepView.Tune(card, minutes = 10)
 
   /** The step timer ticks forever, so a test clock that advances itself until idle would never stop. */
-  private fun session(ui: PracticeUi, onGrade: (Grade) -> Unit = {}, onNext: () -> Unit = {}, onUseTempo: (Int) -> Unit = {}) {
+  private fun session(ui: PracticeUi, onGrade: (Grade) -> Unit = {}, onNext: () -> Unit = {}, onUseTempo: (Int) -> Unit = {}, onPrevious: () -> Unit = {}) {
     compose.mainClock.autoAdvance = false
-    compose.setContent { SessionScreen(ui, onGrade = onGrade, onNext = onNext, onStop = {}, onUseTempo = onUseTempo) }
+    compose.setContent { SessionScreen(ui, onGrade = onGrade, onNext = onNext, onStop = {}, onUseTempo = onUseTempo, onPrevious = onPrevious) }
     compose.mainClock.advanceTimeByFrame()
   }
 
@@ -67,6 +67,20 @@ class PracticeScreenTest {
     compose.onNodeWithText("1 of 3").assertExists()
     compose.onNodeWithTag("grade-good").performClick()
     assertEquals(listOf(Grade.GOOD), graded)
+  }
+
+  @Test
+  fun backGoesToThePreviousStepPastTheFirst() {
+    var previous = 0
+    session(PracticeUi(running = true, step = tuneStep, stepIndex = 1, stepCount = 3), onPrevious = { previous++ })
+    compose.onNodeWithTag("step-previous").performClick()
+    assertEquals(1, previous)
+  }
+
+  @Test
+  fun theFirstStepHasNoBack() {
+    session(PracticeUi(running = true, step = tuneStep, stepCount = 3))
+    compose.onNodeWithTag("step-previous").assertDoesNotExist()
   }
 
   @Test
