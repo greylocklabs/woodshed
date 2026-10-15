@@ -466,6 +466,14 @@ private fun ExerciseFilters(state: BrowseState, onFilter: ((ExerciseFilter) -> E
       onFilter { it.copy(instrument = i) }
     }
     DropdownChip("Category", f.category ?: "Any", state.categories.map { it to it }, allowAny = true) { c -> onFilter { it.copy(category = c) } }
+    DropdownChip(
+      "Difficulty",
+      f.difficulty?.toString() ?: "Any",
+      (1..5).map {
+        it.toString() to it
+      },
+      allowAny = true,
+    ) { d -> onFilter { it.copy(difficulty = d) } }
     DropdownChip("Sort", f.sort.label, ExerciseSort.entries.map { it.label to it }) { o -> onFilter { it.copy(sort = o ?: ExerciseSort.CATEGORY) } }
   }
   Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
