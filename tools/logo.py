@@ -1,4 +1,4 @@
-"""Generates the Woodshed logo: assets/logo.svg and the Android launcher icon layers.
+"""Generates the Woodshed logo: assets/logo.svg, the website's copy and the Android launcher icon layers.
 
 One shape list feeds both outputs, so the SVG and the app icon cannot drift apart.
 Run from the repo root: python3 tools/logo.py
@@ -9,87 +9,88 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 RES = ROOT / "app/src/main/res/drawable"
 
-BARK = ("#c99269", "#8c5735")  # warm brown bark, lighter at the top
-CUT = ("#f7e4cb", "#e9c9a1")  # pale sawn wood
-KNOB_SHADE = ("#b87d55", "#7b4a2c")  # a little deeper than the bark, so the knob stands off the log
-LEAF = ("#a8dd8f", "#5faa6a")
-RIM, RING, STEM = "#6e4026", "#c69a6e", "#5faa6a"
-BACKGROUND = "#fbf3ea"
+# The palette of the Callie and Jot logos: matte pink lighter at the top, binding-ring plum and face ink.
+BODY = ("#f7aed0", "#d8639c")
+EDGE = "#a23f72"
+SIDING = "#f9c9de"
+SIDING_ALPHA = 0.85
+INK = "#3a1630"
+BACKGROUND = "#fbf5f8"
 
-# A brown log lying on its side, its cut end to the right, a leaf sprouting from the top and a knob, a
-# sawn-off branch, on its side pointing down toward the cut end.
-LOG = "M38 48 H96 V108 H38 Q8 108 8 78 Q8 48 38 48 Z"
-END = (96, 78)
-KNOB_END, KNOB_RIM, KNOB_CUT, KNOB_TILT = (62, 103), (10, 6), (7.8, 4.4), 32
+# A rounded shed raised on a plum edge, like the app's sticker buttons. Its siding is a five-line staff with
+# two beamed eighth notes on it.
+# The shed's outline with its y coordinates pulled out, so the edge beneath it is the same shape moved down.
+SHED_POINTS = "M58 {} Q64 {} 70 {} L104 {} Q108 {} 108 {} V{} Q108 {} 96 {} H32 Q20 {} 20 {} V{} Q20 {} 24 {} Z"
+SHED_YS = [29, 24, 29, 57, 60, 66, 98, 110, 110, 110, 98, 66, 60, 57]
+SHED = SHED_POINTS.format(*SHED_YS)
+EDGE_DROP = 6
+SIDING_YS = [70, 77, 84, 91, 98]
+SIDING_X = (20, 108)
+SIDING_WIDTH = 2.4
+# The gradient runs down the shed's bounds and a little to the right, as in Callie's and Jot's.
+GRADIENT = (20, 24, 46.4, 110)
 
-
-def _knob():
-    """The knob's body: from a rounded base up on the log to the rim of its cut end, leaning [KNOB_TILT]."""
-    t = math.radians(KNOB_TILT)
-    along, across = (math.sin(t), math.cos(t)), (math.cos(t), -math.sin(t))
-    rx = KNOB_RIM[0]
-
-    def at(point, v, k):
-        return round(point[0] + v[0] * k, 1), round(point[1] + v[1] * k, 1)
-
-    a, b = at(KNOB_END, across, rx), at(KNOB_END, across, -rx)
-    a0, b0 = at(a, along, -16), at(b, along, -16)
-    return f"M{b0[0]} {b0[1]} A{rx} {rx * 0.8} {-KNOB_TILT} 0 1 {a0[0]} {a0[1]} L{a[0]} {a[1]} L{b[0]} {b[1]} Z"
-
-
-KNOB = _knob()
-RIM_RADII, CUT_RADII = (23, 30), (19, 26)
-# Growth rings, kept faint so they read as texture rather than detail at icon size.
-RINGS = [(14, 19.5), (9, 12.5), (4, 5.5)]
-RING_ALPHA = 0.55
-STEM_PATH = "M58 49 Q57 41 62 36"
-LEAF_PATH = "M61 37 Q66 16 92 18 Q86 42 61 37 Z"
+HEADS = [(55, 87.5), (76, 80.5)]
+HEAD_RADII, HEAD_TILT = (6.4, 4.8), -20
+STEM_WIDTH, STEM_LENGTH = 3.4, 25.6
+BEAM = "M57.8 58.8 L82.2 50.7 L82.2 57.7 L57.8 65.8 Z"
 
 
-def ellipse(cx, cy, rx, ry, clockwise=False, tilt=0):
-    """Clockwise and counter-clockwise ellipses cancel under the nonzero fill rule, which cuts holes.
-    [tilt] rotates the ellipse by that many degrees."""
-    sweep = 1 if clockwise else 0
+def _stem_x(cx, cy):
+    """A stem sits flush with its head's rightmost point, so the two read as one shape."""
+    t = math.radians(HEAD_TILT)
+    rx, ry = HEAD_RADII
+    return round(cx + math.sqrt((rx * math.cos(t)) ** 2 + (ry * math.sin(t)) ** 2) - STEM_WIDTH, 1)
+
+
+def _stems():
+    """Each stem runs from inside its head up into the beam."""
+    out = []
+    for (cx, cy), top in zip(HEADS, (61, 54)):
+        x = _stem_x(cx, cy)
+        out.append(f"M{x} {top} H{round(x + STEM_WIDTH, 1)} V{round(top + STEM_LENGTH, 1)} H{x} Z")
+    return out
+
+
+STEMS = _stems()
+
+
+def edge():
+    """The shed again, dropped [EDGE_DROP] to show as the raised edge beneath it."""
+    return SHED_POINTS.format(*(y + EDGE_DROP for y in SHED_YS))
+
+
+def ellipse(cx, cy, rx, ry, tilt=0):
+    """A closed ellipse as path data, rotated by [tilt] degrees."""
     r = math.radians(tilt)
     x1, y1, x2, y2 = cx - rx * math.cos(r), cy - rx * math.sin(r), cx + rx * math.cos(r), cy + rx * math.sin(r)
-    return f"M{x1:.2f} {y1:.2f} A{rx} {ry} {tilt} 1 {sweep} {x2:.2f} {y2:.2f} A{rx} {ry} {tilt} 1 {sweep} {x1:.2f} {y1:.2f} Z"
+    return f"M{x1:.2f} {y1:.2f} A{rx} {ry} {tilt} 1 0 {x2:.2f} {y2:.2f} A{rx} {ry} {tilt} 1 0 {x1:.2f} {y1:.2f} Z"
 
 
-def hole(cx, cy, rx, ry):
-    """A counter-clockwise cut-out of an ellipse. Its left half lies over the log's body as well as the rim,
-    so that half is cut twice."""
-    near = f"M{cx} {cy - ry} A{rx} {ry} 0 0 0 {cx} {cy + ry} Z"
-    far = f"M{cx} {cy + ry} A{rx} {ry} 0 0 0 {cx} {cy - ry} Z"
-    return " ".join([near, near, far])
+NOTES = [ellipse(cx, cy, *HEAD_RADII, tilt=HEAD_TILT) for cx, cy in HEADS] + STEMS + [BEAM]
+SIDING_PATHS = [f"M{SIDING_X[0]} {y} H{SIDING_X[1]}" for y in SIDING_YS]
 
 
 def svg():
-    def grad(id_, stops, x2, y2="1"):
-        return (f'<linearGradient id="{id_}" x1="0" y1="0" x2="{x2}" y2="{y2}">'
-                f'<stop offset="0" stop-color="{stops[0]}"/><stop offset="1" stop-color="{stops[1]}"/></linearGradient>')
-    (cx, cy) = END
+    x1, y1, x2, y2 = GRADIENT
     parts = [
         '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img" aria-labelledby="t">',
         '  <title id="t">Woodshed</title>',
-        f'  <defs>{grad("bark", BARK, "0")}{grad("knob", KNOB_SHADE, "0")}{grad("cut", CUT, "0.4")}{grad("leaf", LEAF, "1")}</defs>',
-        "  <!-- a brown log on its side: cut end to the right, a leaf on top, a sawn-off knob on its side -->",
-        f'  <path d="{LOG}" fill="url(#bark)"/>',
-        f'  <path d="{KNOB}" fill="url(#knob)"/>',
-        f'  <path d="{ellipse(*KNOB_END, *KNOB_RIM, tilt=-KNOB_TILT)}" fill="{RIM}"/>',
-        f'  <path d="{ellipse(*KNOB_END, *KNOB_CUT, tilt=-KNOB_TILT)}" fill="url(#cut)"/>',
-        f'  <ellipse cx="{cx}" cy="{cy}" rx="{RIM_RADII[0]}" ry="{RIM_RADII[1]}" fill="{RIM}"/>',
-        f'  <ellipse cx="{cx}" cy="{cy}" rx="{CUT_RADII[0]}" ry="{CUT_RADII[1]}" fill="url(#cut)"/>',
-        f'  <g fill="none" stroke="{RING}" stroke-width="2" opacity="{RING_ALPHA}">'
-        + "".join(f'<ellipse cx="{cx}" cy="{cy}" rx="{rx}" ry="{ry}"/>' for rx, ry in RINGS) + "</g>",
-        f'  <path d="{STEM_PATH}" fill="none" stroke="{STEM}" stroke-width="4" stroke-linecap="round"/>',
-        f'  <path d="{LEAF_PATH}" fill="url(#leaf)"/>',
+        f'  <defs><linearGradient id="body" gradientUnits="userSpaceOnUse" x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}">'
+        f'<stop offset="0" stop-color="{BODY[0]}"/><stop offset="1" stop-color="{BODY[1]}"/></linearGradient></defs>',
+        "  <!-- a pink shed raised on a plum edge, its siding a staff with two beamed eighth notes -->",
+        f'  <path d="{edge()}" fill="{EDGE}"/>',
+        f'  <path d="{SHED}" fill="url(#body)"/>',
+        f'  <g stroke="{SIDING}" stroke-width="{SIDING_WIDTH}" opacity="{SIDING_ALPHA}">'
+        + "".join(f'<path d="{d}"/>' for d in SIDING_PATHS) + "</g>",
+        f'  <g fill="{INK}">' + "".join(f'<path d="{d}"/>' for d in NOTES) + "</g>",
         "</svg>",
     ]
     return "\n".join(parts) + "\n"
 
 
-# The drawing spans x 8-119 and y 18-111 of its 128 units, centred on (63.5, 64.1).
-CENTER = (63.5, 64.1)
+# The drawing spans x 20-108 and y 24-116 of its 128 units.
+CENTER = (64, 70)
 
 
 def group(scale):
@@ -98,10 +99,11 @@ def group(scale):
     return f'<group android:translateX="{tx:.2f}" android:translateY="{ty:.2f}" android:scaleX="{scale}" android:scaleY="{scale}">'
 
 
-# Color: 72 of 108 units, inside the visible circle. Themed icons draw the monochrome layer alone, so its
-# glyph is kept to about 48 units, as launchers expect, or it looks oversized beside other themed icons.
+# Color: about 50 of 108 units, so the shed's corners stay inside the visible circle. Themed icons draw the
+# monochrome layer alone, so its glyph is kept to about 40 units, as launchers expect, or it looks oversized
+# beside other themed icons.
 GROUP = group(0.5625)
-MONO_GROUP = group(0.42)
+MONO_GROUP = group(0.44)
 HEAD = ('<?xml version="1.0" encoding="utf-8"?>\n<!-- Generated by tools/logo.py; edit that instead. -->\n'
         '<vector xmlns:android="http://schemas.android.com/apk/res/android" xmlns:aapt="http://schemas.android.com/aapt"\n'
         '    android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">\n')
@@ -110,12 +112,12 @@ LOGO_HEAD = HEAD.replace('android:width="108dp" android:height="108dp" android:v
                          'android:width="128dp" android:height="128dp" android:viewportWidth="128" android:viewportHeight="128"')
 
 
-def vd_path(d, fill=None, gradient=None, stroke=None, width=None, alpha=None):
+def vd_path(d, fill=None, gradient=None, stroke=None, width=None, alpha=None, cap="butt"):
     attrs = [f'android:pathData="{d}"']
     if fill:
         attrs.append(f'android:fillColor="{fill}"')
     if stroke:
-        attrs += [f'android:strokeColor="{stroke}"', f'android:strokeWidth="{width}"', 'android:strokeLineCap="round"']
+        attrs += [f'android:strokeColor="{stroke}"', f'android:strokeWidth="{width}"', f'android:strokeLineCap="{cap}"']
         if alpha is not None:
             attrs.append(f'android:strokeAlpha="{alpha}"')
     body = ""
@@ -127,41 +129,31 @@ def vd_path(d, fill=None, gradient=None, stroke=None, width=None, alpha=None):
 
 
 def foreground(head=HEAD, group=GROUP):
-    (cx, cy) = END
     out = head + group + "\n"
-    kx, ky = KNOB_END
-    out += vd_path(LOG, gradient=(BARK, (0, 48, 0, 108)))
-    out += vd_path(KNOB, gradient=(KNOB_SHADE, (0, 84, 0, 109)))
-    out += vd_path(ellipse(kx, ky, *KNOB_RIM, tilt=-KNOB_TILT), fill=RIM)
-    out += vd_path(ellipse(kx, ky, *KNOB_CUT, tilt=-KNOB_TILT), gradient=(CUT, (kx - 4, ky - 4, kx + 4, ky + 4)))
-    out += vd_path(ellipse(cx, cy, *RIM_RADII), fill=RIM)
-    out += vd_path(ellipse(cx, cy, *CUT_RADII), gradient=(CUT, (cx - 19, cy - 26, cx - 4, cy + 26)))
-    out += "".join(vd_path(ellipse(cx, cy, rx, ry), stroke=RING, width=2, alpha=RING_ALPHA) for rx, ry in RINGS)
-    out += vd_path(STEM_PATH, stroke=STEM, width=4)
-    out += vd_path(LEAF_PATH, gradient=(LEAF, (61, 16, 92, 42)))
+    out += vd_path(edge(), fill=EDGE)
+    out += vd_path(SHED, gradient=(BODY, GRADIENT))
+    out += "".join(vd_path(d, stroke=SIDING, width=SIDING_WIDTH, alpha=SIDING_ALPHA) for d in SIDING_PATHS)
+    out += "".join(vd_path(d, fill=INK) for d in NOTES)
     return out + "</group>\n</vector>\n"
+
+
+def glyph():
+    """Themed and notification icons tint one silhouette, so the shed is drawn as an outline with the notes
+    inside it; a filled shed would hide them. The edge and siding are left out."""
+    out = f'  <path android:pathData="{SHED}" android:strokeColor="#000000" android:strokeWidth="8" android:strokeLineJoin="round"/>\n'
+    return out + "".join(vd_path(d, fill="#000000") for d in NOTES)
 
 
 def monochrome():
-    """Themed icons tint one silhouette. The cut end is a hole, leaving the bark rim and a heart dot, so the
-    shape still reads as a log rather than a fruit. The knob sits inside the outline, so it is left out."""
-    (cx, cy) = END
-    solid = " ".join([
-        LOG, ellipse(cx, cy, *RIM_RADII, clockwise=True), hole(cx, cy, *CUT_RADII), ellipse(cx, cy, 6, 8, clockwise=True),
-    ])
-    out = HEAD + MONO_GROUP + "\n"
-    out += vd_path(solid, fill="#000000")
-    out += vd_path(STEM_PATH, stroke="#000000", width=4) + vd_path(LEAF_PATH, fill="#000000")
-    return out + "</group>\n</vector>\n"
+    return HEAD + MONO_GROUP + "\n" + glyph() + "</group>\n</vector>\n"
 
 
 def notification():
-    """The status bar draws small icons as a white silhouette at 24dp, so this is the monochrome glyph with the
-    log's own bounds (x 8-119, y 16-108) filling the frame."""
-    mono = monochrome().split("\n", 5)[5]
+    """The status bar draws small icons as a white silhouette at 24dp, so the glyph's outline (x 16-112, y 20-114
+    with its stroke) fills a 100-unit frame."""
     head = HEAD.replace('android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108"',
-                        'android:width="24dp" android:height="24dp" android:viewportWidth="116" android:viewportHeight="116"')
-    return head + '<group android:translateX="-5.5" android:translateY="-4">\n' + mono
+                        'android:width="24dp" android:height="24dp" android:viewportWidth="100" android:viewportHeight="100"')
+    return head + '<group android:translateX="-14" android:translateY="-17">\n' + glyph() + "</group>\n</vector>\n"
 
 
 def background():
@@ -171,9 +163,10 @@ def background():
 if __name__ == "__main__":
     (ROOT / "assets").mkdir(exist_ok=True)
     (ROOT / "assets/logo.svg").write_text(svg())
+    (ROOT / "www/logo.svg").write_text(svg())
     (RES / "ic_launcher_foreground.xml").write_text(foreground())
     (RES / "ic_launcher_monochrome.xml").write_text(monochrome())
     (RES / "ic_launcher_background.xml").write_text(background())
     (RES / "logo.xml").write_text(foreground(LOGO_HEAD, "<group>"))
     (RES / "ic_notification.xml").write_text(notification())
-    print("wrote assets/logo.svg, the launcher icon layers, the notification icon and the in-app logo")
+    print("wrote assets/logo.svg, www/logo.svg, the launcher icon layers, the notification icon and the in-app logo")
