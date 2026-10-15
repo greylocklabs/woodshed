@@ -23,7 +23,6 @@ picker, so it can live in Google Drive, Dropbox or local storage.
 | `data/standards.json` | 2,522 tunes: every title in the Hal Leonard Real Books 1-6 and Real Dixieland Book, with composer, year, bars, meter, form, style, key where known |
 | `data/exercises.json` | 61 instrument-scoped practice exercises |
 | `app/` | The Android app (Kotlin, Compose, Room); `data/` ships as its assets |
-| `tools/cards.py` | Prints random tune x exercise x written-key cards for an instrument |
 | `tools/logo.py` | Generates `assets/logo.svg` and the app's launcher icon from one shape list |
 
 ## Credit
@@ -58,7 +57,7 @@ make record-screenshots  # rewrites the screenshots after a deliberate design ch
 make e2e                 # end-to-end tests on an emulator Gradle downloads (*)
 make format              # formats Kotlin with ktlint
 make lint                # formatting, Android lint (any warning fails) and the changelog
-make check               # CI's lint and test jobs, including the card tests in tools/
+make check               # CI's lint, test and worker jobs
 ```
 
 `make help` lists every task; each wraps a Gradle command you can also run directly. Debug builds install as
@@ -126,16 +125,6 @@ WOODSHED_KEYSTORE=/path/to/release.p12 WOODSHED_KEYSTORE_PASSWORD=... ./gradlew 
 
 Keep a backup of the keystore and its password somewhere safe, such as a password manager. Without them, no
 later release can update an installed copy.
-
-## Trying the cards
-
-```
-python3 tools/cards.py -i tenor-sax -n 20 --detail
-python3 -m unittest discover tools
-```
-
-Instruments are named like `alto-sax`, `trumpet`, `alto-flute`; `--help` lists
-them. `--seed` repeats a draw and `--style Ballad` narrows the tunes.
 
 ## The earlier web version
 
