@@ -6,6 +6,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.assertIsSelected
+import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
@@ -151,9 +152,22 @@ class PracticeScreenTest {
 
     compose.onNodeWithTag("needs-instrument").assertExists()
     compose.onNodeWithTag("build-plan").assertDoesNotExist()
-    compose.onNodeWithTag("instrument-flute").performClick()
+    // With every instrument on offer, they come in a dropdown.
+    compose.onNodeWithTag("chip-Instrument").performClick()
+    compose.onNodeWithText("Flute").performClick()
     assertEquals(listOf(Instrument.FLUTE), picked)
     compose.onNodeWithTag("build-plan").assertExists()
+    compose.onNodeWithTag("chip-Instrument").assertTextContains("Flute", substring = true)
+  }
+
+  @Test
+  fun aFewInstrumentsShowAsChips() {
+    val picked = mutableListOf<Instrument>()
+    val few = listOf(Instrument.ALTO_SAX, Instrument.TENOR_SAX, Instrument.FLUTE)
+    compose.setContent { PracticeHome(PracticeUi(setup = SetupUi(instruments = few)), SetupActions(setInstrument = { picked += it })) }
+    compose.onNodeWithTag("chip-Instrument").assertDoesNotExist()
+    compose.onNodeWithTag("instrument-tenor_sax").performClick()
+    assertEquals(listOf(Instrument.TENOR_SAX), picked)
   }
 
   @Test
