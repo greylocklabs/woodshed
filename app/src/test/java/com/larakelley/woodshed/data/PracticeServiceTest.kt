@@ -73,6 +73,18 @@ class PracticeServiceTest {
   }
 
   @Test
+  fun planGivesEachDroneExerciseANoteAndOthersNone() = runTest {
+    val exercises = db.exercises().all().associateBy { it.id }
+    val blocks = (1..10).flatMap { practice.plan(60, setOf(Focus.TONE), emptyList(), Instrument.ALTO_SAX, null) }.filterIsInstance<PlanBlock.Exercise>()
+    assertTrue(blocks.any { it.dronePitchClass != null })
+    blocks.forEach { b ->
+      val droned = exercises.getValue(b.exerciseId).description.contains("drone", ignoreCase = true)
+      assertEquals(droned, b.dronePitchClass != null)
+      b.dronePitchClass?.let { assertTrue(it in 0..11) }
+    }
+  }
+
+  @Test
   fun planPairsEachChosenTuneWithATuneExercise() = runTest {
     val tunes = listOf(id("autumn-leaves"), id("solar"))
     val plan = practice.plan(45, setOf(Focus.ARTICULATION), tunes, Instrument.ALTO_SAX)

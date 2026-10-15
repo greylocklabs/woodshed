@@ -26,7 +26,12 @@ sealed interface PlanBlock {
 
   @Serializable
   @SerialName("exercise")
-  data class Exercise(val exerciseId: Long, override val minutes: Int) : PlanBlock
+  data class Exercise(
+    val exerciseId: Long,
+    override val minutes: Int,
+    /** The concert pitch class of the drone, for an exercise played against one. */
+    val dronePitchClass: Int? = null,
+  ) : PlanBlock
 
   /** A tune worked through one tune exercise. */
   @Serializable
@@ -40,6 +45,9 @@ sealed interface PlanBlock {
 }
 
 const val MIN_BLOCK_MINUTES = 3
+
+/** Whether an exercise is played against a drone, which its instructions say. */
+fun usesDrone(description: String): Boolean = description.contains("drone", ignoreCase = true)
 
 /** Warm-ups stay easy; harder tone work belongs with the Tone focus. */
 const val MAX_WARMUP_DIFFICULTY = 2

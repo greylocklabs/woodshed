@@ -29,6 +29,7 @@ import com.larakelley.woodshed.domain.concertKeyFor
 import com.larakelley.woodshed.domain.pickExercise
 import com.larakelley.woodshed.domain.planSession
 import com.larakelley.woodshed.domain.soloMinutes
+import com.larakelley.woodshed.domain.usesDrone
 import com.larakelley.woodshed.domain.withSolo
 import java.time.Instant
 import java.time.ZoneId
@@ -152,7 +153,10 @@ class PracticeService(
       tuneExercise = { id -> tuneExercises.takeIf { it.isNotEmpty() }?.let { pickExercise(it, { e -> e.id }, history.getValue(id), random).id } },
       random = random,
     )
-    return if (solo != null && forSolo > 0) withSolo(blocks, PlanBlock.Solo(solo.id, forSolo)) else blocks
+    // Each drone exercise gets its note now, so the plan, the session and a restored session all agree on it.
+    val droned = exercises.filter { usesDrone(it.description) }.map { it.id }.toSet()
+    val withDrones = blocks.map { if (it is PlanBlock.Exercise && it.exerciseId in droned) it.copy(dronePitchClass = random.nextInt(12)) else it }
+    return if (solo != null && forSolo > 0) withSolo(withDrones, PlanBlock.Solo(solo.id, forSolo)) else withDrones
   }
 
   /** The solo being transcribed that is most due, if any. */

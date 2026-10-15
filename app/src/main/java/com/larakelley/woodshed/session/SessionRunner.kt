@@ -12,6 +12,7 @@ import com.larakelley.woodshed.domain.PlanBlock
 import com.larakelley.woodshed.domain.delayLabel
 import com.larakelley.woodshed.ui.practice.StepView
 import com.larakelley.woodshed.ui.practice.cardView
+import com.larakelley.woodshed.ui.practice.droneNote
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -180,7 +181,10 @@ class SessionRunner(
     is PlanBlock.Exercise ->
       repository.exercises.first().firstOrNull {
         it.id == block.exerciseId
-      }?.let { StepView.Exercise(it.name, it.category, it.description, it.tempoBpm, block.minutes) }
+      }?.let { e ->
+        val drone = block.dronePitchClass?.let { droneNote(it, e.category, repository.transposition.value) }
+        StepView.Exercise(e.name, e.category, e.description, e.tempoBpm, block.minutes, drone)
+      }
 
     is PlanBlock.Tune -> practice.cardForBlock(block, repository.transposition.value)?.let { c ->
       card = c
