@@ -15,6 +15,7 @@ import com.larakelley.woodshed.data.PlaylistService
 import com.larakelley.woodshed.data.PracticeService
 import com.larakelley.woodshed.data.TranscriptionService
 import com.larakelley.woodshed.data.TuneLibrary
+import com.larakelley.woodshed.data.WhatsNew
 import com.larakelley.woodshed.data.WoodshedRepository
 import com.larakelley.woodshed.data.db.WoodshedDatabase
 import com.larakelley.woodshed.session.SessionNotifications
@@ -55,6 +56,8 @@ class WoodshedApplication : Application() {
   val media: MediaService by lazy { MediaService(database) }
 
   val transcriptions: TranscriptionService by lazy { TranscriptionService(database) }
+
+  val whatsNew: WhatsNew by lazy { WhatsNew(prefs) { assets.open("CHANGELOG.md").bufferedReader().use { it.readText() } } }
 
   private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
   private val mainScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
