@@ -18,9 +18,11 @@ import com.larakelley.woodshed.domain.Grade
 import com.larakelley.woodshed.domain.Instrument
 import com.larakelley.woodshed.domain.Key
 import com.larakelley.woodshed.domain.Lifecycle
+import com.larakelley.woodshed.domain.MAX_WARMUP_DIFFICULTY
 import com.larakelley.woodshed.domain.PlanBlock
 import com.larakelley.woodshed.domain.Transposition
 import com.larakelley.woodshed.domain.delayLabel
+import com.larakelley.woodshed.domain.fill
 import com.larakelley.woodshed.domain.titleSortKey
 import com.larakelley.woodshed.domain.usesDrone
 import com.larakelley.woodshed.session.SessionRunner
@@ -365,9 +367,15 @@ class PracticeViewModel(
     _ui.update { it.copy(setup = it.setup.copy(plan = plan.toMutableList().also { p -> p[index] = planItem(replaced) })) }
   }
 
+  /** Drops a block and shares its minutes among the rest, so the plan still fills the session's length. */
   fun removeBlock(index: Int) {
-    val plan = _ui.value.setup.plan ?: return
-    _ui.update { it.copy(setup = it.setup.copy(plan = plan.filterIndexed { i, _ -> i != index })) }
+    val setup = _ui.value.setup
+    val plan = setup.plan ?: return
+    val kept = plan.filterIndexed { i, _ -> i != index }
+    val first = (kept.firstOrNull()?.block as? PlanBlock.Exercise)?.let { exercises[it.exerciseId] }
+    val warmup = first != null && first.category in Focus.TONE.categories && first.difficulty <= MAX_WARMUP_DIFFICULTY
+    val filled = fill(kept.map { it.block }, setup.minutes, keepFirst = warmup)
+    _ui.update { it.copy(setup = it.setup.copy(plan = filled.map(::planItem))) }
   }
 
   private fun fitsFamily(e: ExerciseEntity): Boolean = _ui.value.setup.instrument?.suits(e.families, e.category) ?: true

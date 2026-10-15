@@ -120,15 +120,25 @@ fun planSession(
     val minutes = left / tuneCount + if (i < left % tuneCount) 1 else 0
     tuneExercise(id)?.let { blocks += PlanBlock.Tune(id, it, minutes) }
   }
-  if (tuneCount > 0) left = 0
 
-  // Minutes no block took, such as when the exercises run out with no tunes picked, are shared out a minute at a
-  // time so the plan fills the session. The warm-up keeps its length unless it is all there is.
-  val stretchable = blocks.indices.drop(if (warmedUp && blocks.size > 1) 1 else 0)
+  // Minutes no block took, such as when the exercises run out with no tunes picked, are shared out so the plan fills
+  // the session.
+  return fill(blocks, totalMinutes, keepFirst = warmedUp)
+}
+
+/**
+ * Shares the minutes [blocks] fall short of [totalMinutes] out a minute at a time, so a plan fills its session. A
+ * solo keeps its share, and so does a warm-up at the start when [keepFirst], unless nothing else can take the time.
+ */
+fun fill(blocks: List<PlanBlock>, totalMinutes: Int, keepFirst: Boolean): List<PlanBlock> {
+  var left = totalMinutes - blocks.sumOf { it.minutes }
+  val fixed = blocks.indices.filter { blocks[it] is PlanBlock.Solo || (keepFirst && it == 0) }.toSet()
+  val stretchable = blocks.indices.filter { it !in fixed }.ifEmpty { blocks.indices.toList() }
+  val out = blocks.toMutableList()
   var i = 0
   while (left > 0 && stretchable.isNotEmpty()) {
     val at = stretchable[i % stretchable.size]
-    blocks[at] = when (val b = blocks[at]) {
+    out[at] = when (val b = out[at]) {
       is PlanBlock.Exercise -> b.copy(minutes = b.minutes + 1)
       is PlanBlock.Tune -> b.copy(minutes = b.minutes + 1)
       is PlanBlock.Solo -> b.copy(minutes = b.minutes + 1)
@@ -136,5 +146,5 @@ fun planSession(
     left--
     i++
   }
-  return blocks
+  return out
 }

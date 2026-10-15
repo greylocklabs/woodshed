@@ -155,4 +155,18 @@ class PracticeViewModelTest {
     vm.pickSolo(null)
     assertTrue(vm.replacements(99).isEmpty())
   }
+
+  @Test
+  fun droppingBlocksKeepsThePlanAtTheSessionLength() = runTest {
+    practice.startLearning(id("solar"))
+    val vm = PracticeViewModel(repository, practice, sessions)
+    vm.setInstrument(Instrument.ALTO_SAX)
+    vm.setMinutes(30)
+    vm.buildPlan()
+    assertEquals(30, vm.ui.value.setup.plan!!.sumOf { it.block.minutes })
+    vm.removeBlock(1)
+    vm.removeBlock(1)
+    val plan = vm.ui.value.setup.plan!!
+    assertEquals(30, plan.sumOf { it.block.minutes })
+  }
 }
