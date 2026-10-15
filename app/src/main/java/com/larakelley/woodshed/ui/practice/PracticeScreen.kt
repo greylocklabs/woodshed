@@ -8,6 +8,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -83,6 +84,9 @@ data class SetupActions(
 
 private val LENGTHS = listOf(15, 30, 45, 60)
 
+/** Past this many instruments, chips wrap into a wall; a dropdown keeps the setup short. */
+private const val MAX_INSTRUMENT_CHIPS = 5
+
 /** The Practice tab when no session is running: set one up, then review its plan. */
 @Composable
 fun PracticeHome(ui: PracticeUi, actions: SetupActions) {
@@ -107,14 +111,20 @@ private fun SessionSetup(ui: PracticeUi, actions: SetupActions) {
           },
           style = MaterialTheme.typography.bodySmall,
         )
-        FlowRow(Modifier.padding(vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-          setup.instruments.forEach { i ->
-            CallieChip(
-              selected = setup.instrument == i,
-              onClick = { actions.setInstrument(i) },
-              label = { Text(i.label) },
-              modifier = Modifier.testTag("instrument-${i.name.lowercase()}"),
-            )
+        if (setup.instruments.size > MAX_INSTRUMENT_CHIPS) {
+          Box(Modifier.padding(vertical = 4.dp)) {
+            DropdownChip("Instrument", setup.instrument?.label ?: "Choose", setup.instruments.map { it.label to it }) { i -> i?.let(actions.setInstrument) }
+          }
+        } else {
+          FlowRow(Modifier.padding(vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            setup.instruments.forEach { i ->
+              CallieChip(
+                selected = setup.instrument == i,
+                onClick = { actions.setInstrument(i) },
+                label = { Text(i.label) },
+                modifier = Modifier.testTag("instrument-${i.name.lowercase()}"),
+              )
+            }
           }
         }
         Spacer(Modifier.height(16.dp))
