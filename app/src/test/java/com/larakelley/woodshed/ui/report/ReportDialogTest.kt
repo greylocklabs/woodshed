@@ -58,6 +58,20 @@ class ReportDialogTest {
   }
 
   @Test
+  fun anAppReportNeedsADescription() {
+    compose.setContent {
+      CompositionLocalProvider(LocalAppVersion provides "1.0") { ReportButton(ReportSubject.APP) }
+    }
+    compose.onNodeWithTag("report").performClick()
+    compose.onNodeWithTag("problem-Something is broken").performClick()
+    compose.onNodeWithTag("send-report").assertIsNotEnabled()
+    compose.onNodeWithTag("report-note").performTextInput("   ")
+    compose.onNodeWithTag("send-report").assertIsNotEnabled()
+    compose.onNodeWithTag("report-note").performTextInput("The tuner freezes")
+    compose.onNodeWithTag("send-report").assertIsEnabled()
+  }
+
+  @Test
   fun sendingFilesTheReportAndSaysWhere() {
     val sent = mutableListOf<Report>()
     val sender = ReportSender { report, appVersion, _ ->
@@ -93,6 +107,7 @@ class ReportDialogTest {
     }
     compose.onNodeWithTag("report").performClick()
     compose.onNodeWithTag("problem-An idea").performClick()
+    compose.onNodeWithTag("report-note").performTextInput("More drones")
     compose.onNodeWithTag("send-report").performClick()
     compose.onNodeWithTag("report-failed").assertTextContains("Couldn't reach", substring = true)
     compose.onNodeWithTag("send-report").assertTextEquals("Try again").performClick()
@@ -113,6 +128,7 @@ class ReportDialogTest {
     }
     compose.onNodeWithTag("report").performClick()
     compose.onNodeWithTag("problem-An idea").performClick()
+    compose.onNodeWithTag("report-note").performTextInput("More drones")
     compose.onNodeWithTag("send-report").performClick()
     compose.onNodeWithTag("report-filed").assertExists()
 

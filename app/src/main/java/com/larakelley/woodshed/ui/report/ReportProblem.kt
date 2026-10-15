@@ -77,7 +77,9 @@ fun ReportDialog(subject: ReportSubject, item: String?, id: String?, details: Li
   // Kept across rotation, so the thanks stays up instead of reopening a form that would file the report again.
   var filed by rememberSaveable(stateSaver = jsonSaver()) { mutableStateOf<FiledReport?>(null) }
   var failure by rememberSaveable { mutableStateOf<String?>(null) }
-  val report = problem?.let { Report(subject, it, item, id, details, note.trim()) }
+  // A tune or exercise report has the item's details to go on; one about the app has only what the user writes.
+  val noteRequired = subject == ReportSubject.APP
+  val report = problem?.takeIf { !noteRequired || note.isNotBlank() }?.let { Report(subject, it, item, id, details, note.trim()) }
   val openOnGitHub = {
     report?.let { uris.openUri(it.issueUrl(version, android)) }
     onDismiss()
@@ -112,7 +114,7 @@ fun ReportDialog(subject: ReportSubject, item: String?, id: String?, details: Li
         OutlinedTextField(
           value = note,
           onValueChange = { note = it.take(Report.MAX_NOTE) },
-          label = { Text("What should it be? (optional)") },
+          label = { Text(if (noteRequired) "What happened, or what's your idea?" else "What should it be? (optional)") },
           supportingText = { if (note.length > Report.MAX_NOTE * 3 / 4) Text("${note.length} / ${Report.MAX_NOTE}") },
           modifier = Modifier.fillMaxWidth().padding(top = 8.dp).testTag("report-note"),
         )
