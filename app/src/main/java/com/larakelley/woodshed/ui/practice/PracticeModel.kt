@@ -300,23 +300,38 @@ class PracticeViewModel(
     }
   }
 
-  /** Replaces a block's exercise with another of the same kind that is not already in the plan, if there is one. */
-  fun swap(index: Int) {
-    val plan = _ui.value.setup.plan ?: return
-    val block = plan.getOrNull(index)?.block ?: return
+  /** Exercises that could stand in for a block's: the same kind, suited to the instrument, and not already planned. */
+  fun replacements(index: Int): List<ExerciseRow> {
+    val plan = _ui.value.setup.plan ?: return emptyList()
+    val block = plan.getOrNull(index)?.block ?: return emptyList()
     val inPlan = plan.map { it.block }.filterIsInstance<PlanBlock.Exercise>().map { it.exerciseId }.toSet()
     val usable = exercises.values.filter { it.archivedAt == null && fitsFamily(it) }
-    val swapped = when (block) {
+    return when (block) {
       is PlanBlock.Exercise -> {
         val category = exercises[block.exerciseId]?.category
-        usable.filter { it.category == category && !it.appliesToTune && it.id !in inPlan }.randomOrNull()?.let { block.copy(exerciseId = it.id) }
+        usable.filter { it.category == category && !it.appliesToTune && it.id !in inPlan }
       }
 
-      is PlanBlock.Tune -> usable.filter { it.appliesToTune && it.id != block.exerciseId }.randomOrNull()?.let { block.copy(exerciseId = it.id) }
+      is PlanBlock.Tune -> usable.filter { it.appliesToTune && it.id != block.exerciseId }
 
-      is PlanBlock.Solo -> null
-    } ?: return
-    _ui.update { it.copy(setup = it.setup.copy(plan = plan.toMutableList().also { p -> p[index] = planItem(swapped) })) }
+      is PlanBlock.Solo -> emptyList()
+    }.sortedBy { it.name.lowercase() }.map(::exerciseRow)
+  }
+
+  /** Replaces a block's exercise with a random one of [replacements], if there is one. */
+  fun shuffle(index: Int) {
+    replacements(index).randomOrNull()?.let { replace(index, it.id) }
+  }
+
+  /** Replaces a block's exercise with [exerciseId], keeping its length. */
+  fun replace(index: Int, exerciseId: Long) {
+    val plan = _ui.value.setup.plan ?: return
+    val replaced = when (val block = plan.getOrNull(index)?.block) {
+      is PlanBlock.Exercise -> block.copy(exerciseId = exerciseId)
+      is PlanBlock.Tune -> block.copy(exerciseId = exerciseId)
+      is PlanBlock.Solo, null -> return
+    }
+    _ui.update { it.copy(setup = it.setup.copy(plan = plan.toMutableList().also { p -> p[index] = planItem(replaced) })) }
   }
 
   fun removeBlock(index: Int) {
