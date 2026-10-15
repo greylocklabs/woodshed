@@ -42,7 +42,6 @@ All The Things You Are  ·  changes without the melody  ·  written F
 `applies_to_tune` marks the 8 exercises that take a tune: the `Standards`,
 `Improvisation` and `Transcription` procedures plus one `Ear Training` drill.
 Across 2,522 tunes that is about twenty thousand distinct cards per instrument.
-`tools/cards.py` prints a random draw of them for trying the idea on paper.
 
 **The gap that stays open.** The vocabulary deck has no content and cannot be
 composed. Licks and ii-V-I lines are the one place where the card *is* the

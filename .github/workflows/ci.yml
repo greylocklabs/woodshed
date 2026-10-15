@@ -56,15 +56,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
-      - name: Setup Python
-        uses: actions/setup-python@v7
-        with:
-          python-version: "3.13"
-
-      - name: Card prototype tests
-        working-directory: tools
-        run: python -m unittest -v test_cards
-
       - name: Setup Java
         if: hashFiles('gradlew') != ''
         uses: actions/setup-java@v6
