@@ -71,6 +71,7 @@ import com.larakelley.woodshed.theme.StickerButton
 import com.larakelley.woodshed.theme.SwitchRow
 import com.larakelley.woodshed.theme.neutralSticker
 import com.larakelley.woodshed.ui.browse.DEFAULT_TABS
+import com.larakelley.woodshed.ui.browse.DropdownChip
 import com.larakelley.woodshed.ui.browse.TAB_EMOJI
 import com.larakelley.woodshed.ui.browse.moveTab
 import com.larakelley.woodshed.ui.browse.orderTabs
@@ -191,6 +192,9 @@ enum class SettingsTab(val label: String) {
   ABOUT("About"),
 }
 
+/** Past this many instruments, the default is picked from a dropdown rather than a row of pills. */
+private const val MAX_INSTRUMENT_PILLS = 3
+
 const val KO_FI = "https://ko-fi.com/sayonara_lara"
 const val AUTHOR_SITE = "https://larakelley.com"
 const val SOURCE = "https://github.com/lararosekelley/woodshed"
@@ -248,8 +252,10 @@ private fun Padded(content: @Composable ColumnScope.() -> Unit) = Column(Modifie
 private fun InstrumentsTab(ui: SettingsUi, actions: SettingsActions) {
   val offered = Instrument.entries.filter { ui.myInstruments.isEmpty() || it in ui.myInstruments }
   Padded {
-    SectionLabel("Playing now")
-    if (offered.isNotEmpty()) {
+    SectionLabel("Default instrument")
+    if (offered.size > MAX_INSTRUMENT_PILLS) {
+      DropdownChip("Instrument", ui.instrument?.label ?: "Choose", offered.map { it.label to it }) { i -> i?.let(actions.setInstrument) }
+    } else if (offered.isNotEmpty()) {
       PillChoice(offered.map { it.label to it }, ui.instrument, { it?.let(actions.setInstrument) }, tagPrefix = "now")
     }
     Helper("Sets the key music is written in and which exercises sessions suggest. You can also change it when you start a session.")
