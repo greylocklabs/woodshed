@@ -33,9 +33,9 @@ val HELP_TOPICS = listOf(
   HelpTopic(
     "Getting started",
     listOf(
-      "Choose the instruments you play in **Settings › Instruments**. Keys are then written for your instrument, and exercises are kept to ones that suit it.",
-      "Find tunes in the **Tunes** tab. Open one and tap **Start learning now** to practise it, or **Add to wishlist** to save it for later.",
-      "Then plan a session from the **Practice** tab.",
+      "Choose the instruments you play in **⚙️ Settings › Instruments**. Keys are then written for your instrument, and exercises are kept to ones that suit it.",
+      "Find tunes in the **🎵 Tunes** tab. Open one and tap **🌱 Start learning now** to practise it, or **💭 Add to wishlist** to save it for later.",
+      "Then plan a session from the **🎷 Practice** tab.",
     ),
   ),
   HelpTopic(
@@ -48,7 +48,7 @@ val HELP_TOPICS = listOf(
   HelpTopic(
     "During a session",
     listOf(
-      "Each block has a timer. Blocks don't move on by themselves: tap **Done** when you finish an exercise, or grade a tune or solo. **‹ Back** returns to the previous block if you tapped too soon.",
+      "Each block has a timer. Blocks don't move on by themselves: tap **✅ Done** when you finish an exercise, or grade a tune or solo. **‹ Back** returns to the previous block if you tapped too soon.",
       "The metronome and drone can be started, stopped and retimed along the bottom of every block. Drone exercises name the note to play against.",
       "A session keeps running with the screen off or another app open, with a notification showing the block and its time left. **End** stops it early; blocks you finished stay logged.",
     ),
@@ -65,21 +65,21 @@ val HELP_TOPICS = listOf(
     "Keys and your instrument",
     listOf(
       "Tunes are stored in concert pitch and shown written for your instrument: an alto player sees a concert F tune in D. Reading in C, keys show as they are.",
-      "Change what you're playing in **Settings**, or when you plan a session.",
+      "Change what you're playing in **⚙️ Settings**, or when you plan a session.",
     ),
   ),
   HelpTopic(
     "Transcribing solos",
     listOf(
-      "The **Transcribe** tab holds solos to learn by ear. A solo plays from just before it starts, at half or three-quarter speed, with five-second skips and an A-B loop for the phrase you're working out.",
+      "The **🎧 Transcribe** tab holds solos to learn by ear. A solo plays from just before it starts, at half or three-quarter speed, with five-second skips and an A-B loop for the phrase you're working out.",
       "Add a solo you're transcribing to a session from practice setup, or add your own solos with a link to the recording.",
     ),
   ),
   HelpTopic(
     "Random, and the tools",
     listOf(
-      "**Random** rolls a tune with an exercise and a key, an exercise, or a solo, within limits you set, for when you'd rather not plan.",
-      "The **Metronome** has tap tempo, jazz tempo presets and clicks on 2 and 4. The **Drone** sounds a note named for your instrument, with an optional fifth. The **Tuner** reads your pitch in your instrument's key.",
+      "**🎲 Random** rolls a tune with an exercise and a key, an exercise, or a solo, within limits you set, for when you'd rather not plan.",
+      "The **⏱️ Metronome** has tap tempo, jazz tempo presets and clicks on 2 and 4. The **🔊 Drone** sounds a note named for your instrument, with an optional fifth. The **🎯 Tuner** reads your pitch in your instrument's key.",
     ),
   ),
   HelpTopic(
@@ -91,7 +91,7 @@ val HELP_TOPICS = listOf(
   HelpTopic(
     "Your data",
     listOf(
-      "Everything stays on your phone. Save a backup file from **Settings › Backup** to Google Drive, Dropbox or a folder, and restore it on any device.",
+      "Everything stays on your phone. Save a backup file from **⚙️ Settings › Backup** to Google Drive, Dropbox or a folder, and restore it on any device.",
       "Woodshed has no account, ads or analytics. It goes online only to play a video you tap and to send a problem report you choose to send. " +
         "Installed from Google Play, it may now and then ask Play to show its rating prompt after a session; it sends nothing for that.",
     ),
@@ -99,7 +99,9 @@ val HELP_TOPICS = listOf(
   HelpTopic(
     "Problems and ideas",
     listOf(
-      "Each tune, exercise and solo has a report button for a wrong key or a broken link, and **Settings › About** has one for anything else. You can also write to hello@woodshedapp.org.",
+      "Each tune, exercise and solo has a **🚩 Report a problem** button for a wrong key or a broken link, " +
+        "and **⚙️ Settings › About** has one for anything else. " +
+        "You can also write to [hello@woodshedapp.org](mailto:hello@woodshedapp.org).",
     ),
   ),
 )
