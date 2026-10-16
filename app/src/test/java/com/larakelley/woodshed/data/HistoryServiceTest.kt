@@ -138,4 +138,14 @@ class HistoryServiceTest {
     assertEquals(1, stats.learning)
     assertEquals(1, stats.reachedRepertoireThisMonth)
   }
+
+  @Test
+  fun deletingASessionTakesItsBlocksAndLeavesTheOthers() = runTest {
+    val longTones = db.exercises().all().first { it.name == "Long tones" }
+    val keep = log.start(listOf(PlanBlock.Exercise(longTones.id, 5)), null, at = 1_000)
+    val drop = log.start(listOf(PlanBlock.Exercise(longTones.id, 5), PlanBlock.Exercise(longTones.id, 5)), null, at = 2_000)
+    history.deleteSession(drop)
+    assertEquals(listOf(keep), history.sessions().map { it.id })
+    assertEquals(listOf(keep), db.sessions().allBlocks().map { it.sessionId })
+  }
 }

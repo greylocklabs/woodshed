@@ -74,6 +74,9 @@ class HistoryService(private val db: WoodshedDatabase) {
     }
   }
 
+  /** Removes a session from the history. Grades given in it stay in the review log, so scheduling is unchanged. */
+  suspend fun deleteSession(id: Long) = db.sessions().delete(id)
+
   /** Practice by day in [zone], for days with a session or a graded review. */
   suspend fun days(sessions: List<PastSession>, zone: ZoneId): Map<LocalDate, PracticeDay> {
     fun dateOf(at: Long) = Instant.ofEpochMilli(at).atZone(zone).toLocalDate()

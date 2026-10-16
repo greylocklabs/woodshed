@@ -194,7 +194,7 @@ class MainActivity : ComponentActivity() {
               },
               historyTab = {
                 LaunchedEffect(Unit) { history.refresh() }
-                HistoryScreen(historyUi, HistoryActions(history::showMonth, history::select, history::sessionsOn))
+                HistoryScreen(historyUi, HistoryActions(history::showMonth, history::select, history::sessionsOn, history::delete))
               },
               helpTab = { HelpScreen() },
               tunerTab = {

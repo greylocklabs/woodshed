@@ -19,6 +19,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -96,6 +97,13 @@ class HistoryViewModel(
   /** The sessions started on [day]. */
   fun sessionsOn(day: LocalDate): List<PastSession> = _ui.value.sessions.filter { dateOf(it.startedAt) == day }
 
+  fun delete(id: Long) {
+    viewModelScope.launch {
+      history.deleteSession(id)
+      refresh()
+    }
+  }
+
   private fun dateOf(at: Long) = Instant.ofEpochMilli(at).atZone(zone).toLocalDate()
 }
 
@@ -104,6 +112,7 @@ data class HistoryActions(
   val showMonth: (YearMonth) -> Unit = {},
   val select: (LocalDate) -> Unit = {},
   val sessionsOn: (LocalDate) -> List<PastSession> = { emptyList() },
+  val delete: (Long) -> Unit = {},
 )
 
 enum class HistoryView(val label: String) {
@@ -121,7 +130,7 @@ fun HistoryScreen(ui: HistoryUi, actions: HistoryActions, zone: ZoneId = ZoneId.
       ui.loaded && ui.sessions.isEmpty() && ui.days.isEmpty() ->
         EmptyState("📜", "Nothing yet", "Sessions you run from the 🎷 Practice tab, and tunes you grade, show up here.", scrolls = true)
 
-      view == HistoryView.LIST -> SessionList(ui.sessions, zone)
+      view == HistoryView.LIST -> SessionList(ui.sessions, zone, actions.delete)
 
       view == HistoryView.CALENDAR -> CalendarView(ui, actions, zone)
 
@@ -162,16 +171,31 @@ private fun outcomeLabel(outcome: BlockOutcome?, grade: String?): String = when 
 }
 
 @Composable
-private fun SessionList(sessions: List<PastSession>, zone: ZoneId) {
+private fun SessionList(sessions: List<PastSession>, zone: ZoneId, onDelete: (Long) -> Unit) {
   LazyColumn(Modifier.fillMaxSize().testTag("session-list")) {
-    items(sessions, key = { it.id }) { s -> SessionRow(s, zone) }
+    items(sessions, key = { it.id }) { s -> SessionRow(s, zone, onDelete) }
   }
 }
 
 @Composable
-private fun SessionRow(s: PastSession, zone: ZoneId) {
+private fun SessionRow(s: PastSession, zone: ZoneId, onDelete: (Long) -> Unit) {
   val callie = LocalCallie.current
   var open by rememberSaveable(s.id) { mutableStateOf(false) }
+  var confirmDelete by rememberSaveable(s.id) { mutableStateOf(false) }
+  if (confirmDelete) {
+    AlertDialog(
+      onDismissRequest = { confirmDelete = false },
+      title = { Text("Delete this session?") },
+      text = { Text("It goes from your history and stats. Grades you gave in it still count toward when tunes come back.") },
+      confirmButton = {
+        TextButton(onClick = {
+          confirmDelete = false
+          onDelete(s.id)
+        }, modifier = Modifier.testTag("confirm-delete-session")) { Text("Delete") }
+      },
+      dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text("Cancel") } },
+    )
+  }
   val started = Instant.ofEpochMilli(s.startedAt).atZone(zone)
   Column(Modifier.fillMaxWidth().clickable { open = !open }.padding(horizontal = 16.dp, vertical = 12.dp).testTag("session-${s.id}")) {
     Text("${started.format(DATE)}, ${started.format(TIME)}", style = MaterialTheme.typography.titleMedium)
@@ -198,6 +222,9 @@ private fun SessionRow(s: PastSession, zone: ZoneId) {
             )
           }
         }
+      }
+      TextButton(onClick = { confirmDelete = true }, modifier = Modifier.align(Alignment.End).testTag("delete-session-${s.id}")) {
+        Text("Delete session", color = callie.danger)
       }
     }
   }
@@ -257,7 +284,7 @@ private fun CalendarView(ui: HistoryUi, actions: HistoryActions, zone: ZoneId) {
         )
       }
     }
-    ui.selected?.let { day -> items(actions.sessionsOn(day), key = { it.id }) { s -> SessionRow(s, zone) } }
+    ui.selected?.let { day -> items(actions.sessionsOn(day), key = { it.id }) { s -> SessionRow(s, zone, actions.delete) } }
   }
 }
 

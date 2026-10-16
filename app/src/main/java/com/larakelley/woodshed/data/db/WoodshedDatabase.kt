@@ -283,6 +283,10 @@ interface SessionDao {
 
   @Query("DELETE FROM sessions")
   suspend fun deleteAll()
+
+  /** Deletes a session; its blocks go with it. */
+  @Query("DELETE FROM sessions WHERE id = :id")
+  suspend fun delete(id: Long)
 }
 
 class Converters {
