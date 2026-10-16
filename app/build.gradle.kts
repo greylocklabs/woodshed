@@ -197,6 +197,8 @@ dependencies {
   implementation(libs.androidx.room.ktx)
   ksp(libs.androidx.room.compiler)
   implementation(libs.kotlinx.serialization.json)
+  // Play's in-app review prompt; on installs that are not from Play it shows nothing.
+  implementation(libs.play.review.ktx)
   testImplementation(libs.robolectric)
   testImplementation(libs.androidx.room.testing)
   testImplementation(libs.androidx.test.core)

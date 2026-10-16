@@ -334,6 +334,8 @@ fun SessionScreen(
   onStopDrone: () -> Unit = {},
   /** Back to the previous block, for a Done tapped too early. */
   onPrevious: () -> Unit = {},
+  /** Finish on the done screen: the session ended by completing it rather than by End. */
+  onFinish: () -> Unit = onStop,
   metronomeRunning: Boolean = false,
   bpm: Int = 100,
   onToggleMetronome: () -> Unit = {},
@@ -388,7 +390,9 @@ fun SessionScreen(
       Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Text("🎉 Session done", style = MaterialTheme.typography.headlineMedium)
         Text("${ui.stepCount} blocks, ${ui.reviewedThisSession} tunes reviewed.", modifier = Modifier.testTag("session-summary"))
-        StickerButton(onClick = onStop, modifier = Modifier.fillMaxWidth().height(72.dp)) { Text("Finish", style = MaterialTheme.typography.titleLarge) }
+        StickerButton(onClick = onFinish, modifier = Modifier.fillMaxWidth().height(72.dp).testTag("finish")) {
+          Text("Finish", style = MaterialTheme.typography.titleLarge)
+        }
       }
       return@Column
     }

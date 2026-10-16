@@ -13,6 +13,7 @@ import com.larakelley.woodshed.data.ExerciseLibrary
 import com.larakelley.woodshed.data.MediaService
 import com.larakelley.woodshed.data.PlaylistService
 import com.larakelley.woodshed.data.PracticeService
+import com.larakelley.woodshed.data.ReviewPrompt
 import com.larakelley.woodshed.data.TranscriptionService
 import com.larakelley.woodshed.data.TuneLibrary
 import com.larakelley.woodshed.data.WhatsNew
@@ -56,6 +57,11 @@ class WoodshedApplication : Application() {
   val media: MediaService by lazy { MediaService(database) }
 
   val transcriptions: TranscriptionService by lazy { TranscriptionService(database) }
+
+  val reviewPrompt: ReviewPrompt by lazy { ReviewPrompt(prefs, packageManager.getPackageInfo(packageName, 0).firstInstallTime) }
+
+  /** The times practice was logged, for deciding when to ask for a review. */
+  suspend fun practiceTimes(): List<Long> = database.reviewEvents().times()
 
   val whatsNew: WhatsNew by lazy { WhatsNew(prefs) { assets.open("CHANGELOG.md").bufferedReader().use { it.readText() } } }
 

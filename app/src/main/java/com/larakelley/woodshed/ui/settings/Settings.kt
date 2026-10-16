@@ -165,6 +165,7 @@ const val WEBSITE = "https://woodshedapp.org"
 const val PRIVACY_POLICY = "https://woodshedapp.org/privacy.html"
 const val TERMS = "https://woodshedapp.org/terms.html"
 const val CHANGELOG = "$SOURCE/blob/main/CHANGELOG.md"
+const val PLAY_LISTING = "https://play.google.com/store/apps/details?id=com.larakelley.woodshed"
 
 /** Laid out like Callie's settings: a back sticker and title, pill tabs, then labelled sections. */
 @Composable
@@ -322,7 +323,12 @@ private fun AboutTab(ui: SettingsUi) {
     Helper("Found a wrong key or a broken link? Each tune and exercise page has a report button too.")
     ReportButton(ReportSubject.APP, label = "🚩 Report a bug or idea")
     SectionLabel("Support")
-    Helper("Woodshed is free. If it helps your practice, you can buy me a coffee.")
+    Helper("Woodshed is free. If it helps your practice, a review on Google Play helps others find it, or you can buy me a coffee.")
+    StickerButton(
+      onClick = { uris.openUri(PLAY_LISTING) },
+      sticker = neutralSticker,
+      modifier = Modifier.fillMaxWidth().height(52.dp).padding(top = 8.dp).testTag("review"),
+    ) { Text("\u2B50 Review on Google Play") }
     StickerButton(onClick = { uris.openUri(KO_FI) }, modifier = Modifier.fillMaxWidth().height(52.dp).padding(top = 8.dp).testTag("donate")) {
       Text("\u2615 Donate on Ko-fi")
     }
