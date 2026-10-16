@@ -1,6 +1,5 @@
 package com.larakelley.woodshed.ui.history
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -45,7 +44,6 @@ import com.larakelley.woodshed.data.PracticeDay
 import com.larakelley.woodshed.data.PracticeStats
 import com.larakelley.woodshed.data.db.BlockOutcome
 import com.larakelley.woodshed.domain.Key
-import com.larakelley.woodshed.theme.BackButton
 import com.larakelley.woodshed.theme.EmptyState
 import com.larakelley.woodshed.theme.LocalCallie
 import com.larakelley.woodshed.theme.PillChoice
@@ -115,24 +113,13 @@ enum class HistoryView(val label: String) {
 }
 
 @Composable
-fun HistoryScreen(
-  ui: HistoryUi,
-  actions: HistoryActions,
-  onBack: () -> Unit,
-  zone: ZoneId = ZoneId.systemDefault(),
-  initialView: HistoryView = HistoryView.LIST,
-) {
-  BackHandler(onBack = onBack)
+fun HistoryScreen(ui: HistoryUi, actions: HistoryActions, zone: ZoneId = ZoneId.systemDefault(), initialView: HistoryView = HistoryView.LIST) {
   var view by rememberSaveable { mutableStateOf(initialView) }
   Column(Modifier.fillMaxSize()) {
-    Column(Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp)) {
-      BackButton("Back", onBack, Modifier.testTag("close-history"))
-      Text("History", style = MaterialTheme.typography.headlineMedium, modifier = Modifier.padding(top = 8.dp))
-    }
     PillChoice(HistoryView.entries.map { it.label to it }, view, { view = it }, Modifier.padding(horizontal = 12.dp, vertical = 12.dp), tagPrefix = "history")
     when {
       ui.loaded && ui.sessions.isEmpty() && ui.days.isEmpty() ->
-        EmptyState("📜", "Nothing yet", "Sessions you run from the Practice tab, and tunes you grade, show up here.", scrolls = true)
+        EmptyState("📜", "Nothing yet", "Sessions you run from the 🎷 Practice tab, and tunes you grade, show up here.", scrolls = true)
 
       view == HistoryView.LIST -> SessionList(ui.sessions, zone)
 

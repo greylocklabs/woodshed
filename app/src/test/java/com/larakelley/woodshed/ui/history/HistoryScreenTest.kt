@@ -45,7 +45,7 @@ class HistoryScreenTest {
 
   @Test
   fun aSessionSummarisesAndOpensToItsBlocks() {
-    compose.setContent { HistoryScreen(HistoryUi(sessions = listOf(session), loaded = true), HistoryActions(), onBack = {}, zone = ZoneOffset.UTC) }
+    compose.setContent { HistoryScreen(HistoryUi(sessions = listOf(session), loaded = true), HistoryActions(), zone = ZoneOffset.UTC) }
     compose.onNodeWithText("Thu, Oct 15, 7:40 PM").assertExists()
     compose.onNodeWithText("28 min of 30 min, 2 of 3 blocks, ended early").assertExists()
     compose.onNodeWithText("Graded good").assertDoesNotExist()
@@ -72,7 +72,6 @@ class HistoryScreenTest {
         HistoryActions(showMonth = {
           months += it
         }, select = { picked += it }, sessionsOn = { listOf(session) }),
-        onBack = {},
         zone = ZoneOffset.UTC,
       )
     }
@@ -97,7 +96,7 @@ class HistoryScreenTest {
       learning = 3, repertoire = 2, reachedRepertoireThisMonth = 1,
     )
     compose.setContent {
-      HistoryScreen(HistoryUi(sessions = listOf(session), stats = stats, loaded = true), HistoryActions(), onBack = {}, initialView = HistoryView.STATS)
+      HistoryScreen(HistoryUi(sessions = listOf(session), stats = stats, loaded = true), HistoryActions(), initialView = HistoryView.STATS)
     }
     compose.onNodeWithText("2 h 5 min").assertExists()
     compose.onNodeWithText("1 day").assertExists()
@@ -111,7 +110,7 @@ class HistoryScreenTest {
 
   @Test
   fun nothingYetSaysWhereHistoryComesFrom() {
-    compose.setContent { HistoryScreen(HistoryUi(loaded = true), HistoryActions(), onBack = {}) }
+    compose.setContent { HistoryScreen(HistoryUi(loaded = true), HistoryActions()) }
     compose.onNodeWithTag("empty-state").assertExists()
   }
 
