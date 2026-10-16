@@ -105,12 +105,18 @@ class SessionRunnerTest {
     r.resume()
     clock += 2 * 60_000
     r.grade(Grade.GOOD)
+    // Complete as soon as the last block is done, before Finish is tapped or even if it never is.
+    val doneAt = clock
+    val completed = runTestResult { db.sessions().all() }.single()
+    assertTrue(completed.completed)
+    assertEquals(doneAt, completed.endedAt)
+    clock += 60_000
     r.stop()
 
     val session = runTestResult { db.sessions().all() }.single()
     assertEquals(15, session.plannedMinutes)
     assertTrue(session.completed)
-    assertEquals(clock, session.endedAt)
+    assertEquals("Finish leaves the end where the last block finished", doneAt, session.endedAt)
     val blocks = runTestResult { db.sessions().allBlocks() }
     assertEquals(listOf(BlockOutcome.DONE, BlockOutcome.GRADED), blocks.map { it.outcome })
     assertEquals(Grade.GOOD, blocks[1].grade)
