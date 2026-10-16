@@ -92,7 +92,8 @@ val HELP_TOPICS = listOf(
     "Your data",
     listOf(
       "Everything stays on your phone. Save a backup file from **Settings › Backup** to Google Drive, Dropbox or a folder, and restore it on any device.",
-      "Woodshed has no account, ads or analytics. It goes online only to play a video you tap and to send a problem report you choose to send.",
+      "Woodshed has no account, ads or analytics. It goes online only to play a video you tap and to send a problem report you choose to send. " +
+        "Installed from Google Play, it may now and then ask Play to show its rating prompt after a session; it sends nothing for that.",
     ),
   ),
   HelpTopic(
