@@ -1,6 +1,7 @@
 package com.larakelley.woodshed.ui.settings
 
 import android.app.Application
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertIsOff
 import androidx.compose.ui.test.assertIsOn
@@ -10,6 +11,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performTouchInput
 import com.larakelley.woodshed.data.ThemeMode
 import com.larakelley.woodshed.domain.Instrument
 import com.larakelley.woodshed.ui.browse.DEFAULT_TABS
@@ -46,6 +48,22 @@ class SettingsScreenTest {
     compose.onNodeWithTag("reset-tabs").performScrollTo().performClick()
     assertEquals(listOf("Tunes" to 1, "Practice" to -1), moves)
     assertEquals(true, reset)
+  }
+
+  @Test
+  fun holdingATabAndDraggingItMovesIt() {
+    val set = mutableListOf<List<String>>()
+    compose.setContent { SettingsScreen(SettingsUi(), SettingsActions(setTabOrder = { set += it }), onBack = {}) }
+    val row = compose.onNodeWithTag("tab-order-Practice").performScrollTo()
+    val height = row.fetchSemanticsNode().size.height.toFloat()
+    // Hold, then drag down a little over two rows: Practice lands third.
+    row.performTouchInput {
+      down(center)
+      advanceEventTime(1_000)
+      repeat(10) { moveBy(Offset(0f, height * 0.22f)) }
+      up()
+    }
+    assertEquals(listOf(listOf("History", "Random", "Practice") + DEFAULT_TABS.drop(3)), set)
   }
 
   @Test
