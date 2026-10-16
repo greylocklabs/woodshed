@@ -56,6 +56,22 @@ class HistoryScreenTest {
   }
 
   @Test
+  fun aSessionIsDeletedOnlyOnceConfirmed() {
+    val deleted = mutableListOf<Long>()
+    compose.setContent {
+      HistoryScreen(HistoryUi(sessions = listOf(session), loaded = true), HistoryActions(delete = { deleted += it }), zone = ZoneOffset.UTC)
+    }
+    compose.onNodeWithTag("delete-session-1").assertDoesNotExist()
+    compose.onNodeWithTag("session-1").performClick()
+    compose.onNodeWithTag("delete-session-1").performClick()
+    compose.onNodeWithText("Cancel").performClick()
+    assertEquals(emptyList<Long>(), deleted)
+    compose.onNodeWithTag("delete-session-1").performClick()
+    compose.onNodeWithTag("confirm-delete-session").performClick()
+    assertEquals(listOf(1L), deleted)
+  }
+
+  @Test
   fun theCalendarMarksPracticeDaysAndListsADaysSessions() {
     val picked = mutableListOf<LocalDate>()
     val months = mutableListOf<YearMonth>()
