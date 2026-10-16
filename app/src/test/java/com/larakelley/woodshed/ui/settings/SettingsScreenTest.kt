@@ -6,6 +6,9 @@ import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertIsOff
 import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.assertTextContains
+import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.isPopup
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -48,6 +51,22 @@ class SettingsScreenTest {
     compose.onNodeWithTag("reset-tabs").performScrollTo().performClick()
     assertEquals(listOf("Tunes" to 1, "Practice" to -1), moves)
     assertEquals(true, reset)
+  }
+
+  @Test
+  fun moreThanThreeInstrumentsPickTheDefaultFromADropdown() {
+    val picked = mutableListOf<Instrument>()
+    val mine = setOf(Instrument.ALTO_SAX, Instrument.TENOR_SAX, Instrument.TRUMPET, Instrument.FLUTE)
+    compose.setContent {
+      SettingsScreen(SettingsUi(instrument = Instrument.ALTO_SAX, myInstruments = mine), SettingsActions(setInstrument = { picked += it }), onBack = {})
+    }
+    compose.onNodeWithTag("tab-instruments").performClick()
+    compose.onNodeWithText("Default instrument", substring = true, ignoreCase = true).assertExists()
+    compose.onNodeWithTag("now-alto_sax").assertDoesNotExist()
+    compose.onNodeWithTag("chip-Instrument").performClick()
+    // The menu's item, not the Trumpet switch further down the tab.
+    compose.onNode(hasText("Trumpet") and hasAnyAncestor(isPopup())).performClick()
+    assertEquals(listOf(Instrument.TRUMPET), picked)
   }
 
   @Test
