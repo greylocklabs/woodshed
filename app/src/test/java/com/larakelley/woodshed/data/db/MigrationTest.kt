@@ -270,4 +270,20 @@ class MigrationTest {
       }
     }
   }
+
+  @Test
+  fun version13To14AddsSessions() {
+    helper.createDatabase("migration-test-13", 13).close()
+    helper.runMigrationsAndValidate("migration-test-13", 14, true).use { db ->
+      db.execSQL("INSERT INTO sessions (id, startedAt, endedAt, plannedMinutes, instrument, completed) VALUES (1, 0, 60000, 30, 'ALTO_SAX', 1)")
+      db.execSQL("INSERT INTO session_blocks (sessionId, position, kind, itemId, plannedMinutes, elapsedMs) VALUES (1, 0, 'exercise', 3, 5, 0)")
+      // Deleting a session takes its blocks with it. Room turns foreign keys on for its own connections; the helper's needs telling.
+      db.execSQL("PRAGMA foreign_keys = ON")
+      db.execSQL("DELETE FROM sessions")
+      db.query("SELECT COUNT(*) FROM session_blocks").use {
+        it.moveToFirst()
+        assertEquals(0, it.getInt(0))
+      }
+    }
+  }
 }

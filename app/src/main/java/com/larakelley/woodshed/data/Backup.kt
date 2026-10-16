@@ -1,12 +1,15 @@
 package com.larakelley.woodshed.data
 
 import androidx.room.withTransaction
+import com.larakelley.woodshed.data.db.BlockOutcome
 import com.larakelley.woodshed.data.db.ExerciseEntity
 import com.larakelley.woodshed.data.db.ExerciseOverrideEntity
 import com.larakelley.woodshed.data.db.Performer
 import com.larakelley.woodshed.data.db.PlaylistEntity
 import com.larakelley.woodshed.data.db.PlaylistTuneEntity
 import com.larakelley.woodshed.data.db.ReviewEventEntity
+import com.larakelley.woodshed.data.db.SessionBlockEntity
+import com.larakelley.woodshed.data.db.SessionEntity
 import com.larakelley.woodshed.data.db.StandardEntity
 import com.larakelley.woodshed.data.db.TranscriptionEntity
 import com.larakelley.woodshed.data.db.TranscriptionStateEntity
@@ -62,6 +65,8 @@ data class Backup(
   val tunes: List<BackupTune>,
   val knowledge: List<BackupKnowledge>,
   val reviews: List<BackupReview>,
+  /** Practice sessions, newest first, with their blocks naming tunes and solos by slug and exercises by name. */
+  val sessions: List<BackupSession> = emptyList(),
 ) {
   companion object {
     const val FORMAT = "woodshed-backup"
@@ -227,6 +232,32 @@ data class BackupReview(
   }
 }
 
+@Serializable
+data class BackupSession(
+  @SerialName("started_at") val startedAt: Long,
+  @SerialName("ended_at") val endedAt: Long? = null,
+  @SerialName("planned_minutes") val plannedMinutes: Int,
+  val instrument: String? = null,
+  val completed: Boolean = false,
+  val blocks: List<BackupSessionBlock> = emptyList(),
+)
+
+@Serializable
+data class BackupSessionBlock(
+  val position: Int,
+  /** [SessionBlockEntity.KIND_EXERCISE], [SessionBlockEntity.KIND_TUNE] or [SessionBlockEntity.KIND_SOLO]. */
+  val kind: String,
+  /** The exercise's name, or the tune's or solo's slug. */
+  val item: String,
+  /** A tune block's exercise, by name. */
+  val exercise: String? = null,
+  @SerialName("planned_minutes") val plannedMinutes: Int,
+  val outcome: BlockOutcome? = null,
+  val grade: Grade? = null,
+  @SerialName("elapsed_ms") val elapsedMs: Long = 0,
+  @SerialName("finished_at") val finishedAt: Long? = null,
+)
+
 /** What a restore brought back, and how many rows named tunes this install does not have. */
 data class RestoreResult(
   val tunes: Int,
@@ -302,6 +333,7 @@ class BackupService(private val db: WoodshedDatabase, private val repository: Wo
           s.lastReviewedAt,
         )
       },
+      sessions = exportSessions(slugs, exercises),
       knowledge = db.tuneKnowledge().all().mapNotNull { k ->
         slugs[k.standardId]?.let { BackupKnowledge(it, k.comfort, k.knownKeys, k.updatedAt) }
       },
@@ -321,6 +353,49 @@ class BackupService(private val db: WoodshedDatabase, private val repository: Wo
       },
     )
     return json.encodeToString(Backup.serializer(), backup)
+  }
+
+  private suspend fun exportSessions(slugs: Map<Long, String>, exercises: Map<Long, String>): List<BackupSession> {
+    val solos = db.transcriptions().all().associate { it.id to it.slug }
+    val blocks = db.sessions().allBlocks().groupBy { it.sessionId }
+    return db.sessions().all().map { s ->
+      BackupSession(
+        s.startedAt,
+        s.endedAt,
+        s.plannedMinutes,
+        s.instrument,
+        s.completed,
+        blocks[s.id].orEmpty().mapNotNull { b ->
+          val item = when (b.kind) {
+            SessionBlockEntity.KIND_EXERCISE -> exercises[b.itemId]
+            SessionBlockEntity.KIND_TUNE -> slugs[b.itemId]
+            else -> solos[b.itemId]
+          } ?: return@mapNotNull null
+          BackupSessionBlock(b.position, b.kind, item, b.exerciseId?.let { exercises[it] }, b.plannedMinutes, b.outcome, b.grade, b.elapsedMs, b.finishedAt)
+        },
+      )
+    }
+  }
+
+  /** Brings back [sessions], dropping blocks whose tune, solo or exercise this install does not have. */
+  private suspend fun restoreSessions(sessions: List<BackupSession>, tunes: Map<String, Long>, solos: Map<String, Long>, exercises: Map<String, Long>) {
+    db.sessions().deleteAll()
+    for (s in sessions) {
+      val id = db.sessions().insert(
+        SessionEntity(startedAt = s.startedAt, endedAt = s.endedAt, plannedMinutes = s.plannedMinutes, instrument = s.instrument, completed = s.completed),
+      )
+      db.sessions().insertBlocks(
+        s.blocks.mapNotNull { b ->
+          val item = when (b.kind) {
+            SessionBlockEntity.KIND_EXERCISE -> exercises[b.item]
+            SessionBlockEntity.KIND_TUNE -> tunes[b.item]
+            SessionBlockEntity.KIND_SOLO -> solos[b.item]
+            else -> null
+          } ?: return@mapNotNull null
+          SessionBlockEntity(id, b.position, b.kind, item, b.exercise?.let { exercises[it] }, b.plannedMinutes, b.outcome, b.grade, b.elapsedMs, b.finishedAt)
+        },
+      )
+    }
   }
 
   /** Replaces the user's tunes, knowledge and history with the backup's. Throws [BackupException] if [text] is not a backup. */
@@ -511,6 +586,7 @@ class BackupService(private val db: WoodshedDatabase, private val repository: Wo
         val order = p.tunes.mapNotNull { ids[it] }.distinct()
         db.playlists().upsertEntries(order.mapIndexed { i, tune -> PlaylistTuneEntity(id, tune, i) })
       }
+      restoreSessions(backup.sessions, ids, soloIds, exercises)
       RestoreResult(tunes, knowledge, reviews, skipped, backup.myTunes.size, edits, backup.playlists.size)
     }
     repository.applyBackupSettings(backup.settings)

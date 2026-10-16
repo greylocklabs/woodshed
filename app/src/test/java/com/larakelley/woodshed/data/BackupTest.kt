@@ -4,6 +4,7 @@ import android.app.Application
 import android.content.Context
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
+import com.larakelley.woodshed.data.db.BlockOutcome
 import com.larakelley.woodshed.data.db.WoodshedDatabase
 import com.larakelley.woodshed.data.seed.Seed
 import com.larakelley.woodshed.data.seed.SeedImporter
@@ -85,6 +86,26 @@ class BackupTest {
     assertEquals(Transposition.Eb, repository.transposition.value)
     assertEquals(ThemeMode.DARK, repository.themeMode.value)
     assertEquals(setOf(Focus.SPEED), repository.sessionFocus)
+  }
+
+  @Test
+  fun sessionsComeBackWithTheirBlocks() = runTest {
+    val log = SessionLog(db)
+    val drill = db.exercises().all().first { !it.appliesToTune }
+    val tuneExercise = db.exercises().all().first { it.appliesToTune }
+    val plan = listOf(PlanBlock.Exercise(drill.id, 5), PlanBlock.Tune(id("solar"), tuneExercise.id, 10))
+    val session = log.start(plan, "ALTO_SAX", at = 1_000)
+    log.finish(session, 0, BlockOutcome.DONE, null, 300_000, at = 301_000)
+    log.finish(session, 1, BlockOutcome.GRADED, Grade.EASY, 500_000, at = 801_000)
+    log.end(session, at = 802_000, completed = true)
+    val sessions = db.sessions().all().map { it.copy(id = 0) }
+    val blocks = db.sessions().allBlocks().map { it.copy(sessionId = 0) }
+
+    val text = backups.export()
+    db.sessions().deleteAll()
+    backups.restore(text)
+    assertEquals(sessions, db.sessions().all().map { it.copy(id = 0) })
+    assertEquals(blocks, db.sessions().allBlocks().map { it.copy(sessionId = 0) })
   }
 
   @Test

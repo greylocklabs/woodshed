@@ -4,8 +4,10 @@ import android.content.SharedPreferences
 import androidx.core.content.edit
 import com.larakelley.woodshed.data.Card
 import com.larakelley.woodshed.data.PracticeService
+import com.larakelley.woodshed.data.SessionLog
 import com.larakelley.woodshed.data.TranscriptionService
 import com.larakelley.woodshed.data.WoodshedRepository
+import com.larakelley.woodshed.data.db.BlockOutcome
 import com.larakelley.woodshed.domain.Grade
 import com.larakelley.woodshed.domain.MediaLink
 import com.larakelley.woodshed.domain.PlanBlock
@@ -44,7 +46,15 @@ data class SessionState(
 
 /** What survives the process being killed: the plan, where the user is in it, and its clock. */
 @Serializable
-data class SavedSession(val blocks: List<PlanBlock>, val index: Int, val stepStartedAt: Long, val pausedAt: Long? = null, val reviewed: Int = 0)
+data class SavedSession(
+  val blocks: List<PlanBlock>,
+  val index: Int,
+  val stepStartedAt: Long,
+  val pausedAt: Long? = null,
+  val reviewed: Int = 0,
+  /** The session's row in the history, or null for one saved before sessions were recorded. */
+  val sessionId: Long? = null,
+)
 
 /** Keeps the running session in its own preferences file, outside the settings that backups carry. */
 class SessionStore(private val prefs: SharedPreferences) {
@@ -66,6 +76,7 @@ class SessionRunner(
   private val practice: PracticeService,
   private val transcriptions: TranscriptionService?,
   private val store: SessionStore,
+  private val log: SessionLog,
   private val scope: CoroutineScope,
   private val now: () -> Long = System::currentTimeMillis,
 ) {
@@ -79,12 +90,14 @@ class SessionRunner(
   private var blocks: List<PlanBlock> = emptyList()
   private var card: Card? = null
   private var solo: Long? = null
+  private var sessionId: Long? = null
 
   /** Picks up a saved session where it left off, unless it is more than [STALE_MS] old. */
   fun restore() = serially {
     val saved = store.load()
     if (saved != null && now() - saved.stepStartedAt < STALE_MS && saved.index in saved.blocks.indices) {
       blocks = saved.blocks
+      sessionId = saved.sessionId
       _state.value = SessionState(running = true, stepCount = blocks.size, reviewed = saved.reviewed)
       show(saved.index, startedAt = saved.stepStartedAt, pausedAt = saved.pausedAt)
     } else if (saved != null) {
@@ -98,6 +111,7 @@ class SessionRunner(
     blocks = plan
     card = null
     solo = null
+    sessionId = log.start(plan, repository.instrument.value?.name, now())
     _state.value = SessionState(running = true, stepCount = plan.size)
     show(0)
   }
@@ -105,6 +119,7 @@ class SessionRunner(
   /** Finishes an exercise block, or moves past a tune or solo block without grading it. */
   fun next() = serially {
     if (!_state.value.running || _state.value.step == null) return@serially
+    record(if (_state.value.step is StepView.Exercise) BlockOutcome.DONE else BlockOutcome.SKIPPED, null)
     card = null
     solo = null
     show(_state.value.stepIndex + 1)
@@ -133,6 +148,7 @@ class SessionRunner(
       tuneCard != null -> practice.grade(tuneCard, grade)
       else -> return@serially
     }
+    record(BlockOutcome.GRADED, grade)
     card = null
     solo = null
     _state.value = _state.value.copy(reviewed = _state.value.reviewed + 1)
@@ -154,6 +170,8 @@ class SessionRunner(
   }
 
   fun stop() = serially {
+    sessionId?.let { log.end(it, now(), completed = _state.value.running && _state.value.step == null) }
+    sessionId = null
     blocks = emptyList()
     card = null
     solo = null
@@ -161,11 +179,19 @@ class SessionRunner(
     store.save(null)
   }
 
+  /** Logs how the current block ended, with the time spent on it less any pause. */
+  private suspend fun record(outcome: BlockOutcome, grade: Grade?) {
+    val id = sessionId ?: return
+    val s = _state.value
+    val at = now()
+    log.finish(id, s.stepIndex, outcome, grade, ((s.pausedAt ?: at) - s.stepStartedAt).coerceAtLeast(0), at)
+  }
+
   private fun serially(action: suspend () -> Unit) = scope.launch { lock.withLock { action() } }
 
   private fun save() {
     val s = _state.value
-    store.save(if (s.running && s.step != null) SavedSession(blocks, s.stepIndex, s.stepStartedAt, s.pausedAt, s.reviewed) else null)
+    store.save(if (s.running && s.step != null) SavedSession(blocks, s.stepIndex, s.stepStartedAt, s.pausedAt, s.reviewed, sessionId) else null)
   }
 
   /** Shows block [index], skipping any whose tune, exercise or solo has gone; past the end, the session is done. */

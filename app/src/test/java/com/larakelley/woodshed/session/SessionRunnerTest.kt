@@ -5,8 +5,10 @@ import android.content.Context
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import com.larakelley.woodshed.data.PracticeService
+import com.larakelley.woodshed.data.SessionLog
 import com.larakelley.woodshed.data.TranscriptionService
 import com.larakelley.woodshed.data.WoodshedRepository
+import com.larakelley.woodshed.data.db.BlockOutcome
 import com.larakelley.woodshed.data.db.ReviewEventEntity
 import com.larakelley.woodshed.data.db.WoodshedDatabase
 import com.larakelley.woodshed.data.seed.Seed
@@ -70,6 +72,7 @@ class SessionRunnerTest {
     practice,
     TranscriptionService(db),
     store,
+    SessionLog(db),
     CoroutineScope(UnconfinedTestDispatcher()),
     now = { clock },
   )
@@ -88,6 +91,42 @@ class SessionRunnerTest {
     assertTrue(r.state.value.running)
     assertNull(r.state.value.step)
     assertNull(store.load())
+  }
+
+  @Test
+  fun aSessionIsRecordedWithHowEachBlockWent() {
+    val r = runner()
+    r.start(plan)
+    clock += 4 * 60_000
+    r.next()
+    clock += 60_000
+    r.pause()
+    clock += 10 * 60_000
+    r.resume()
+    clock += 2 * 60_000
+    r.grade(Grade.GOOD)
+    r.stop()
+
+    val session = runTestResult { db.sessions().all() }.single()
+    assertEquals(15, session.plannedMinutes)
+    assertTrue(session.completed)
+    assertEquals(clock, session.endedAt)
+    val blocks = runTestResult { db.sessions().allBlocks() }
+    assertEquals(listOf(BlockOutcome.DONE, BlockOutcome.GRADED), blocks.map { it.outcome })
+    assertEquals(Grade.GOOD, blocks[1].grade)
+    // The pause is left out of the time spent.
+    assertEquals(listOf(4 * 60_000L, 3 * 60_000L), blocks.map { it.elapsedMs })
+  }
+
+  @Test
+  fun endingEarlyLeavesTheRestUnfinished() {
+    val r = runner()
+    r.start(plan)
+    r.next()
+    r.stop()
+    val session = runTestResult { db.sessions().all() }.single()
+    assertFalse(session.completed)
+    assertEquals(listOf(BlockOutcome.DONE, null), runTestResult { db.sessions().allBlocks() }.map { it.outcome })
   }
 
   @Test

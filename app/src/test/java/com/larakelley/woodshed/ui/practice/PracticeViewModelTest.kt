@@ -6,6 +6,7 @@ import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import com.larakelley.woodshed.data.PlaylistService
 import com.larakelley.woodshed.data.PracticeService
+import com.larakelley.woodshed.data.SessionLog
 import com.larakelley.woodshed.data.TranscriptionService
 import com.larakelley.woodshed.data.WoodshedRepository
 import com.larakelley.woodshed.data.db.WoodshedDatabase
@@ -61,7 +62,7 @@ class PracticeViewModelTest {
     practice = PracticeService(db, random = Random(1))
     solos = TranscriptionService(db)
     val store = SessionStore(context.getSharedPreferences("practice-vm-session", Context.MODE_PRIVATE).also { it.edit().clear().commit() })
-    sessions = SessionRunner(repository, practice, solos, store, CoroutineScope(UnconfinedTestDispatcher()))
+    sessions = SessionRunner(repository, practice, solos, store, SessionLog(db), CoroutineScope(UnconfinedTestDispatcher()))
   }
 
   @After

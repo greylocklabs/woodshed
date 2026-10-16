@@ -13,6 +13,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
@@ -33,6 +34,9 @@ import com.larakelley.woodshed.ui.browse.BrowseScreen
 import com.larakelley.woodshed.ui.browse.BrowseViewModel
 import com.larakelley.woodshed.ui.dice.DiceScreen
 import com.larakelley.woodshed.ui.dice.DiceViewModel
+import com.larakelley.woodshed.ui.history.HistoryActions
+import com.larakelley.woodshed.ui.history.HistoryScreen
+import com.larakelley.woodshed.ui.history.HistoryViewModel
 import com.larakelley.woodshed.ui.practice.PracticeHome
 import com.larakelley.woodshed.ui.practice.PracticeViewModel
 import com.larakelley.woodshed.ui.practice.SessionScreen
@@ -103,6 +107,9 @@ class MainActivity : ComponentActivity() {
             val categories = exercises.map { it.category }.distinct().sortedBy { Phase.categoryRank(it) }
             dice.setOptions(browseState.styles, exercises.filter { it.appliesToTune }.map { it.name }, categories)
           }
+          var showHistory by rememberSaveable { mutableStateOf(false) }
+          val history: HistoryViewModel = viewModel { HistoryViewModel(app.history) }
+          val historyUi by history.ui.collectAsStateWithLifecycle()
           val setupActions = SetupActions(
             setInstrument = practice::setInstrument,
             setMinutes = practice::setMinutes,
@@ -117,6 +124,7 @@ class MainActivity : ComponentActivity() {
             replace = practice::replace,
             remove = practice::removeBlock,
             start = practice::start,
+            openHistory = { showHistory = true },
           )
 
           var whatsNew by remember { mutableStateOf(emptyList<ChangelogRelease>()) }
@@ -163,6 +171,9 @@ class MainActivity : ComponentActivity() {
                     onToggleMetronome = metronome::toggle,
                     onSetBpm = metronome::setBpm,
                   )
+                } else if (showHistory) {
+                  LaunchedEffect(Unit) { history.refresh() }
+                  HistoryScreen(historyUi, HistoryActions(history::showMonth, history::select, history::sessionsOn), onBack = { showHistory = false })
                 } else {
                   LaunchedEffect(Unit) { practice.refresh() }
                   PracticeHome(practiceUi, setupActions)

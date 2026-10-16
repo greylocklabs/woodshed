@@ -1,0 +1,113 @@
+package com.larakelley.woodshed.ui.history
+
+import android.app.Application
+import androidx.compose.ui.test.assertTextEquals
+import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollToNode
+import com.larakelley.woodshed.data.PastBlock
+import com.larakelley.woodshed.data.PastSession
+import com.larakelley.woodshed.data.PracticeDay
+import com.larakelley.woodshed.data.db.BlockOutcome
+import com.larakelley.woodshed.domain.Grade
+import org.junit.Assert.assertEquals
+import org.junit.Rule
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
+import java.time.LocalDate
+import java.time.YearMonth
+import java.time.ZoneOffset
+
+@RunWith(RobolectricTestRunner::class)
+@Config(application = Application::class)
+class HistoryScreenTest {
+  @get:Rule val compose = createComposeRule()
+
+  private val oct15 = LocalDate.of(2026, 10, 15)
+  private val session = PastSession(
+    id = 1,
+    startedAt = oct15.atTime(19, 40).toInstant(ZoneOffset.UTC).toEpochMilli(),
+    endedAt = oct15.atTime(20, 10).toInstant(ZoneOffset.UTC).toEpochMilli(),
+    plannedMinutes = 30,
+    completed = false,
+    blocks = listOf(
+      PastBlock("Long tones", "Tone", 5, BlockOutcome.DONE, null, 300_000),
+      PastBlock("Solar", "Guide-tone solo", 25, BlockOutcome.GRADED, Grade.GOOD, 1_380_000),
+      PastBlock("Blue Bossa", "Melody from memory", 10, null, null, 0),
+    ),
+  )
+
+  @Test
+  fun aSessionSummarisesAndOpensToItsBlocks() {
+    compose.setContent { HistoryScreen(HistoryUi(sessions = listOf(session), loaded = true), HistoryActions(), onBack = {}, zone = ZoneOffset.UTC) }
+    compose.onNodeWithText("Thu, Oct 15, 7:40 PM").assertExists()
+    compose.onNodeWithText("28 min of 30 min, 2 of 3 blocks, ended early").assertExists()
+    compose.onNodeWithText("Graded good").assertDoesNotExist()
+    compose.onNodeWithTag("session-1").performClick()
+    compose.onNodeWithText("Graded good").assertExists()
+    compose.onNodeWithText("Not reached").assertExists()
+    compose.onNodeWithText("10 min planned").assertExists()
+  }
+
+  @Test
+  fun theCalendarMarksPracticeDaysAndListsADaysSessions() {
+    val picked = mutableListOf<LocalDate>()
+    val months = mutableListOf<YearMonth>()
+    val ui = HistoryUi(
+      sessions = listOf(session),
+      days = mapOf(oct15 to PracticeDay(oct15, 1_680_000, 2)),
+      month = YearMonth.of(2026, 10),
+      selected = oct15,
+      loaded = true,
+    )
+    compose.setContent {
+      HistoryScreen(
+        ui,
+        HistoryActions(showMonth = {
+          months += it
+        }, select = { picked += it }, sessionsOn = { listOf(session) }),
+        onBack = {},
+        zone = ZoneOffset.UTC,
+      )
+    }
+    compose.onNodeWithTag("history-calendar").performClick()
+    compose.onNodeWithTag("month").assertTextEquals("October 2026")
+    compose.onNodeWithTag("day-summary").assertTextEquals("28 min in sessions, 2 reviews")
+    compose.onNodeWithTag("calendar").performScrollToNode(hasTestTag("session-1"))
+    compose.onNodeWithTag("session-1").assertExists()
+    compose.onNodeWithTag("calendar").performScrollToNode(hasTestTag("day-2026-10-03"))
+    compose.onNodeWithTag("day-2026-10-03").performClick()
+    compose.onNodeWithTag("calendar").performScrollToNode(hasTestTag("month-next"))
+    compose.onNodeWithTag("month-next").performClick()
+    assertEquals(listOf(LocalDate.of(2026, 10, 3)), picked)
+    assertEquals(listOf(YearMonth.of(2026, 11)), months)
+  }
+
+  @Test
+  fun nothingYetSaysWhereHistoryComesFrom() {
+    compose.setContent { HistoryScreen(HistoryUi(loaded = true), HistoryActions(), onBack = {}) }
+    compose.onNodeWithTag("empty-state").assertExists()
+  }
+
+  @Test
+  fun minutesRoundAndReadInHours() {
+    assertEquals("28 min", minutesLabel(28 * 60_000L + 20_000))
+    assertEquals("1 h", minutesLabel(60 * 60_000L))
+    assertEquals("1 h 5 min", minutesLabel(65 * 60_000L))
+  }
+
+  @Test
+  fun weeksStartOnMondayAndPadTheMonth() {
+    // October 2026 starts on a Thursday and has 31 days.
+    val weeks = monthWeeks(YearMonth.of(2026, 10))
+    assertEquals(5, weeks.size)
+    assertEquals(listOf(null, null, null, LocalDate.of(2026, 10, 1)), weeks.first().take(4))
+    assertEquals(LocalDate.of(2026, 10, 31), weeks.last()[5])
+    assertEquals(null, weeks.last()[6])
+  }
+}
