@@ -246,7 +246,7 @@ class ScreenshotTest(private val mode: String) {
   fun historyCalendar() = capture("history-calendar") {
     val days = listOf(2, 3, 5, 8, 9, 10, 12, 14, 15).associate { d ->
       val date = LocalDate.of(2026, 10, d)
-      date to PracticeDay(date, (d % 4 + 1) * 15 * 60_000L, d % 3)
+      date to PracticeDay(date, (d % 4 + 1) * 15 * 60_000L, d % 3, 1)
     }
     HistoryScreen(
       HistoryUi(sessions = listOf(historySession), days = days, month = YearMonth.of(2026, 10), selected = LocalDate.of(2026, 10, 15), loaded = true),
