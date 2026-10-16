@@ -11,6 +11,7 @@ import androidx.compose.ui.test.performScrollToNode
 import com.larakelley.woodshed.data.PastBlock
 import com.larakelley.woodshed.data.PastSession
 import com.larakelley.woodshed.data.PracticeDay
+import com.larakelley.woodshed.data.PracticeStats
 import com.larakelley.woodshed.data.db.BlockOutcome
 import com.larakelley.woodshed.domain.Grade
 import org.junit.Assert.assertEquals
@@ -86,6 +87,26 @@ class HistoryScreenTest {
     compose.onNodeWithTag("month-next").performClick()
     assertEquals(listOf(LocalDate.of(2026, 10, 3)), picked)
     assertEquals(listOf(YearMonth.of(2026, 11)), months)
+  }
+
+  @Test
+  fun statsShowTotalsStreaksAndKeys() {
+    val stats = PracticeStats(
+      practicedMs = 125 * 60_000L, sessions = 6, currentStreak = 1, longestStreak = 4,
+      topTunes = listOf("Solar" to 7, "Nardis" to 1), repsByKey = List(12) { if (it == 0) 5 else 0 }.toMutableList().also { it[5] = 3 },
+      learning = 3, repertoire = 2, reachedRepertoireThisMonth = 1,
+    )
+    compose.setContent {
+      HistoryScreen(HistoryUi(sessions = listOf(session), stats = stats, loaded = true), HistoryActions(), onBack = {}, initialView = HistoryView.STATS)
+    }
+    compose.onNodeWithText("2 h 5 min").assertExists()
+    compose.onNodeWithText("1 day").assertExists()
+    compose.onNodeWithText("4 days").assertExists()
+    compose.onNodeWithTag("stat-tunes").assertTextEquals("3 learning, 2 in repertoire. 1 reached repertoire this month.")
+    compose.onNodeWithText("7 reps").assertExists()
+    compose.onNodeWithText("1 rep").assertExists()
+    compose.onNodeWithTag("stats").performScrollToNode(hasTestTag("key-bars"))
+    compose.onNodeWithTag("key-bars").assertExists()
   }
 
   @Test

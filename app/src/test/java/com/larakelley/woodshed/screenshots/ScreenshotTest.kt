@@ -14,6 +14,7 @@ import com.larakelley.woodshed.audio.TunerState
 import com.larakelley.woodshed.data.PastBlock
 import com.larakelley.woodshed.data.PastSession
 import com.larakelley.woodshed.data.PracticeDay
+import com.larakelley.woodshed.data.PracticeStats
 import com.larakelley.woodshed.data.db.BlockOutcome
 import com.larakelley.woodshed.data.db.TranscriptionEntity
 import com.larakelley.woodshed.data.db.TranscriptionStateEntity
@@ -254,5 +255,16 @@ class ScreenshotTest(private val mode: String) {
       zone = ZoneOffset.UTC,
       initialView = HistoryView.CALENDAR,
     )
+  }
+
+  @Test
+  fun historyStats() = capture("history-stats") {
+    val stats = PracticeStats(
+      practicedMs = 754 * 60_000L, sessions = 23, currentStreak = 4, longestStreak = 9,
+      topTunes = listOf("Solar" to 14, "Blue Bossa" to 11, "Autumn Leaves" to 9, "Nardis" to 6, "Tangerine" to 3),
+      repsByKey = listOf(12, 3, 7, 9, 2, 11, 1, 8, 4, 5, 10, 2),
+      learning = 6, repertoire = 4, reachedRepertoireThisMonth = 2,
+    )
+    HistoryScreen(HistoryUi(sessions = listOf(historySession), stats = stats, loaded = true), HistoryActions(), onBack = {}, initialView = HistoryView.STATS)
   }
 }

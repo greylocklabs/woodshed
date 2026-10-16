@@ -79,4 +79,37 @@ class HistoryServiceTest {
     assertEquals(PracticeDay(LocalDate.of(1970, 1, 4), 0, 1), days[LocalDate.of(1970, 1, 4)])
     assertEquals(2, days.size)
   }
+
+  @Test
+  fun statsCountStreaksTunesAndKeys() = runTest {
+    val longTones = db.exercises().all().first { it.name == "Long tones" }
+    val tuneExercise = db.exercises().all().first { it.appliesToTune }
+    // Sessions on days 1, 2 and 3, then a gap, then day 5.
+    for (d in listOf(1, 2, 3, 5)) {
+      val s = log.start(listOf(PlanBlock.Exercise(longTones.id, 5)), null, at = d * day + 1_000)
+      log.finish(s, 0, BlockOutcome.DONE, null, 300_000, at = d * day + 301_000)
+    }
+    var clock = 5 * day
+    val practice = PracticeService(db, now = { clock })
+    val solar = db.standards().bySlug("solar")!!.id
+    val nardis = db.standards().bySlug("nardis")!!.id
+    practice.startLearning(solar)
+    practice.startLearning(nardis)
+    repeat(2) { practice.grade(practice.cardForBlock(PlanBlock.Tune(solar, tuneExercise.id, 10), Transposition.C)!!, Grade.GOOD) }
+    practice.grade(practice.cardForBlock(PlanBlock.Tune(nardis, tuneExercise.id, 10), Transposition.C)!!, Grade.GOOD)
+
+    val sessions = history.sessions()
+    val stats = history.stats(sessions, ZoneOffset.UTC, today = LocalDate.of(1970, 1, 6))
+    assertEquals(4 * 300_000L, stats.practicedMs)
+    assertEquals(4, stats.sessions)
+    // Today has no practice yet, so the streak runs to yesterday.
+    assertEquals(1, stats.currentStreak)
+    assertEquals(3, stats.longestStreak)
+    assertEquals(listOf("Solar" to 2, "Nardis" to 1), stats.topTunes)
+    assertEquals(3, stats.repsByKey.sum())
+    assertEquals(2, stats.learning)
+    assertEquals(0, stats.repertoire)
+    // A week with no practice breaks the streak.
+    assertEquals(0, history.stats(sessions, ZoneOffset.UTC, today = LocalDate.of(1970, 1, 12)).currentStreak)
+  }
 }

@@ -7,15 +7,19 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -38,11 +42,13 @@ import androidx.lifecycle.viewModelScope
 import com.larakelley.woodshed.data.HistoryService
 import com.larakelley.woodshed.data.PastSession
 import com.larakelley.woodshed.data.PracticeDay
+import com.larakelley.woodshed.data.PracticeStats
 import com.larakelley.woodshed.data.db.BlockOutcome
 import com.larakelley.woodshed.theme.BackButton
 import com.larakelley.woodshed.theme.EmptyState
 import com.larakelley.woodshed.theme.LocalCallie
 import com.larakelley.woodshed.theme.PillChoice
+import com.larakelley.woodshed.theme.SectionLabel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -62,6 +68,7 @@ data class HistoryUi(
   val days: Map<LocalDate, PracticeDay> = emptyMap(),
   val month: YearMonth = YearMonth.now(),
   val selected: LocalDate? = null,
+  val stats: PracticeStats? = null,
   val loaded: Boolean = false,
 )
 
@@ -77,7 +84,8 @@ class HistoryViewModel(
     viewModelScope.launch {
       val sessions = history.sessions()
       val days = history.days(sessions, zone)
-      _ui.update { it.copy(sessions = sessions, days = days, loaded = true) }
+      val stats = history.stats(sessions, zone, today())
+      _ui.update { it.copy(sessions = sessions, days = days, stats = stats, loaded = true) }
     }
   }
 
@@ -102,6 +110,7 @@ data class HistoryActions(
 enum class HistoryView(val label: String) {
   LIST("List"),
   CALENDAR("Calendar"),
+  STATS("Stats"),
 }
 
 @Composable
@@ -126,7 +135,9 @@ fun HistoryScreen(
 
       view == HistoryView.LIST -> SessionList(ui.sessions, zone)
 
-      else -> CalendarView(ui, actions, zone)
+      view == HistoryView.CALENDAR -> CalendarView(ui, actions, zone)
+
+      else -> ui.stats?.let { StatsView(it) }
     }
   }
 }
@@ -295,4 +306,86 @@ private fun DayCell(day: LocalDate, practice: PracticeDay?, selected: Boolean, o
   ) {
     Text("${day.dayOfMonth}", style = MaterialTheme.typography.bodyMedium, color = if (strength != null && strength > 0.6f) callie.accentText else callie.text)
   }
+}
+
+private val KEY_NAMES = listOf("C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B")
+
+@Composable
+private fun StatsView(stats: PracticeStats) {
+  val callie = LocalCallie.current
+  LazyColumn(Modifier.fillMaxSize().testTag("stats"), contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp)) {
+    item {
+      Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+          StatTile("Time in sessions", minutesLabel(stats.practicedMs), Modifier.weight(1f), "stat-time")
+          StatTile("Sessions", "${stats.sessions}", Modifier.weight(1f), "stat-sessions")
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+          StatTile("Current streak", daysLabel(stats.currentStreak), Modifier.weight(1f), "stat-streak")
+          StatTile("Longest streak", daysLabel(stats.longestStreak), Modifier.weight(1f), "stat-longest")
+        }
+      }
+      SectionLabel("Tunes")
+      Text(
+        "${stats.learning} learning, ${stats.repertoire} in repertoire. ${reachedLabel(stats.reachedRepertoireThisMonth)}",
+        style = MaterialTheme.typography.bodyLarge,
+        modifier = Modifier.testTag("stat-tunes"),
+      )
+      if (stats.topTunes.isNotEmpty()) {
+        SectionLabel("Most practised")
+        stats.topTunes.forEach { (title, reps) ->
+          Row(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+            Text(title, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+            Text(repsLabel(reps), style = MaterialTheme.typography.bodyLarge, color = callie.textMuted)
+          }
+        }
+      }
+      if (stats.repsByKey.any { it > 0 }) {
+        SectionLabel("Graded reps by written key")
+        KeyBars(stats.repsByKey)
+      }
+    }
+  }
+}
+
+@Composable
+private fun StatTile(label: String, value: String, modifier: Modifier, tag: String) {
+  val callie = LocalCallie.current
+  Column(modifier.background(callie.surfaceAlt, RoundedCornerShape(16.dp)).padding(16.dp).testTag(tag)) {
+    Text(value, style = MaterialTheme.typography.headlineSmall)
+    Text(label, style = MaterialTheme.typography.bodyMedium, color = callie.textMuted)
+  }
+}
+
+/** One thin bar per key from C, each named and counted in text so the bars are never read by color alone. */
+@Composable
+private fun KeyBars(reps: List<Int>) {
+  val callie = LocalCallie.current
+  val most = reps.max().coerceAtLeast(1)
+  Column(Modifier.testTag("key-bars"), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+    reps.forEachIndexed { pc, n ->
+      Row(Modifier.fillMaxWidth().height(24.dp), verticalAlignment = Alignment.CenterVertically) {
+        Text(KEY_NAMES[pc], style = MaterialTheme.typography.labelLarge, modifier = Modifier.width(36.dp))
+        Box(Modifier.weight(1f).height(10.dp)) {
+          if (n > 0) {
+            Box(
+              Modifier.fillMaxWidth(n.toFloat() / most).height(10.dp)
+                .background(callie.accent, RoundedCornerShape(topEnd = 4.dp, bottomEnd = 4.dp)),
+            )
+          }
+        }
+        Text("$n", style = MaterialTheme.typography.labelLarge, color = callie.textMuted, textAlign = TextAlign.End, modifier = Modifier.width(40.dp))
+      }
+    }
+  }
+}
+
+fun daysLabel(n: Int) = if (n == 1) "1 day" else "$n days"
+
+fun repsLabel(n: Int) = if (n == 1) "1 rep" else "$n reps"
+
+fun reachedLabel(n: Int) = when (n) {
+  0 -> "None reached repertoire this month."
+  1 -> "1 reached repertoire this month."
+  else -> "$n reached repertoire this month."
 }
