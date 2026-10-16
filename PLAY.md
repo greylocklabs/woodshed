@@ -59,8 +59,11 @@ Not collected: location, personal info, contacts, files, photos, audio (the tune
 phone and keeps nothing), health, financial info, messages, identifiers and device IDs. The IP address the
 report service sees for rate limiting is processed ephemerally and not declared.
 
+The in-app review prompt is shown by the Play Store through Play's review library; the app sends nothing for
+it and never learns whether the user rated it.
+
 To check before submitting: whether Play treats YouTube and Vimeo videos loaded in a WebView, after the user
-taps play, as data collection by the app. As written, the app sends nothing to them itself; the services
+taps play, as data collection by the app, and whether its guidance asks for the review library to be declared. As written, the app sends nothing to them itself; the services
 receive what any website they serve receives.
 
 ## Permissions and declarations
