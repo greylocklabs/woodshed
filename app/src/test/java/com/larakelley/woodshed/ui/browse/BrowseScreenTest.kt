@@ -1,10 +1,14 @@
 package com.larakelley.woodshed.ui.browse
 
 import android.app.Application
+import androidx.compose.material3.Text
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.getOrNull
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
@@ -102,6 +106,24 @@ class BrowseScreenTest {
     compose.onNodeWithTag("solo-tune").performClick()
     compose.onNodeWithTag("tune-status").assertExists()
     compose.onNodeWithTag("tune-solo-9").performScrollTo().assertExists()
+  }
+
+  @Test
+  fun helpIsTheLastTab() {
+    compose.setContent {
+      val rows = tuneRows(standards, Transposition.C)
+      BrowseScreen(
+        BrowseState(Transposition.C, rows, rows.size, exerciseRows(exercises), exercises.size, allTunes = rows),
+        onSelectTransposition = {},
+        practiceTab = { Text("practice") },
+        helpTab = { Text("help content") },
+      )
+    }
+    compose.onNodeWithTag("tab-Help").performScrollTo().performClick()
+    compose.onNodeWithText("help content").assertExists()
+    val isTab = SemanticsMatcher("is a tab") { it.config.getOrNull(SemanticsProperties.TestTag)?.startsWith("tab-") == true }
+    val tabs = compose.onAllNodes(isTab).fetchSemanticsNodes().map { it.config[SemanticsProperties.TestTag] }
+    assertEquals("tab-Help", tabs.last())
   }
 
   @Test

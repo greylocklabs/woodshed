@@ -105,6 +105,7 @@ private val TAB_EMOJI = mapOf(
   "Tuner" to "🎯",
   "Tunes" to "🎵",
   "Exercises" to "💪",
+  "Help" to "❓",
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -126,6 +127,7 @@ fun BrowseScreen(
   metronomeTab: (@Composable () -> Unit)? = null,
   droneTab: (@Composable () -> Unit)? = null,
   tunerTab: (@Composable () -> Unit)? = null,
+  helpTab: (@Composable () -> Unit)? = null,
   settings: (@Composable (onBack: () -> Unit, modifier: Modifier) -> Unit)? = null,
   /** Solos on each tune, by tune id. */
   tuneSolos: Map<Long, List<SoloLink>> = emptyMap(),
@@ -152,6 +154,7 @@ fun BrowseScreen(
     if (tunerTab != null) add("Tuner")
     add("Tunes")
     add("Exercises")
+    if (helpTab != null) add("Help")
   }
   // Another tab asked to show a tune or a solo: close whatever is open here and switch to it.
   LaunchedEffect(navigation.pending) {
@@ -300,6 +303,8 @@ fun BrowseScreen(
         "Drone" -> droneTab?.invoke()
 
         "Tuner" -> tunerTab?.invoke()
+
+        "Help" -> helpTab?.invoke()
 
         "Tunes" -> {
           TuneFilters(state, onTuneFilter, onAdd = { editing = NEW_TUNE }, onPlaylists = { playlistsOpen = true })
