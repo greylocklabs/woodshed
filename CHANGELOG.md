@@ -5,6 +5,19 @@ published as that release's GitHub notes, so the headings must stay
 `## <version>`. Write the section for a version before running
 `make release`, which refuses to release without one.
 
+## 0.4.0
+
+### Added
+
+- **practice:** a History tab: every session and how each block went, and a
+  calendar of the days you practised. Sessions are recorded from this version
+  on.
+- **practice:** Stats: time practised, streaks, tunes learning and in
+  repertoire, the most practised tunes and reps per key.
+- **app:** a Help tab explaining how Woodshed works.
+- **app:** an occasional prompt to rate Woodshed on Google Play after a
+  finished session, and a Review on Google Play button in About.
+
 ## 0.3.0
 
 ### Added
