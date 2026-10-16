@@ -1,9 +1,11 @@
-"""Generates the Woodshed logo: assets/logo.svg, the website's copy and the Android launcher icon layers.
+"""Generates the Woodshed logo: assets/logo.svg and its 512 px PNG, the website's copy and the Android launcher
+icon layers.
 
 One shape list feeds both outputs, so the SVG and the app icon cannot drift apart.
-Run from the repo root: python3 tools/logo.py
+Run from the repo root: python3 tools/logo.py (the PNG needs ImageMagick's magick on the PATH)
 """
 import math
+import subprocess
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -164,9 +166,12 @@ if __name__ == "__main__":
     (ROOT / "assets").mkdir(exist_ok=True)
     (ROOT / "assets/logo.svg").write_text(svg())
     (ROOT / "www/logo.svg").write_text(svg())
+    # -strip drops the timestamps ImageMagick writes, so a rerun leaves the PNG byte-identical.
+    subprocess.run(["magick", "-background", "none", "-density", "384", str(ROOT / "assets/logo.svg"),
+                    "-resize", "512x512", "-strip", str(ROOT / "assets/logo.png")], check=True)
     (RES / "ic_launcher_foreground.xml").write_text(foreground())
     (RES / "ic_launcher_monochrome.xml").write_text(monochrome())
     (RES / "ic_launcher_background.xml").write_text(background())
     (RES / "logo.xml").write_text(foreground(LOGO_HEAD, "<group>"))
     (RES / "ic_notification.xml").write_text(notification())
-    print("wrote assets/logo.svg, www/logo.svg, the launcher icon layers, the notification icon and the in-app logo")
+    print("wrote assets/logo.svg and logo.png, www/logo.svg, the launcher icon layers, the notification icon and the in-app logo")
