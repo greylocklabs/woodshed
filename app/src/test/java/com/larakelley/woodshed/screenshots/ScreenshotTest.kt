@@ -169,6 +169,7 @@ class ScreenshotTest(private val mode: String) {
       onGrade = {},
       onNext = {},
       onStop = {},
+      transposition = Transposition.Eb,
     )
   }
 
