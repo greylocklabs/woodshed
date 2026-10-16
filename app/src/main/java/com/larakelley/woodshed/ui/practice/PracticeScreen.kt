@@ -50,6 +50,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.larakelley.woodshed.domain.Focus
@@ -342,12 +344,13 @@ fun SessionScreen(
   onSetBpm: (Int) -> Unit = {},
 ) {
   @Composable
-  fun DroneButton(label: String, pitchClass: Int?) {
+  fun DroneButton(label: String, pitchClass: Int?, modifier: Modifier) {
     StickerButton(
       onClick = { if (dronePlaying) onStopDrone() else onDrone(pitchClass) },
       sticker = neutralSticker,
-      modifier = Modifier.height(44.dp).testTag("use-drone"),
-    ) { Text(if (dronePlaying) "◼ Stop the drone" else label, style = MaterialTheme.typography.labelLarge) }
+      modifier = modifier.height(44.dp).testTag("use-drone"),
+      contentPadding = PaddingValues(horizontal = 8.dp),
+    ) { Text(if (dronePlaying) "◼ Stop drone" else label, style = MaterialTheme.typography.labelLarge, maxLines = 1, softWrap = false) }
   }
   val view = LocalView.current
   val uris = LocalUriHandler.current
@@ -443,21 +446,38 @@ fun SessionScreen(
         }
       }
     }
-    // The metronome and drone stay in reach on every block, so stopping one never means leaving the session.
+    // The metronome and drone stay in reach on every block, so stopping one never means leaving the session. The row
+    // shares out the width rather than scrolling, so every control shows at once.
     Row(
-      Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 4.dp).testTag("session-tools"),
-      horizontalArrangement = Arrangement.spacedBy(8.dp),
+      Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp).testTag("session-tools"),
+      horizontalArrangement = Arrangement.spacedBy(6.dp),
       verticalAlignment = Alignment.CenterVertically,
     ) {
-      StickerButton(onClick = onToggleMetronome, sticker = neutralSticker, modifier = Modifier.height(44.dp).testTag("session-metronome")) {
-        Text(if (metronomeRunning) "◼ $bpm bpm" else "⏱️ $bpm bpm", style = MaterialTheme.typography.labelLarge)
-      }
-      OutlinedButton(onClick = { onSetBpm(bpm - 5) }, modifier = Modifier.testTag("session-slower")) { Text("-5") }
-      OutlinedButton(onClick = { onSetBpm(bpm + 5) }, modifier = Modifier.testTag("session-faster")) { Text("+5") }
+      StickerButton(
+        onClick = onToggleMetronome,
+        sticker = neutralSticker,
+        modifier = Modifier.weight(1.1f).height(44.dp).semantics {
+          contentDescription =
+            if (metronomeRunning) "Stop the metronome, $bpm bpm" else "Start the metronome at $bpm bpm"
+        }
+          .testTag("session-metronome"),
+        contentPadding = PaddingValues(horizontal = 8.dp),
+      ) { Text(if (metronomeRunning) "◼ $bpm" else "⏱️ $bpm", style = MaterialTheme.typography.labelLarge, maxLines = 1, softWrap = false) }
+      OutlinedButton(
+        onClick = { onSetBpm(bpm - 5) },
+        modifier = Modifier.weight(0.7f).height(44.dp).testTag("session-slower"),
+        contentPadding = PaddingValues(0.dp),
+      ) { Text("-5", maxLines = 1) }
+      OutlinedButton(
+        onClick = { onSetBpm(bpm + 5) },
+        modifier = Modifier.weight(0.7f).height(44.dp).testTag("session-faster"),
+        contentPadding = PaddingValues(0.dp),
+      ) { Text("+5", maxLines = 1) }
+      val droneModifier = Modifier.weight(1.5f)
       when {
-        step is StepView.Tune && step.card.concertPitchClass != null -> DroneButton("🔊 Drone on the key", step.card.concertPitchClass)
-        step is StepView.Exercise && step.drone != null -> DroneButton("🔊 Drone", step.drone.concertPitchClass)
-        else -> DroneButton("🔊 Drone", null)
+        step is StepView.Tune && step.card.concertPitchClass != null -> DroneButton("🔊 Drone", step.card.concertPitchClass, droneModifier)
+        step is StepView.Exercise && step.drone != null -> DroneButton("🔊 Drone", step.drone.concertPitchClass, droneModifier)
+        else -> DroneButton("🔊 Drone", null, droneModifier)
       }
     }
     when (step) {
