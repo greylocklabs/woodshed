@@ -1,6 +1,7 @@
 package com.larakelley.woodshed.ui.settings
 
 import android.app.Application
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertIsOff
 import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.assertTextContains
@@ -11,6 +12,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import com.larakelley.woodshed.data.ThemeMode
 import com.larakelley.woodshed.domain.Instrument
+import com.larakelley.woodshed.ui.browse.DEFAULT_TABS
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -30,6 +32,20 @@ class SettingsScreenTest {
     compose.onNodeWithTag("theme-dark").performClick()
     compose.onNodeWithTag("key-bb").assertDoesNotExist()
     assertEquals(listOf<Any>(ThemeMode.DARK), picked)
+  }
+
+  @Test
+  fun generalTabMovesTabsAndResetsTheirOrder() {
+    val moves = mutableListOf<Pair<String, Int>>()
+    var reset = false
+    val ui = SettingsUi(tabOrder = listOf("Tunes") + DEFAULT_TABS.filter { it != "Tunes" })
+    compose.setContent { SettingsScreen(ui, SettingsActions(moveTab = { n, by -> moves += n to by }, resetTabs = { reset = true }), onBack = {}) }
+    compose.onNodeWithTag("tab-up-Tunes").performScrollTo().assertIsNotEnabled()
+    compose.onNodeWithTag("tab-down-Tunes").performClick()
+    compose.onNodeWithTag("tab-up-Practice").performScrollTo().performClick()
+    compose.onNodeWithTag("reset-tabs").performScrollTo().performClick()
+    assertEquals(listOf("Tunes" to 1, "Practice" to -1), moves)
+    assertEquals(true, reset)
   }
 
   @Test

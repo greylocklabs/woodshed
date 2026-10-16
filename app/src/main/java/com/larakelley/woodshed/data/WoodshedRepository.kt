@@ -62,6 +62,11 @@ class WoodshedRepository(
   private val _themeMode = MutableStateFlow(enumPref(THEME_MODE) ?: ThemeMode.SYSTEM)
   val themeMode: StateFlow<ThemeMode> = _themeMode.asStateFlow()
 
+  private val _tabOrder = MutableStateFlow(prefs.getString(TAB_ORDER, null)?.split(',')?.filter { it.isNotEmpty() }.orEmpty())
+
+  /** The main tabs in the user's order, or empty for the default order. */
+  val tabOrder: StateFlow<List<String>> = _tabOrder.asStateFlow()
+
   private val _lastBackupAt = MutableStateFlow(prefs.getLong(LAST_BACKUP_AT, 0L).takeIf { it > 0 })
 
   /** When a backup was last exported from this device, or null if never. */
@@ -122,6 +127,11 @@ class WoodshedRepository(
     _myInstruments.value = instruments
   }
 
+  fun setTabOrder(order: List<String>) {
+    prefs.edit { if (order.isEmpty()) remove(TAB_ORDER) else putString(TAB_ORDER, order.joinToString(",")) }
+    _tabOrder.value = order
+  }
+
   fun setThemeMode(mode: ThemeMode) {
     prefs.edit { putString(THEME_MODE, mode.name) }
     _themeMode.value = mode
@@ -139,6 +149,7 @@ class WoodshedRepository(
     themeMode = themeMode.value.name,
     sessionMinutes = sessionMinutes,
     sessionFocus = sessionFocus.map { it.name },
+    tabOrder = tabOrder.value,
   )
 
   /** Applies a restored backup's settings, ignoring any value this version does not know. */
@@ -147,6 +158,7 @@ class WoodshedRepository(
     setMyInstruments(s.myInstruments.mapNotNull { n -> Instrument.entries.firstOrNull { it.name == n } }.toSet())
     Transposition.entries.firstOrNull { it.name == s.transposition }?.let(::setTransposition)
     ThemeMode.entries.firstOrNull { it.name == s.themeMode }?.let(::setThemeMode)
+    setTabOrder(s.tabOrder)
     rememberSession(s.sessionMinutes ?: sessionMinutes, s.sessionFocus.mapNotNull { n -> Focus.entries.firstOrNull { it.name == n } }.toSet())
   }
 
@@ -186,6 +198,7 @@ class WoodshedRepository(
     const val INSTRUMENT = "instrument"
     const val MY_INSTRUMENTS = "my_instruments"
     const val THEME_MODE = "theme_mode"
+    const val TAB_ORDER = "tab_order"
     const val LAST_BACKUP_AT = "last_backup_at"
     const val SESSION_MINUTES = "session_minutes"
     const val SESSION_FOCUS = "session_focus"

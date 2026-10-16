@@ -30,6 +30,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLinkStyles
@@ -55,6 +57,10 @@ import com.larakelley.woodshed.theme.SectionLabel
 import com.larakelley.woodshed.theme.StickerButton
 import com.larakelley.woodshed.theme.SwitchRow
 import com.larakelley.woodshed.theme.neutralSticker
+import com.larakelley.woodshed.ui.browse.DEFAULT_TABS
+import com.larakelley.woodshed.ui.browse.TAB_EMOJI
+import com.larakelley.woodshed.ui.browse.moveTab
+import com.larakelley.woodshed.ui.browse.orderTabs
 import com.larakelley.woodshed.ui.report.ReportButton
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -78,6 +84,8 @@ data class SettingsUi(
   /** The outcome of the last export or restore, shown until the next one. */
   val message: String? = null,
   val version: String = "",
+  /** Every main tab, in the order the user has them. */
+  val tabOrder: List<String> = DEFAULT_TABS,
 )
 
 class SettingsViewModel(
@@ -94,8 +102,9 @@ class SettingsViewModel(
       repository.themeMode,
       repository.lastBackupAt,
       message,
-    ) { (i, mine, t), m, last, msg ->
-      SettingsUi(i, mine, t, m, last, msg, version)
+      repository.tabOrder,
+    ) { (i, mine, t), m, last, msg, order ->
+      SettingsUi(i, mine, t, m, last, msg, version, orderTabs(DEFAULT_TABS, order))
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SettingsUi(version = version))
 
   fun setInstrument(i: Instrument) = repository.setInstrument(i)
@@ -109,6 +118,11 @@ class SettingsViewModel(
   }
 
   fun setThemeMode(m: ThemeMode) = repository.setThemeMode(m)
+
+  /** Moves a main tab [by] places; negative moves it towards the start. */
+  fun moveTab(name: String, by: Int) = repository.setTabOrder(moveTab(orderTabs(DEFAULT_TABS, repository.tabOrder.value), name, by))
+
+  fun resetTabs() = repository.setTabOrder(emptyList())
 
   fun export(uri: Uri, resolver: ContentResolver) {
     viewModelScope.launch {
@@ -149,6 +163,8 @@ data class SettingsActions(
   val setThemeMode: (ThemeMode) -> Unit = {},
   val export: (Uri, ContentResolver) -> Unit = { _, _ -> },
   val restore: (Uri, ContentResolver) -> Unit = { _, _ -> },
+  val moveTab: (String, Int) -> Unit = { _, _ -> },
+  val resetTabs: () -> Unit = {},
 )
 
 enum class SettingsTab(val label: String) {
@@ -196,6 +212,28 @@ private fun GeneralTab(ui: SettingsUi, actions: SettingsActions) {
     SectionLabel("Appearance")
     PillChoice(ThemeMode.entries.map { it.label to it }, ui.themeMode, actions.setThemeMode, tagPrefix = "theme")
     Helper("System follows the phone's light or dark setting.")
+    SectionLabel("Tab order")
+    Helper("The order of the tabs along the top of the app.")
+  }
+  ui.tabOrder.forEachIndexed { i, name ->
+    Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp).testTag("tab-order-$name"), verticalAlignment = Alignment.CenterVertically) {
+      Text("${TAB_EMOJI[name].orEmpty()} $name", style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+      TextButton(
+        onClick = { actions.moveTab(name, -1) },
+        enabled = i > 0,
+        modifier = Modifier.semantics { contentDescription = "Move $name earlier" }.testTag("tab-up-$name"),
+      ) { Text("▲") }
+      TextButton(
+        onClick = { actions.moveTab(name, 1) },
+        enabled = i < ui.tabOrder.lastIndex,
+        modifier = Modifier.semantics { contentDescription = "Move $name later" }.testTag("tab-down-$name"),
+      ) { Text("▼") }
+    }
+  }
+  Padded {
+    TextButton(onClick = actions.resetTabs, enabled = ui.tabOrder != DEFAULT_TABS, modifier = Modifier.testTag("reset-tabs")) {
+      Text("Reset to the default order")
+    }
   }
 }
 

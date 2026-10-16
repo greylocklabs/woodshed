@@ -71,6 +71,7 @@ class MainActivity : ComponentActivity() {
     val freshInstall = info.firstInstallTime == info.lastUpdateTime
     setContent {
       val themeMode by app.repository.themeMode.collectAsStateWithLifecycle()
+      val tabOrder by app.repository.tabOrder.collectAsStateWithLifecycle()
       val dark = when (themeMode) {
         ThemeMode.SYSTEM -> isSystemInDarkTheme()
         ThemeMode.LIGHT -> false
@@ -199,6 +200,7 @@ class MainActivity : ComponentActivity() {
                 HistoryScreen(historyUi, HistoryActions(history::showMonth, history::select, history::sessionsOn, history::delete))
               },
               helpTab = { HelpScreen() },
+              tabOrder = tabOrder,
               tunerTab = {
                 // The microphone is only on while this tab is showing.
                 DisposableEffect(Unit) { onDispose { app.tuner.stop() } }
@@ -214,6 +216,8 @@ class MainActivity : ComponentActivity() {
                     settings::setThemeMode,
                     settings::export,
                     settings::restore,
+                    moveTab = settings::moveTab,
+                    resetTabs = settings::resetTabs,
                   ),
                   onBack = {
                     settings.clearMessage()

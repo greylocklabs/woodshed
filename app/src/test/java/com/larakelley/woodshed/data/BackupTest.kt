@@ -65,6 +65,7 @@ class BackupTest {
     repository.setInstrument(Instrument.ALTO_SAX)
     repository.setThemeMode(ThemeMode.DARK)
     repository.rememberSession(45, setOf(Focus.SPEED))
+    repository.setTabOrder(listOf("Tunes", "Practice"))
     val states = db.tuneStates().all().sortedBy { it.standardId }
     val knowledge = db.tuneKnowledge().all()
     val events = db.reviewEvents().all().map { it.copy(id = 0) }
@@ -76,6 +77,7 @@ class BackupTest {
     db.reviewEvents().deleteAll()
     repository.setTransposition(Transposition.C)
     repository.setThemeMode(ThemeMode.SYSTEM)
+    repository.setTabOrder(emptyList())
 
     val result = backups.restore(text)
     assertEquals(RestoreResult(tunes = 2, knowledge = 1, reviews = 1, skipped = 0), result)
@@ -86,6 +88,7 @@ class BackupTest {
     assertEquals(Transposition.Eb, repository.transposition.value)
     assertEquals(ThemeMode.DARK, repository.themeMode.value)
     assertEquals(setOf(Focus.SPEED), repository.sessionFocus)
+    assertEquals(listOf("Tunes", "Practice"), repository.tabOrder.value)
   }
 
   @Test
