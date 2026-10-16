@@ -54,6 +54,8 @@ data class SavedSession(
   val reviewed: Int = 0,
   /** The session's row in the history, or null for one saved before sessions were recorded. */
   val sessionId: Long? = null,
+  /** True when the session already passed its last block, and the user has gone back to one since. */
+  val completed: Boolean = false,
 )
 
 /** Keeps the running session in its own preferences file, outside the settings that backups carry. */
@@ -101,6 +103,7 @@ class SessionRunner(
     if (saved != null && now() - saved.stepStartedAt < STALE_MS && saved.index in saved.blocks.indices) {
       blocks = saved.blocks
       sessionId = saved.sessionId
+      completed = saved.completed
       _state.value = SessionState(running = true, stepCount = blocks.size, reviewed = saved.reviewed)
       show(saved.index, startedAt = saved.stepStartedAt, pausedAt = saved.pausedAt)
     } else if (saved != null) {
@@ -197,7 +200,7 @@ class SessionRunner(
 
   private fun save() {
     val s = _state.value
-    store.save(if (s.running && s.step != null) SavedSession(blocks, s.stepIndex, s.stepStartedAt, s.pausedAt, s.reviewed, sessionId) else null)
+    store.save(if (s.running && s.step != null) SavedSession(blocks, s.stepIndex, s.stepStartedAt, s.pausedAt, s.reviewed, sessionId, completed) else null)
   }
 
   /** Shows block [index], skipping any whose tune, exercise or solo has gone; past the end, the session is done. */
