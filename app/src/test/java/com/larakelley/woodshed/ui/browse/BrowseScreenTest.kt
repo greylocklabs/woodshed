@@ -109,7 +109,7 @@ class BrowseScreenTest {
   }
 
   @Test
-  fun helpIsTheLastTab() {
+  fun theTabsFollowTheSavedOrder() {
     compose.setContent {
       val rows = tuneRows(standards, Transposition.C)
       BrowseScreen(
@@ -118,14 +118,15 @@ class BrowseScreenTest {
         practiceTab = { Text("practice") },
         historyTab = { Text("history content") },
         helpTab = { Text("help content") },
+        tabOrder = listOf("Help"),
       )
     }
     compose.onNodeWithTag("tab-Help").performScrollTo().performClick()
     compose.onNodeWithText("help content").assertExists()
     val isTab = SemanticsMatcher("is a tab") { it.config.getOrNull(SemanticsProperties.TestTag)?.startsWith("tab-") == true }
     val tabs = compose.onAllNodes(isTab).fetchSemanticsNodes().map { it.config[SemanticsProperties.TestTag] }
-    assertEquals("tab-Help", tabs.last())
-    assertEquals(listOf("tab-Practice", "tab-History"), tabs.take(2))
+    // Help was moved to the front; the rest keep their default order.
+    assertEquals(listOf("tab-Help", "tab-Practice", "tab-History"), tabs.take(3))
   }
 
   @Test

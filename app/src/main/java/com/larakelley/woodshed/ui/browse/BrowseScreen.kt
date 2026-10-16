@@ -95,20 +95,6 @@ private const val NEW_EXERCISE = -1L
 /** The editor's target while adding a tune rather than editing one. */
 private const val NEW_TUNE = "+new"
 
-/** Shown before each tab name in the main navigation. */
-private val TAB_EMOJI = mapOf(
-  "Practice" to "🎷",
-  "History" to "📜",
-  "Random" to "🎲",
-  "Transcribe" to "🎧",
-  "Metronome" to "⏱️",
-  "Drone" to "🔊",
-  "Tuner" to "🎯",
-  "Tunes" to "🎵",
-  "Exercises" to "💪",
-  "Help" to "❓",
-)
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BrowseScreen(
@@ -130,13 +116,16 @@ fun BrowseScreen(
   droneTab: (@Composable () -> Unit)? = null,
   tunerTab: (@Composable () -> Unit)? = null,
   helpTab: (@Composable () -> Unit)? = null,
+  /** The user's tab order; tabs it does not name keep their default places. */
+  tabOrder: List<String> = emptyList(),
   settings: (@Composable (onBack: () -> Unit, modifier: Modifier) -> Unit)? = null,
   /** Solos on each tune, by tune id. */
   tuneSolos: Map<Long, List<SoloLink>> = emptyMap(),
   navigation: AppNavigation = remember { AppNavigation() },
 ) {
   var settingsOpen by rememberSaveable { mutableStateOf(false) }
-  var tab by rememberSaveable { mutableIntStateOf(0) }
+  // Kept by name, so reordering the tabs leaves the same one showing.
+  var tabName by rememberSaveable { mutableStateOf<String?>(null) }
   var openSlug by rememberSaveable { mutableStateOf<String?>(null) }
 
   /** A tune's slug while editing it, [NEW_TUNE] while adding one, or null. */
@@ -147,18 +136,22 @@ fun BrowseScreen(
 
   /** An exercise's id while editing it, [NEW_EXERCISE] while adding one, or null. */
   var editingExercise by rememberSaveable { mutableStateOf<Long?>(null) }
-  val tabs = buildList {
-    if (practiceTab != null) add("Practice")
-    if (historyTab != null) add("History")
-    if (diceTab != null) add("Random")
-    if (transcribeTab != null) add("Transcribe")
-    if (metronomeTab != null) add("Metronome")
-    if (droneTab != null) add("Drone")
-    if (tunerTab != null) add("Tuner")
-    add("Tunes")
-    add("Exercises")
-    if (helpTab != null) add("Help")
-  }
+  val tabs = orderTabs(
+    buildList {
+      if (practiceTab != null) add("Practice")
+      if (historyTab != null) add("History")
+      if (diceTab != null) add("Random")
+      if (transcribeTab != null) add("Transcribe")
+      if (metronomeTab != null) add("Metronome")
+      if (droneTab != null) add("Drone")
+      if (tunerTab != null) add("Tuner")
+      add("Tunes")
+      add("Exercises")
+      if (helpTab != null) add("Help")
+    },
+    tabOrder,
+  )
+  val tab = tabs.indexOf(tabName).coerceAtLeast(0)
   // Another tab asked to show a tune or a solo: close whatever is open here and switch to it.
   LaunchedEffect(navigation.pending) {
     val to = navigation.pending ?: return@LaunchedEffect
@@ -173,11 +166,11 @@ fun BrowseScreen(
       is Destination.Tune -> {
         navigation.take()
         openSlug = (state.allTunes.ifEmpty { state.tunes }).firstOrNull { it.id == to.id }?.slug
-        tab = tabs.indexOf("Tunes")
+        tabName = "Tunes"
       }
 
       // The Transcribe tab takes the request once it is showing.
-      is Destination.Solo -> tabs.indexOf("Transcribe").takeIf { it >= 0 }?.let { tab = it } ?: navigation.take()
+      is Destination.Solo -> if ("Transcribe" in tabs) tabName = "Transcribe" else navigation.take()
     }
   }
 
@@ -290,7 +283,7 @@ fun BrowseScreen(
       PrimaryScrollableTabRow(selectedTabIndex = tab, edgePadding = 8.dp) {
         tabs.forEachIndexed { i, label ->
           Tab(selected = tab == i, onClick = {
-            tab = i
+            tabName = label
           }, text = { Text("${TAB_EMOJI[label].orEmpty()} $label".trim()) }, modifier = Modifier.testTag("tab-$label"))
         }
       }

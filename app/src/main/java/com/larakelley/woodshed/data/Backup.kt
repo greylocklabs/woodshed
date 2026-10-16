@@ -82,6 +82,8 @@ data class BackupSettings(
   @SerialName("theme_mode") val themeMode: String? = null,
   @SerialName("session_minutes") val sessionMinutes: Int? = null,
   @SerialName("session_focus") val sessionFocus: List<String> = emptyList(),
+  /** The main tabs in the user's order, by name; empty for the default. */
+  @SerialName("tab_order") val tabOrder: List<String> = emptyList(),
 )
 
 @Serializable
