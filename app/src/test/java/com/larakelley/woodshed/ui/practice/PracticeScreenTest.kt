@@ -112,10 +112,10 @@ class PracticeScreenTest {
     }
     compose.mainClock.advanceTimeByFrame()
 
-    compose.onNodeWithText("⏱️ 120 bpm").performClick()
+    compose.onNodeWithText("⏱️ 120").performClick()
     compose.mainClock.advanceTimeByFrame()
     compose.mainClock.advanceTimeBy(500)
-    compose.onNodeWithText("◼ 120 bpm").assertExists()
+    compose.onNodeWithText("◼ 120").assertExists()
     compose.onNodeWithTag("session-faster").performClick()
     compose.onNodeWithTag("session-slower").performClick()
     assertEquals(1, toggled)
