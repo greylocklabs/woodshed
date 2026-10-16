@@ -170,7 +170,8 @@ class SessionRunner(
   }
 
   fun stop() = serially {
-    sessionId?.let { log.end(it, now(), completed = _state.value.running && _state.value.step == null) }
+    // A session worked to the end was logged as completed when its last block finished; ending one early logs it here.
+    if (_state.value.running && _state.value.step != null) sessionId?.let { log.end(it, now(), completed = false) }
     sessionId = null
     blocks = emptyList()
     card = null
@@ -201,6 +202,8 @@ class SessionRunner(
     if (block != null && step == null) return show(index + 1, startedAt, pausedAt)
     _state.value = _state.value.copy(step = step, stepIndex = index, stepStartedAt = startedAt, pausedAt = pausedAt)
     save()
+    // Past the last block the session is complete, whether or not Finish is ever tapped.
+    if (block == null) sessionId?.let { log.end(it, now(), completed = true) }
   }
 
   private suspend fun view(block: PlanBlock): StepView? = when (block) {
