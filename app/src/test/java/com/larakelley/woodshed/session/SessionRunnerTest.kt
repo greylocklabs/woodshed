@@ -125,6 +125,21 @@ class SessionRunnerTest {
   }
 
   @Test
+  fun goingBackFromDoneAndEndingKeepsTheSessionCompleted() {
+    val r = runner()
+    r.start(plan)
+    r.next()
+    r.grade(Grade.GOOD)
+    val doneAt = clock
+    clock += 60_000
+    r.previous()
+    r.stop()
+    val session = runTestResult { db.sessions().all() }.single()
+    assertTrue(session.completed)
+    assertEquals(doneAt, session.endedAt)
+  }
+
+  @Test
   fun endingEarlyLeavesTheRestUnfinished() {
     val r = runner()
     r.start(plan)
