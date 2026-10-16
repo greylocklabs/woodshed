@@ -73,6 +73,12 @@ NOTES = [ellipse(cx, cy, *HEAD_RADII, tilt=HEAD_TILT) for cx, cy in HEADS] + STE
 SIDING_PATHS = [f"M{SIDING_X[0]} {y} H{SIDING_X[1]}" for y in SIDING_YS]
 
 
+# The drawing spans x 20-108 and y 26.5-116 of its 128 units: the rounded roof peaks below its control point.
+CENTER = (64, 71.25)
+# The standalone logo moves the drawing up by this much, so it sits centred in its own 128-unit frame.
+LIFT = CENTER[1] - 64
+
+
 def svg():
     x1, y1, x2, y2 = GRADIENT
     parts = [
@@ -81,18 +87,17 @@ def svg():
         f'  <defs><linearGradient id="body" gradientUnits="userSpaceOnUse" x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}">'
         f'<stop offset="0" stop-color="{BODY[0]}"/><stop offset="1" stop-color="{BODY[1]}"/></linearGradient></defs>',
         "  <!-- a pink shed raised on a plum edge, its siding a staff with two beamed eighth notes -->",
+        f'  <g transform="translate(0 {-LIFT})">',
         f'  <path d="{edge()}" fill="{EDGE}"/>',
         f'  <path d="{SHED}" fill="url(#body)"/>',
         f'  <g stroke="{SIDING}" stroke-width="{SIDING_WIDTH}" opacity="{SIDING_ALPHA}">'
         + "".join(f'<path d="{d}"/>' for d in SIDING_PATHS) + "</g>",
         f'  <g fill="{INK}">' + "".join(f'<path d="{d}"/>' for d in NOTES) + "</g>",
+        "  </g>",
         "</svg>",
     ]
     return "\n".join(parts) + "\n"
 
-
-# The drawing spans x 20-108 and y 24-116 of its 128 units.
-CENTER = (64, 70)
 
 
 def group(scale):
@@ -151,11 +156,11 @@ def monochrome():
 
 
 def notification():
-    """The status bar draws small icons as a white silhouette at 24dp, so the glyph's outline (x 16-112, y 20-114
-    with its stroke) fills a 100-unit frame."""
+    """The status bar draws small icons as a white silhouette at 24dp, so the glyph's outline (x 16-112, y 22.5-114
+    with its stroke; the edge is not drawn) is centred in a 100-unit frame."""
     head = HEAD.replace('android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108"',
                         'android:width="24dp" android:height="24dp" android:viewportWidth="100" android:viewportHeight="100"')
-    return head + '<group android:translateX="-14" android:translateY="-17">\n' + glyph() + "</group>\n</vector>\n"
+    return head + f'<group android:translateX="{50 - 64}" android:translateY="{50 - (22.5 + 114) / 2}">\n' + glyph() + "</group>\n</vector>\n"
 
 
 def background():
@@ -172,6 +177,6 @@ if __name__ == "__main__":
     (RES / "ic_launcher_foreground.xml").write_text(foreground())
     (RES / "ic_launcher_monochrome.xml").write_text(monochrome())
     (RES / "ic_launcher_background.xml").write_text(background())
-    (RES / "logo.xml").write_text(foreground(LOGO_HEAD, "<group>"))
+    (RES / "logo.xml").write_text(foreground(LOGO_HEAD, f'<group android:translateY="{-LIFT}">'))
     (RES / "ic_notification.xml").write_text(notification())
     print("wrote assets/logo.svg and logo.png, www/logo.svg, the launcher icon layers, the notification icon and the in-app logo")

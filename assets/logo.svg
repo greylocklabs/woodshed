@@ -2,8 +2,10 @@
   <title id="t">Woodshed</title>
   <defs><linearGradient id="body" gradientUnits="userSpaceOnUse" x1="20" y1="24" x2="46.4" y2="110"><stop offset="0" stop-color="#f7aed0"/><stop offset="1" stop-color="#d8639c"/></linearGradient></defs>
   <!-- a pink shed raised on a plum edge, its siding a staff with two beamed eighth notes -->
+  <g transform="translate(0 -7.25)">
   <path d="M58 35 Q64 30 70 35 L104 63 Q108 66 108 72 V104 Q108 116 96 116 H32 Q20 116 20 104 V72 Q20 66 24 63 Z" fill="#a23f72"/>
   <path d="M58 29 Q64 24 70 29 L104 57 Q108 60 108 66 V98 Q108 110 96 110 H32 Q20 110 20 98 V66 Q20 60 24 57 Z" fill="url(#body)"/>
   <g stroke="#f9c9de" stroke-width="2.4" opacity="0.85"><path d="M20 70 H108"/><path d="M20 77 H108"/><path d="M20 84 H108"/><path d="M20 91 H108"/><path d="M20 98 H108"/></g>
   <g fill="#3a1630"><path d="M48.99 89.69 A6.4 4.8 -20 1 0 61.01 85.31 A6.4 4.8 -20 1 0 48.99 89.69 Z"/><path d="M69.99 82.69 A6.4 4.8 -20 1 0 82.01 78.31 A6.4 4.8 -20 1 0 69.99 82.69 Z"/><path d="M57.8 61 H61.2 V86.6 H57.8 Z"/><path d="M78.8 54 H82.2 V79.6 H78.8 Z"/><path d="M57.8 58.8 L82.2 50.7 L82.2 57.7 L57.8 65.8 Z"/></g>
+  </g>
 </svg>
