@@ -43,6 +43,9 @@ import com.larakelley.woodshed.ui.practice.SetupUi
 import com.larakelley.woodshed.ui.practice.StepView
 import com.larakelley.woodshed.ui.practice.TuneGroup
 import com.larakelley.woodshed.ui.practice.droneNote
+import com.larakelley.woodshed.ui.settings.SettingsActions
+import com.larakelley.woodshed.ui.settings.SettingsScreen
+import com.larakelley.woodshed.ui.settings.SettingsUi
 import com.larakelley.woodshed.ui.tools.DroneActions
 import com.larakelley.woodshed.ui.tools.DroneScreen
 import com.larakelley.woodshed.ui.tools.MetronomeActions
@@ -270,4 +273,7 @@ class ScreenshotTest(private val mode: String) {
 
   @Test
   fun help() = capture("help") { HelpScreen() }
+
+  @Test
+  fun settingsGeneral() = capture("settings-general") { SettingsScreen(SettingsUi(version = "0.4.0"), SettingsActions(), onBack = {}) }
 }

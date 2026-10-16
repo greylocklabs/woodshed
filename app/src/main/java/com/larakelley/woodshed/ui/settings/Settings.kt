@@ -5,6 +5,8 @@ import android.net.Uri
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
@@ -17,17 +19,26 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
@@ -39,6 +50,7 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withLink
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.larakelley.woodshed.data.BackupException
@@ -49,6 +61,7 @@ import com.larakelley.woodshed.domain.Instrument
 import com.larakelley.woodshed.domain.InstrumentGroup
 import com.larakelley.woodshed.domain.ReportSubject
 import com.larakelley.woodshed.domain.Transposition
+import com.larakelley.woodshed.theme.AppIcons
 import com.larakelley.woodshed.theme.BackButton
 import com.larakelley.woodshed.theme.Helper
 import com.larakelley.woodshed.theme.LocalCallie
@@ -74,6 +87,7 @@ import kotlinx.coroutines.withContext
 import java.text.DateFormat
 import java.time.LocalDate
 import java.util.Date
+import kotlin.math.roundToInt
 
 data class SettingsUi(
   val instrument: Instrument? = null,
@@ -124,6 +138,8 @@ class SettingsViewModel(
 
   fun resetTabs() = repository.setTabOrder(emptyList())
 
+  fun setTabOrder(order: List<String>) = repository.setTabOrder(order)
+
   fun export(uri: Uri, resolver: ContentResolver) {
     viewModelScope.launch {
       message.value = try {
@@ -165,6 +181,7 @@ data class SettingsActions(
   val restore: (Uri, ContentResolver) -> Unit = { _, _ -> },
   val moveTab: (String, Int) -> Unit = { _, _ -> },
   val resetTabs: () -> Unit = {},
+  val setTabOrder: (List<String>) -> Unit = {},
 )
 
 enum class SettingsTab(val label: String) {
@@ -213,23 +230,9 @@ private fun GeneralTab(ui: SettingsUi, actions: SettingsActions) {
     PillChoice(ThemeMode.entries.map { it.label to it }, ui.themeMode, actions.setThemeMode, tagPrefix = "theme")
     Helper("System follows the phone's light or dark setting.")
     SectionLabel("Tab order")
-    Helper("The order of the tabs along the top of the app.")
+    Helper("The order of the tabs along the top of the app. Hold a tab and drag it, or use the arrows.")
   }
-  ui.tabOrder.forEachIndexed { i, name ->
-    Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp).testTag("tab-order-$name"), verticalAlignment = Alignment.CenterVertically) {
-      Text("${TAB_EMOJI[name].orEmpty()} $name", style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
-      TextButton(
-        onClick = { actions.moveTab(name, -1) },
-        enabled = i > 0,
-        modifier = Modifier.semantics { contentDescription = "Move $name earlier" }.testTag("tab-up-$name"),
-      ) { Text("▲") }
-      TextButton(
-        onClick = { actions.moveTab(name, 1) },
-        enabled = i < ui.tabOrder.lastIndex,
-        modifier = Modifier.semantics { contentDescription = "Move $name later" }.testTag("tab-down-$name"),
-      ) { Text("▼") }
-    }
-  }
+  TabOrderList(ui.tabOrder, actions.moveTab, actions.setTabOrder)
   Padded {
     TextButton(onClick = actions.resetTabs, enabled = ui.tabOrder != DEFAULT_TABS, modifier = Modifier.testTag("reset-tabs")) {
       Text("Reset to the default order")
@@ -389,5 +392,73 @@ private fun AboutTab(ui: SettingsUi) {
       "Tune data draws on standardrepertoire.com by David Miller, jazzstandards.com, Wikipedia, iReal Pro charts and the " +
         "Jazz Chord Progressions Corpus. The Nunito and Fraunces typefaces are used under the SIL Open Font License.",
     )
+  }
+}
+
+private val TAB_ROW_HEIGHT = 52.dp
+
+/**
+ * The main tabs in order. Hold a row and drag it to move it; the arrows move a tab one place, and are what screen
+ * readers use. A drag is applied when it ends, so the bar along the top changes once.
+ */
+@Composable
+private fun TabOrderList(order: List<String>, onMove: (String, Int) -> Unit, onSet: (List<String>) -> Unit) {
+  val callie = LocalCallie.current
+  val rowPx = with(LocalDensity.current) { TAB_ROW_HEIGHT.toPx() }
+  var items by remember(order) { mutableStateOf(order) }
+  var dragging by remember { mutableStateOf<String?>(null) }
+  var offset by remember { mutableFloatStateOf(0f) }
+  Column(Modifier.testTag("tab-order")) {
+    items.forEachIndexed { i, name ->
+      key(name) {
+        val dragged = name == dragging
+        Row(
+          Modifier.fillMaxWidth().height(TAB_ROW_HEIGHT).zIndex(if (dragged) 1f else 0f)
+            .graphicsLayer { translationY = if (dragged) offset else 0f }
+            .background(if (dragged) callie.surfaceAlt else Color.Transparent)
+            .pointerInput(name) {
+              detectDragGesturesAfterLongPress(
+                onDragStart = {
+                  dragging = name
+                  offset = 0f
+                },
+                onDrag = { change, amount ->
+                  change.consume()
+                  offset += amount.y
+                  // Past half a row, swap with the neighbour and carry the leftover offset to the new place.
+                  val from = items.indexOf(name)
+                  val to = (from + (offset / rowPx).roundToInt()).coerceIn(0, items.lastIndex)
+                  if (to != from) {
+                    items = moveTab(items, name, to - from)
+                    offset -= (to - from) * rowPx
+                  }
+                },
+                onDragEnd = {
+                  dragging = null
+                  offset = 0f
+                  if (items != order) onSet(items)
+                },
+                onDragCancel = {
+                  dragging = null
+                  offset = 0f
+                  items = order
+                },
+              )
+            }
+            .padding(start = 16.dp, end = 8.dp)
+            .testTag("tab-order-$name"),
+          verticalAlignment = Alignment.CenterVertically,
+        ) {
+          Icon(AppIcons.DragHandle, contentDescription = null, tint = callie.textMuted, modifier = Modifier.padding(end = 12.dp))
+          Text("${TAB_EMOJI[name].orEmpty()} $name", style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+          IconButton(onClick = { onMove(name, -1) }, enabled = i > 0, modifier = Modifier.testTag("tab-up-$name")) {
+            Icon(AppIcons.ChevronUp, contentDescription = "Move $name earlier")
+          }
+          IconButton(onClick = { onMove(name, 1) }, enabled = i < items.lastIndex, modifier = Modifier.testTag("tab-down-$name")) {
+            Icon(AppIcons.ChevronDown, contentDescription = "Move $name later")
+          }
+        }
+      }
+    }
   }
 }
