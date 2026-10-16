@@ -121,7 +121,8 @@ class PracticeScreenTest {
     assertEquals(1, toggled)
     assertEquals(listOf(125, 115), bpms)
 
-    // On a tune, the drone sounds the card's key; a second tap stops it.
+    // On a tune, the drone sounds the card's key, named on the button; a second tap stops it.
+    compose.onNodeWithText("🔊 Drone (G)").assertExists()
     compose.onNodeWithTag("use-drone").performClick()
     compose.mainClock.advanceTimeByFrame()
     compose.onNodeWithTag("use-drone").performClick()
@@ -135,12 +136,21 @@ class PracticeScreenTest {
     val step = StepView.Exercise("Long tones", "Tone", "Eight counts a note against a drone.", null, 5, droneNote(5, "Tone", Transposition.Bb))
     compose.mainClock.autoAdvance = false
     compose.setContent {
-      SessionScreen(PracticeUi(running = true, step = step, stepCount = 3), onGrade = {}, onNext = {}, onStop = {}, onDrone = { drones += it })
+      SessionScreen(
+        PracticeUi(running = true, step = step, stepCount = 3),
+        onGrade = {},
+        onNext = {},
+        onStop = {},
+        onDrone = { drones += it },
+        transposition = Transposition.Bb,
+      )
     }
     compose.mainClock.advanceTimeByFrame()
 
     compose.onNodeWithTag("step-drone").assertTextEquals("Drone on written G (concert F)")
     compose.onNodeWithText("Start on G, the drone's note, then hold each note of the G major scale above it.").assertExists()
+    // Concert F, written for a Bb horn.
+    compose.onNodeWithText("🔊 Drone (G)").assertExists()
     compose.onNodeWithTag("use-drone").performClick()
     assertEquals(listOf<Int?>(5), drones)
 

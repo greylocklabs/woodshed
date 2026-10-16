@@ -154,6 +154,8 @@ class MainActivity : ComponentActivity() {
                     },
                     onPause = practice::pause, onResume = practice::resume,
                     dronePlaying = droning.playing,
+                    droneLastPitchClass = droning.pitchClass,
+                    transposition = browseState.transposition,
                     onDrone = { pc ->
                       pc?.let(app.drone::setPitchClass)
                       app.drone.start()

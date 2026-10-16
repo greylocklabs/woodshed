@@ -57,7 +57,9 @@ import androidx.core.content.ContextCompat
 import com.larakelley.woodshed.domain.Focus
 import com.larakelley.woodshed.domain.Grade
 import com.larakelley.woodshed.domain.Instrument
+import com.larakelley.woodshed.domain.Key
 import com.larakelley.woodshed.domain.PlanBlock
+import com.larakelley.woodshed.domain.Transposition
 import com.larakelley.woodshed.theme.BackButton
 import com.larakelley.woodshed.theme.CallieChip
 import com.larakelley.woodshed.theme.EmptyState
@@ -342,9 +344,15 @@ fun SessionScreen(
   bpm: Int = 100,
   onToggleMetronome: () -> Unit = {},
   onSetBpm: (Int) -> Unit = {},
+  /** The note the drone last played, in concert pitch, for blocks that don't choose one. */
+  droneLastPitchClass: Int = 0,
+  /** What the user reads in, so the drone's note is named as they would write it. */
+  transposition: Transposition = Transposition.C,
 ) {
   @Composable
-  fun DroneButton(label: String, pitchClass: Int?, modifier: Modifier) {
+  fun DroneButton(pitchClass: Int?, modifier: Modifier) {
+    val note = Key(pitchClass ?: droneLastPitchClass, minor = false).writtenFor(transposition).displayName
+    val label = "🔊 Drone ($note)"
     StickerButton(
       onClick = { if (dronePlaying) onStopDrone() else onDrone(pitchClass) },
       sticker = neutralSticker,
@@ -475,9 +483,9 @@ fun SessionScreen(
       ) { Text("+5", maxLines = 1) }
       val droneModifier = Modifier.weight(1.5f)
       when {
-        step is StepView.Tune && step.card.concertPitchClass != null -> DroneButton("🔊 Drone", step.card.concertPitchClass, droneModifier)
-        step is StepView.Exercise && step.drone != null -> DroneButton("🔊 Drone", step.drone.concertPitchClass, droneModifier)
-        else -> DroneButton("🔊 Drone", null, droneModifier)
+        step is StepView.Tune && step.card.concertPitchClass != null -> DroneButton(step.card.concertPitchClass, droneModifier)
+        step is StepView.Exercise && step.drone != null -> DroneButton(step.drone.concertPitchClass, droneModifier)
+        else -> DroneButton(null, droneModifier)
       }
     }
     when (step) {
