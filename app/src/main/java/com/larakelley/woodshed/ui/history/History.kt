@@ -340,7 +340,7 @@ private fun StatsView(stats: PracticeStats) {
         }
       }
       if (stats.repsByKey.any { it > 0 }) {
-        SectionLabel("Graded reps by written key")
+        SectionLabel("Graded reps by written key, major and minor together")
         KeyBars(stats.repsByKey)
       }
     }
