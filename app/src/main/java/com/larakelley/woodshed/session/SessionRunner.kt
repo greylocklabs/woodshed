@@ -92,6 +92,9 @@ class SessionRunner(
   private var solo: Long? = null
   private var sessionId: Long? = null
 
+  /** True once the session has passed its last block; going back to a block afterwards does not undo it. */
+  private var completed = false
+
   /** Picks up a saved session where it left off, unless it is more than [STALE_MS] old. */
   fun restore() = serially {
     val saved = store.load()
@@ -112,6 +115,7 @@ class SessionRunner(
     card = null
     solo = null
     sessionId = log.start(plan, repository.instrument.value?.name, now())
+    completed = false
     _state.value = SessionState(running = true, stepCount = plan.size)
     show(0)
   }
@@ -171,8 +175,9 @@ class SessionRunner(
 
   fun stop() = serially {
     // A session worked to the end was logged as completed when its last block finished; ending one early logs it here.
-    if (_state.value.running && _state.value.step != null) sessionId?.let { log.end(it, now(), completed = false) }
+    if (_state.value.running && !completed) sessionId?.let { log.end(it, now(), completed = false) }
     sessionId = null
+    completed = false
     blocks = emptyList()
     card = null
     solo = null
@@ -203,7 +208,10 @@ class SessionRunner(
     _state.value = _state.value.copy(step = step, stepIndex = index, stepStartedAt = startedAt, pausedAt = pausedAt)
     save()
     // Past the last block the session is complete, whether or not Finish is ever tapped.
-    if (block == null) sessionId?.let { log.end(it, now(), completed = true) }
+    if (block == null && !completed) {
+      completed = true
+      sessionId?.let { log.end(it, now(), completed = true) }
+    }
   }
 
   private suspend fun view(block: PlanBlock): StepView? = when (block) {
