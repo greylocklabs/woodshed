@@ -78,7 +78,7 @@ class HistoryServiceTest {
     practice.grade(practice.cardForBlock(PlanBlock.Tune(solar, tuneExercise.id, 10), Transposition.C)!!, Grade.GOOD)
 
     val days = history.days(history.sessions(), ZoneOffset.UTC)
-    assertEquals(PracticeDay(LocalDate.of(1970, 1, 3), 300_000, 0), days[LocalDate.of(1970, 1, 3)])
+    assertEquals(PracticeDay(LocalDate.of(1970, 1, 3), 300_000, 0, 1), days[LocalDate.of(1970, 1, 3)])
     assertEquals(PracticeDay(LocalDate.of(1970, 1, 4), 0, 1), days[LocalDate.of(1970, 1, 4)])
     assertEquals(2, days.size)
   }

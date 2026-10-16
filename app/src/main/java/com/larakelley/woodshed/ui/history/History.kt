@@ -263,9 +263,15 @@ private fun CalendarView(ui: HistoryUi, actions: HistoryActions, zone: ZoneId) {
 
 /** What a day's practice adds up to, for its summary and its cell's description. */
 fun dayLabel(day: PracticeDay?): String {
-  if (day == null || (day.practicedMs == 0L && day.reviews == 0)) return "No practice"
+  if (day == null || (day.sessions == 0 && day.reviews == 0)) return "No practice"
   val parts = listOfNotNull(
-    day.practicedMs.takeIf { it > 0 }?.let { "${minutesLabel(it)} in sessions" },
+    day.sessions.takeIf { it > 0 }?.let { if (it == 1) "1 session" else "$it sessions" },
+    when {
+      day.sessions == 0 -> null
+      day.practicedMs == 0L -> "no blocks finished"
+      day.practicedMs < 30_000 -> "under a minute"
+      else -> minutesLabel(day.practicedMs)
+    },
     day.reviews.takeIf { it > 0 }?.let { if (it == 1) "1 review" else "$it reviews" },
   )
   return parts.joinToString(", ")
@@ -282,7 +288,7 @@ fun monthWeeks(month: YearMonth): List<List<LocalDate?>> {
 private fun DayCell(day: LocalDate, practice: PracticeDay?, selected: Boolean, onClick: () -> Unit) {
   val callie = LocalCallie.current
   // A full hour in sessions fills the circle; reviews alone show as a light one.
-  val strength = practice?.let { (it.practicedMs / 3_600_000f).coerceIn(0f, 1f).let { s -> if (s == 0f && it.reviews > 0) 0.25f else 0.25f + 0.75f * s } }
+  val strength = practice?.let { 0.25f + 0.75f * (it.practicedMs / 3_600_000f).coerceIn(0f, 1f) }
   Box(
     Modifier.size(40.dp).clip(CircleShape)
       .then(if (strength != null) Modifier.background(callie.accent.copy(alpha = strength), CircleShape) else Modifier)

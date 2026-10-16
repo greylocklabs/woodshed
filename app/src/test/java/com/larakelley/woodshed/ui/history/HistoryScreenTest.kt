@@ -61,7 +61,7 @@ class HistoryScreenTest {
     val months = mutableListOf<YearMonth>()
     val ui = HistoryUi(
       sessions = listOf(session),
-      days = mapOf(oct15 to PracticeDay(oct15, 1_680_000, 2)),
+      days = mapOf(oct15 to PracticeDay(oct15, 1_680_000, 2, 1)),
       month = YearMonth.of(2026, 10),
       selected = oct15,
       loaded = true,
@@ -77,7 +77,7 @@ class HistoryScreenTest {
     }
     compose.onNodeWithTag("history-calendar").performClick()
     compose.onNodeWithTag("month").assertTextEquals("October 2026")
-    compose.onNodeWithTag("day-summary").assertTextEquals("28 min in sessions, 2 reviews")
+    compose.onNodeWithTag("day-summary").assertTextEquals("1 session, 28 min, 2 reviews")
     compose.onNodeWithTag("calendar").performScrollToNode(hasTestTag("session-1"))
     compose.onNodeWithTag("session-1").assertExists()
     compose.onNodeWithTag("calendar").performScrollToNode(hasTestTag("day-2026-10-03"))
@@ -112,6 +112,15 @@ class HistoryScreenTest {
   fun nothingYetSaysWhereHistoryComesFrom() {
     compose.setContent { HistoryScreen(HistoryUi(loaded = true), HistoryActions()) }
     compose.onNodeWithTag("empty-state").assertExists()
+  }
+
+  @Test
+  fun aDayWithASessionNeverSaysNoPractice() {
+    val day = LocalDate.of(2026, 10, 16)
+    assertEquals("1 session, no blocks finished", dayLabel(PracticeDay(day, 0, 0, 1)))
+    assertEquals("2 sessions, under a minute, 1 review", dayLabel(PracticeDay(day, 20_000, 1, 2)))
+    assertEquals("3 reviews", dayLabel(PracticeDay(day, 0, 3, 0)))
+    assertEquals("No practice", dayLabel(null))
   }
 
   @Test

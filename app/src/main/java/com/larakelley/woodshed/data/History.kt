@@ -27,8 +27,8 @@ data class PastSession(val id: Long, val startedAt: Long, val endedAt: Long?, va
   val practicedMs: Long get() = blocks.sumOf { it.elapsedMs }
 }
 
-/** One day's practice: time in sessions and graded reviews from anywhere in the app. */
-data class PracticeDay(val date: LocalDate, val practicedMs: Long, val reviews: Int)
+/** One day's practice: sessions and the time spent in them, and graded reviews from anywhere in the app. */
+data class PracticeDay(val date: LocalDate, val practicedMs: Long, val reviews: Int, val sessions: Int = 0)
 
 /** What the stats screen shows, from sessions and the review log. */
 data class PracticeStats(
@@ -77,9 +77,12 @@ class HistoryService(private val db: WoodshedDatabase) {
   /** Practice by day in [zone], for days with a session or a graded review. */
   suspend fun days(sessions: List<PastSession>, zone: ZoneId): Map<LocalDate, PracticeDay> {
     fun dateOf(at: Long) = Instant.ofEpochMilli(at).atZone(zone).toLocalDate()
-    val practiced = sessions.groupBy { dateOf(it.startedAt) }.mapValues { (_, list) -> list.sumOf { it.practicedMs } }
+    val byDay = sessions.groupBy { dateOf(it.startedAt) }
     val reviews = db.reviewEvents().times().groupingBy(::dateOf).eachCount()
-    return (practiced.keys + reviews.keys).associateWith { PracticeDay(it, practiced[it] ?: 0, reviews[it] ?: 0) }
+    return (byDay.keys + reviews.keys).associateWith { day ->
+      val list = byDay[day].orEmpty()
+      PracticeDay(day, list.sumOf { it.practicedMs }, reviews[day] ?: 0, list.size)
+    }
   }
 
   /** Totals, streaks and spreads over everything practised, as of [today] in [zone]. */
