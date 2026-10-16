@@ -69,6 +69,7 @@ class SettingsScreenTest {
     compose.onNodeWithTag("made-by").assertExists()
     compose.onNodeWithText("Lara Kelley", substring = true).assertExists()
     compose.onNodeWithTag("donate").assertExists()
+    compose.onNodeWithTag("review").assertExists()
     compose.onNodeWithTag("source").assertExists()
     compose.onNodeWithTag("changelog").assertTextContains("changelog", substring = true)
     compose.onNodeWithText("buy me a coffee", substring = true).assertExists()

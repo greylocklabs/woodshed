@@ -15,7 +15,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.google.android.play.core.ktx.launchReview
+import com.google.android.play.core.ktx.requestReview
+import com.google.android.play.core.review.ReviewManagerFactory
 import com.larakelley.woodshed.data.ThemeMode
 import com.larakelley.woodshed.data.recordedLabel
 import com.larakelley.woodshed.domain.ChangelogRelease
@@ -47,6 +51,7 @@ import com.larakelley.woodshed.ui.transcribe.TranscribeScreen
 import com.larakelley.woodshed.ui.transcribe.TranscribeViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 class MainActivity : ComponentActivity() {
@@ -149,6 +154,10 @@ class MainActivity : ComponentActivity() {
                     },
                     onStopDrone = app.drone::stop,
                     onPrevious = practice::previous,
+                    onFinish = {
+                      practice.stop()
+                      maybeAskForReview()
+                    },
                     metronomeRunning = click.running,
                     bpm = click.bpm,
                     onToggleMetronome = metronome::toggle,
@@ -206,6 +215,20 @@ class MainActivity : ComponentActivity() {
             )
           }
         }
+      }
+    }
+  }
+
+  /** Asks for a Play review after a finished session, when nothing is sounding and the prompt is due. */
+  private fun maybeAskForReview() {
+    if (app.metronome.state.value.running || app.drone.state.value.playing || app.tuner.state.value.listening) return
+    lifecycleScope.launch {
+      if (!app.reviewPrompt.shouldAsk(app.practiceTimes())) return@launch
+      app.reviewPrompt.asked()
+      // Play may decline to show it, and a failure here only means no prompt this time.
+      runCatching {
+        val reviews = ReviewManagerFactory.create(this@MainActivity)
+        reviews.launchReview(this@MainActivity, reviews.requestReview())
       }
     }
   }

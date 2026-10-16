@@ -149,6 +149,21 @@ class PracticeScreenTest {
   }
 
   @Test
+  fun finishingADoneSessionIsToldApartFromEndingIt() {
+    var finished = 0
+    var stopped = 0
+    compose.mainClock.autoAdvance = false
+    compose.setContent {
+      SessionScreen(PracticeUi(running = true, step = null, stepIndex = 3, stepCount = 3), onGrade = {
+      }, onNext = {}, onStop = { stopped++ }, onFinish = { finished++ })
+    }
+    compose.mainClock.advanceTimeByFrame()
+    compose.onNodeWithTag("finish").performClick()
+    assertEquals(1, finished)
+    assertEquals(0, stopped)
+  }
+
+  @Test
   fun theFirstStepHasNoBack() {
     session(PracticeUi(running = true, step = tuneStep, stepCount = 3))
     compose.onNodeWithTag("step-previous").assertDoesNotExist()

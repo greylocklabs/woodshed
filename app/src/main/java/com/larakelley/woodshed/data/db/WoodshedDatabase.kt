@@ -254,6 +254,9 @@ interface ReviewEventDao {
 
   @Query("SELECT COUNT(*) FROM review_events WHERE reviewedAt >= :since")
   suspend fun countSince(since: Long): Int
+
+  @Query("SELECT reviewedAt FROM review_events")
+  suspend fun times(): List<Long>
 }
 
 class Converters {
