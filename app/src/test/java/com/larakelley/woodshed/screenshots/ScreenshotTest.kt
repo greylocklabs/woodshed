@@ -11,16 +11,25 @@ import com.github.takahirom.roborazzi.captureRoboImage
 import com.larakelley.woodshed.audio.DroneState
 import com.larakelley.woodshed.audio.MetronomeState
 import com.larakelley.woodshed.audio.TunerState
+import com.larakelley.woodshed.data.PastBlock
+import com.larakelley.woodshed.data.PastSession
+import com.larakelley.woodshed.data.PracticeDay
+import com.larakelley.woodshed.data.db.BlockOutcome
 import com.larakelley.woodshed.data.db.TranscriptionEntity
 import com.larakelley.woodshed.data.db.TranscriptionStateEntity
 import com.larakelley.woodshed.data.db.TranscriptionStatus
 import com.larakelley.woodshed.domain.Focus
+import com.larakelley.woodshed.domain.Grade
 import com.larakelley.woodshed.domain.Instrument
 import com.larakelley.woodshed.domain.NoteReading
 import com.larakelley.woodshed.domain.PlanBlock
 import com.larakelley.woodshed.domain.Tonality
 import com.larakelley.woodshed.domain.Transposition
 import com.larakelley.woodshed.theme.WoodshedTheme
+import com.larakelley.woodshed.ui.history.HistoryActions
+import com.larakelley.woodshed.ui.history.HistoryScreen
+import com.larakelley.woodshed.ui.history.HistoryUi
+import com.larakelley.woodshed.ui.history.HistoryView
 import com.larakelley.woodshed.ui.practice.PlanItem
 import com.larakelley.woodshed.ui.practice.PracticeHome
 import com.larakelley.woodshed.ui.practice.PracticeUi
@@ -49,6 +58,9 @@ import org.robolectric.ParameterizedRobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
+import java.time.LocalDate
+import java.time.YearMonth
+import java.time.ZoneOffset
 
 /**
  * The main screens in light and dark, compared against the images in src/test/screenshots. Each screen gets fixed
@@ -70,6 +82,8 @@ class ScreenshotTest(private val mode: String) {
   }
 
   private fun capture(name: String, content: @Composable () -> Unit) {
+    // Only the listing's screens are shot for Play.
+    if (mode == "play" && name !in PLAY_ORDER) return
     // The theme follows the system's night mode, as it does in the app. The Play set is dark on a 9:16, 1080 x 1920
     // phone, since Play refuses screenshots more than twice as tall as they are wide.
     when (mode) {
@@ -199,5 +213,46 @@ class ScreenshotTest(private val mode: String) {
   @Test
   fun tuner() = capture("tuner") {
     TunerScreen(TunerState(listening = true, reading = NoteReading.of(442.0)), Transposition.Eb, TunerActions())
+  }
+
+  private val historySession = PastSession(
+    id = 1,
+    startedAt = 1_792_093_200_000L,
+    endedAt = 1_792_095_000_000L,
+    plannedMinutes = 30,
+    completed = true,
+    blocks = listOf(
+      PastBlock("Long tones", "Tone", 5, BlockOutcome.DONE, null, 300_000),
+      PastBlock("🎧 Tangerine", "Transcribe Chet Baker", 7, BlockOutcome.GRADED, Grade.GOOD, 420_000),
+      PastBlock("Solar", "Guide-tone solo", 18, BlockOutcome.GRADED, Grade.HARD, 1_080_000),
+    ),
+  )
+
+  @Test
+  fun historyList() = capture("history-list") {
+    HistoryScreen(
+      HistoryUi(
+        sessions = listOf(historySession, historySession.copy(id = 2, startedAt = historySession.startedAt - 86_400_000L, completed = false)),
+        loaded = true,
+      ),
+      HistoryActions(),
+      onBack = {},
+      zone = ZoneOffset.UTC,
+    )
+  }
+
+  @Test
+  fun historyCalendar() = capture("history-calendar") {
+    val days = listOf(2, 3, 5, 8, 9, 10, 12, 14, 15).associate { d ->
+      val date = LocalDate.of(2026, 10, d)
+      date to PracticeDay(date, (d % 4 + 1) * 15 * 60_000L, d % 3)
+    }
+    HistoryScreen(
+      HistoryUi(sessions = listOf(historySession), days = days, month = YearMonth.of(2026, 10), selected = LocalDate.of(2026, 10, 15), loaded = true),
+      HistoryActions(sessionsOn = { listOf(historySession) }),
+      onBack = {},
+      zone = ZoneOffset.UTC,
+      initialView = HistoryView.CALENDAR,
+    )
   }
 }

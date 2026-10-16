@@ -85,6 +85,7 @@ data class SetupActions(
   val replace: (Int, Long) -> Unit = { _, _ -> },
   val remove: (Int) -> Unit = {},
   val start: () -> Unit = {},
+  val openHistory: () -> Unit = {},
 )
 
 private val LENGTHS = listOf(15, 30, 45, 60)
@@ -106,7 +107,18 @@ private fun SessionSetup(ui: PracticeUi, actions: SetupActions) {
   Column(Modifier.fillMaxSize()) {
     LazyColumn(Modifier.weight(1f).fillMaxWidth(), contentPadding = PaddingValues(16.dp)) {
       item {
-        ui.summary?.takeIf { it.reviewedToday > 0 }?.let { Text("Reviewed today: ${it.reviewedToday}", modifier = Modifier.padding(bottom = 8.dp)) }
+        Row(Modifier.fillMaxWidth().padding(bottom = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+          Text(
+            ui.summary?.takeIf { it.reviewedToday > 0 }?.let { "Reviewed today: ${it.reviewedToday}" } ?: "",
+            modifier = Modifier.weight(1f),
+          )
+          StickerButton(
+            onClick = actions.openHistory,
+            sticker = neutralSticker,
+            modifier = Modifier.height(40.dp).testTag("open-history"),
+            contentPadding = PaddingValues(horizontal = 14.dp),
+          ) { Text("📜 History", style = MaterialTheme.typography.labelLarge) }
+        }
         Text("What are you playing?", style = MaterialTheme.typography.titleMedium)
         Text(
           if (setup.instrumentsChosen) {

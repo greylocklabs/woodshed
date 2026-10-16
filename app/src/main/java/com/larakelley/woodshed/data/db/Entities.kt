@@ -205,6 +205,52 @@ data class ReviewEventEntity(
   }
 }
 
+/** A practice session, from Start to its end. */
+@Entity(tableName = "sessions")
+data class SessionEntity(
+  @PrimaryKey(autoGenerate = true) val id: Long = 0,
+  val startedAt: Long,
+  /** Null while the session runs, and for one the app never saw end. */
+  val endedAt: Long? = null,
+  val plannedMinutes: Int,
+  /** The instrument's enum name, or null when none was chosen. */
+  val instrument: String?,
+  /** True when every block was worked through, false when it was ended early. */
+  val completed: Boolean = false,
+)
+
+/** How a session block ended. */
+enum class BlockOutcome { DONE, SKIPPED, GRADED }
+
+/** One block of a session as planned, and how it went once worked through. */
+@Entity(
+  tableName = "session_blocks",
+  primaryKeys = ["sessionId", "position"],
+  foreignKeys = [ForeignKey(entity = SessionEntity::class, parentColumns = ["id"], childColumns = ["sessionId"], onDelete = ForeignKey.CASCADE)],
+)
+data class SessionBlockEntity(
+  val sessionId: Long,
+  val position: Int,
+  /** [KIND_EXERCISE], [KIND_TUNE] or [KIND_SOLO]; [itemId] is the exercise, tune or solo it names. */
+  val kind: String,
+  val itemId: Long,
+  /** The exercise a tune block was worked through, or null. */
+  val exerciseId: Long? = null,
+  val plannedMinutes: Int,
+  /** Null for a block the session never finished. */
+  val outcome: BlockOutcome? = null,
+  val grade: Grade? = null,
+  /** Time spent on the block, pauses left out. */
+  val elapsedMs: Long = 0,
+  val finishedAt: Long? = null,
+) {
+  companion object {
+    const val KIND_EXERCISE = "exercise"
+    const val KIND_TUNE = "tune"
+    const val KIND_SOLO = "solo"
+  }
+}
+
 /** User-owned notes on how well a tune is known; kept apart from scheduling so clearing one leaves the other. */
 @Entity(
   tableName = "tune_knowledge",

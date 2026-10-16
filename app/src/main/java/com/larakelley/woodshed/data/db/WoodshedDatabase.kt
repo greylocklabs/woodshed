@@ -16,6 +16,7 @@ import androidx.room.Update
 import androidx.room.Upsert
 import androidx.room.migration.AutoMigrationSpec
 import com.larakelley.woodshed.domain.Family
+import com.larakelley.woodshed.domain.Grade
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -259,6 +260,31 @@ interface ReviewEventDao {
   suspend fun times(): List<Long>
 }
 
+@Dao
+interface SessionDao {
+  @Insert suspend fun insert(session: SessionEntity): Long
+
+  @Insert suspend fun insertBlocks(blocks: List<SessionBlockEntity>)
+
+  @Query(
+    "UPDATE session_blocks SET outcome = :outcome, grade = :grade, elapsedMs = :elapsedMs, finishedAt = :finishedAt " +
+      "WHERE sessionId = :sessionId AND position = :position",
+  )
+  suspend fun finishBlock(sessionId: Long, position: Int, outcome: BlockOutcome, grade: Grade?, elapsedMs: Long, finishedAt: Long)
+
+  @Query("UPDATE sessions SET endedAt = :endedAt, completed = :completed WHERE id = :id")
+  suspend fun end(id: Long, endedAt: Long, completed: Boolean)
+
+  @Query("SELECT * FROM sessions ORDER BY startedAt DESC, id DESC")
+  suspend fun all(): List<SessionEntity>
+
+  @Query("SELECT * FROM session_blocks ORDER BY sessionId, position")
+  suspend fun allBlocks(): List<SessionBlockEntity>
+
+  @Query("DELETE FROM sessions")
+  suspend fun deleteAll()
+}
+
 class Converters {
   private val json = kotlinx.serialization.json.Json
 
@@ -280,9 +306,9 @@ class Converters {
   entities = [
     StandardEntity::class, ExerciseEntity::class, TuneStateEntity::class, ReviewEventEntity::class, TuneKnowledgeEntity::class,
     TuneOverrideEntity::class, PlaylistEntity::class, PlaylistTuneEntity::class, ExerciseOverrideEntity::class, TuneMediaEntity::class,
-    TranscriptionEntity::class, TranscriptionStateEntity::class,
+    TranscriptionEntity::class, TranscriptionStateEntity::class, SessionEntity::class, SessionBlockEntity::class,
   ],
-  version = 13,
+  version = 14,
   autoMigrations = [
     AutoMigration(from = 1, to = 2),
     AutoMigration(from = 2, to = 3),
@@ -296,6 +322,7 @@ class Converters {
     AutoMigration(from = 10, to = 11),
     AutoMigration(from = 11, to = 12),
     AutoMigration(from = 12, to = 13),
+    AutoMigration(from = 13, to = 14),
   ],
 )
 @TypeConverters(Converters::class)
@@ -319,6 +346,8 @@ abstract class WoodshedDatabase : RoomDatabase() {
   abstract fun tuneMedia(): TuneMediaDao
 
   abstract fun transcriptions(): TranscriptionDao
+
+  abstract fun sessions(): SessionDao
 
   /** Version 4 listed every fake book a tune is printed in; version 5 keeps only its collection. */
   @DeleteColumn(tableName = "standards", columnName = "books")

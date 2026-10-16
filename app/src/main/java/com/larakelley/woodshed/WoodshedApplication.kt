@@ -10,10 +10,12 @@ import com.larakelley.woodshed.audio.Metronome
 import com.larakelley.woodshed.audio.Tuner
 import com.larakelley.woodshed.data.BackupService
 import com.larakelley.woodshed.data.ExerciseLibrary
+import com.larakelley.woodshed.data.HistoryService
 import com.larakelley.woodshed.data.MediaService
 import com.larakelley.woodshed.data.PlaylistService
 import com.larakelley.woodshed.data.PracticeService
 import com.larakelley.woodshed.data.ReviewPrompt
+import com.larakelley.woodshed.data.SessionLog
 import com.larakelley.woodshed.data.TranscriptionService
 import com.larakelley.woodshed.data.TuneLibrary
 import com.larakelley.woodshed.data.WhatsNew
@@ -63,13 +65,15 @@ class WoodshedApplication : Application() {
   /** The times practice was logged, for deciding when to ask for a review. */
   suspend fun practiceTimes(): List<Long> = database.reviewEvents().times()
 
+  val history: HistoryService by lazy { HistoryService(database) }
+
   val whatsNew: WhatsNew by lazy { WhatsNew(prefs) { assets.open("CHANGELOG.md").bufferedReader().use { it.readText() } } }
 
   private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
   private val mainScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
   val sessions: SessionRunner by lazy {
-    SessionRunner(repository, practice, transcriptions, SessionStore(getSharedPreferences("session", Context.MODE_PRIVATE)), mainScope)
+    SessionRunner(repository, practice, transcriptions, SessionStore(getSharedPreferences("session", Context.MODE_PRIVATE)), SessionLog(database), mainScope)
   }
 
   override fun onCreate() {
