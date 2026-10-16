@@ -63,7 +63,7 @@ class SettingsScreenTest {
       repeat(10) { moveBy(Offset(0f, height * 0.22f)) }
       up()
     }
-    assertEquals(listOf(listOf("History", "Random", "Practice") + DEFAULT_TABS.drop(3)), set)
+    assertEquals(listOf(listOf("Random", "History", "Practice") + DEFAULT_TABS.drop(3)), set)
   }
 
   @Test
