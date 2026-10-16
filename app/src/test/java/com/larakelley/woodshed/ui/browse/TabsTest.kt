@@ -14,6 +14,14 @@ class TabsTest {
   }
 
   @Test
+  fun theDefaultOrderPutsPracticeAndRandomFirstAndHelpLast() {
+    assertEquals(
+      listOf("Practice", "Random", "History", "Transcribe", "Tunes", "Exercises", "Drone", "Tuner", "Metronome", "Help"),
+      DEFAULT_TABS,
+    )
+  }
+
+  @Test
   fun movingATabStaysWithinTheList() {
     val order = listOf("A", "B", "C")
     assertEquals(listOf("B", "A", "C"), moveTab(order, "B", -1))

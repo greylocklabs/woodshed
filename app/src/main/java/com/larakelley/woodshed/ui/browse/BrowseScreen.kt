@@ -137,16 +137,17 @@ fun BrowseScreen(
   /** An exercise's id while editing it, [NEW_EXERCISE] while adding one, or null. */
   var editingExercise by rememberSaveable { mutableStateOf<Long?>(null) }
   val tabs = orderTabs(
+    // In DEFAULT_TABS order.
     buildList {
       if (practiceTab != null) add("Practice")
-      if (historyTab != null) add("History")
       if (diceTab != null) add("Random")
+      if (historyTab != null) add("History")
       if (transcribeTab != null) add("Transcribe")
-      if (metronomeTab != null) add("Metronome")
-      if (droneTab != null) add("Drone")
-      if (tunerTab != null) add("Tuner")
       add("Tunes")
       add("Exercises")
+      if (droneTab != null) add("Drone")
+      if (tunerTab != null) add("Tuner")
+      if (metronomeTab != null) add("Metronome")
       if (helpTab != null) add("Help")
     },
     tabOrder,

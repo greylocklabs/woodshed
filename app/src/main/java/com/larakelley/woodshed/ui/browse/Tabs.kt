@@ -3,14 +3,14 @@ package com.larakelley.woodshed.ui.browse
 /** The main tabs in their default order, each with the emoji shown before its name. */
 val TAB_EMOJI = linkedMapOf(
   "Practice" to "🎷",
-  "History" to "📜",
   "Random" to "🎲",
+  "History" to "📜",
   "Transcribe" to "🎧",
-  "Metronome" to "⏱️",
-  "Drone" to "🔊",
-  "Tuner" to "🎯",
   "Tunes" to "🎵",
   "Exercises" to "💪",
+  "Drone" to "🔊",
+  "Tuner" to "🎯",
+  "Metronome" to "⏱️",
   "Help" to "❓",
 )
 
