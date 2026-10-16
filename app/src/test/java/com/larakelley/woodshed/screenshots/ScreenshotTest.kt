@@ -238,7 +238,6 @@ class ScreenshotTest(private val mode: String) {
         loaded = true,
       ),
       HistoryActions(),
-      onBack = {},
       zone = ZoneOffset.UTC,
     )
   }
@@ -252,7 +251,6 @@ class ScreenshotTest(private val mode: String) {
     HistoryScreen(
       HistoryUi(sessions = listOf(historySession), days = days, month = YearMonth.of(2026, 10), selected = LocalDate.of(2026, 10, 15), loaded = true),
       HistoryActions(sessionsOn = { listOf(historySession) }),
-      onBack = {},
       zone = ZoneOffset.UTC,
       initialView = HistoryView.CALENDAR,
     )
@@ -266,7 +264,7 @@ class ScreenshotTest(private val mode: String) {
       repsByKey = listOf(12, 3, 7, 9, 2, 11, 1, 8, 4, 5, 10, 2),
       learning = 6, repertoire = 4, reachedRepertoireThisMonth = 2,
     )
-    HistoryScreen(HistoryUi(sessions = listOf(historySession), stats = stats, loaded = true), HistoryActions(), onBack = {}, initialView = HistoryView.STATS)
+    HistoryScreen(HistoryUi(sessions = listOf(historySession), stats = stats, loaded = true), HistoryActions(), initialView = HistoryView.STATS)
   }
 
   @Test

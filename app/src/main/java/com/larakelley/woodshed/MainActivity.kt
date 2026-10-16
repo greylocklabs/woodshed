@@ -13,7 +13,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
@@ -108,7 +107,6 @@ class MainActivity : ComponentActivity() {
             val categories = exercises.map { it.category }.distinct().sortedBy { Phase.categoryRank(it) }
             dice.setOptions(browseState.styles, exercises.filter { it.appliesToTune }.map { it.name }, categories)
           }
-          var showHistory by rememberSaveable { mutableStateOf(false) }
           val history: HistoryViewModel = viewModel { HistoryViewModel(app.history) }
           val historyUi by history.ui.collectAsStateWithLifecycle()
           val setupActions = SetupActions(
@@ -125,7 +123,6 @@ class MainActivity : ComponentActivity() {
             replace = practice::replace,
             remove = practice::removeBlock,
             start = practice::start,
-            openHistory = { showHistory = true },
           )
 
           var whatsNew by remember { mutableStateOf(emptyList<ChangelogRelease>()) }
@@ -172,9 +169,6 @@ class MainActivity : ComponentActivity() {
                     onToggleMetronome = metronome::toggle,
                     onSetBpm = metronome::setBpm,
                   )
-                } else if (showHistory) {
-                  LaunchedEffect(Unit) { history.refresh() }
-                  HistoryScreen(historyUi, HistoryActions(history::showMonth, history::select, history::sessionsOn), onBack = { showHistory = false })
                 } else {
                   LaunchedEffect(Unit) { practice.refresh() }
                   PracticeHome(practiceUi, setupActions)
@@ -197,6 +191,10 @@ class MainActivity : ComponentActivity() {
                   tuning.a4,
                   DroneActions(drone::toggle, drone::setPitchClass, drone::setOctave, drone::setFifth, drone::setVolume),
                 )
+              },
+              historyTab = {
+                LaunchedEffect(Unit) { history.refresh() }
+                HistoryScreen(historyUi, HistoryActions(history::showMonth, history::select, history::sessionsOn))
               },
               helpTab = { HelpScreen() },
               tunerTab = {

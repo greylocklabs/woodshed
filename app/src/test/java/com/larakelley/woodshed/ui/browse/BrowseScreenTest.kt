@@ -116,6 +116,7 @@ class BrowseScreenTest {
         BrowseState(Transposition.C, rows, rows.size, exerciseRows(exercises), exercises.size, allTunes = rows),
         onSelectTransposition = {},
         practiceTab = { Text("practice") },
+        historyTab = { Text("history content") },
         helpTab = { Text("help content") },
       )
     }
@@ -124,6 +125,7 @@ class BrowseScreenTest {
     val isTab = SemanticsMatcher("is a tab") { it.config.getOrNull(SemanticsProperties.TestTag)?.startsWith("tab-") == true }
     val tabs = compose.onAllNodes(isTab).fetchSemanticsNodes().map { it.config[SemanticsProperties.TestTag] }
     assertEquals("tab-Help", tabs.last())
+    assertEquals(listOf("tab-Practice", "tab-History"), tabs.take(2))
   }
 
   @Test

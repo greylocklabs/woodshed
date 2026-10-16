@@ -85,7 +85,7 @@ val HELP_TOPICS = listOf(
   HelpTopic(
     "History and stats",
     listOf(
-      "**📜 History** at the top of practice setup lists your sessions and what you did in each. The calendar marks the days you practised, and **Stats** shows your time, streaks, most practised tunes and keys.",
+      "The **📜 History** tab lists your sessions and what you did in each. The calendar marks the days you practised, and **Stats** shows your time, streaks, most practised tunes and keys.",
     ),
   ),
   HelpTopic(

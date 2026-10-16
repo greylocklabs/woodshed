@@ -98,6 +98,7 @@ private const val NEW_TUNE = "+new"
 /** Shown before each tab name in the main navigation. */
 private val TAB_EMOJI = mapOf(
   "Practice" to "🎷",
+  "History" to "📜",
   "Random" to "🎲",
   "Transcribe" to "🎧",
   "Metronome" to "⏱️",
@@ -122,6 +123,7 @@ fun BrowseScreen(
   onExerciseFilter: ((ExerciseFilter) -> ExerciseFilter) -> Unit = {},
   now: () -> Long = System::currentTimeMillis,
   practiceTab: (@Composable () -> Unit)? = null,
+  historyTab: (@Composable () -> Unit)? = null,
   diceTab: (@Composable () -> Unit)? = null,
   transcribeTab: (@Composable () -> Unit)? = null,
   metronomeTab: (@Composable () -> Unit)? = null,
@@ -147,6 +149,7 @@ fun BrowseScreen(
   var editingExercise by rememberSaveable { mutableStateOf<Long?>(null) }
   val tabs = buildList {
     if (practiceTab != null) add("Practice")
+    if (historyTab != null) add("History")
     if (diceTab != null) add("Random")
     if (transcribeTab != null) add("Transcribe")
     if (metronomeTab != null) add("Metronome")
@@ -293,6 +296,8 @@ fun BrowseScreen(
       }
       when (tabs[tab]) {
         "Practice" -> practiceTab?.invoke()
+
+        "History" -> historyTab?.invoke()
 
         "Random" -> diceTab?.invoke()
 
