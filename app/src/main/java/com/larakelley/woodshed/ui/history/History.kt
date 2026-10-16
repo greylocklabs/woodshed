@@ -44,6 +44,7 @@ import com.larakelley.woodshed.data.PastSession
 import com.larakelley.woodshed.data.PracticeDay
 import com.larakelley.woodshed.data.PracticeStats
 import com.larakelley.woodshed.data.db.BlockOutcome
+import com.larakelley.woodshed.domain.Key
 import com.larakelley.woodshed.theme.BackButton
 import com.larakelley.woodshed.theme.EmptyState
 import com.larakelley.woodshed.theme.LocalCallie
@@ -308,8 +309,6 @@ private fun DayCell(day: LocalDate, practice: PracticeDay?, selected: Boolean, o
   }
 }
 
-private val KEY_NAMES = listOf("C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B")
-
 @Composable
 private fun StatsView(stats: PracticeStats) {
   val callie = LocalCallie.current
@@ -357,7 +356,10 @@ private fun StatTile(label: String, value: String, modifier: Modifier, tag: Stri
   }
 }
 
-/** One thin bar per key from C, each named and counted in text so the bars are never read by color alone. */
+/**
+ * One thin bar per key centre from C, each named and counted in text so the bars are never read by color alone. Major
+ * and minor reps on the same tonic share a bar, named with the major spelling.
+ */
 @Composable
 private fun KeyBars(reps: List<Int>) {
   val callie = LocalCallie.current
@@ -365,7 +367,7 @@ private fun KeyBars(reps: List<Int>) {
   Column(Modifier.testTag("key-bars"), verticalArrangement = Arrangement.spacedBy(2.dp)) {
     reps.forEachIndexed { pc, n ->
       Row(Modifier.fillMaxWidth().height(24.dp), verticalAlignment = Alignment.CenterVertically) {
-        Text(KEY_NAMES[pc], style = MaterialTheme.typography.labelLarge, modifier = Modifier.width(36.dp))
+        Text(Key.MAJOR_SPELLING[pc], style = MaterialTheme.typography.labelLarge, modifier = Modifier.width(36.dp))
         Box(Modifier.weight(1f).height(10.dp)) {
           if (n > 0) {
             Box(

@@ -4,10 +4,13 @@ import android.app.Application
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import com.larakelley.woodshed.data.db.BlockOutcome
+import com.larakelley.woodshed.data.db.ReviewEventEntity
+import com.larakelley.woodshed.data.db.TuneStateEntity
 import com.larakelley.woodshed.data.db.WoodshedDatabase
 import com.larakelley.woodshed.data.seed.Seed
 import com.larakelley.woodshed.data.seed.SeedImporter
 import com.larakelley.woodshed.domain.Grade
+import com.larakelley.woodshed.domain.Lifecycle
 import com.larakelley.woodshed.domain.PlanBlock
 import com.larakelley.woodshed.domain.Transposition
 import kotlinx.coroutines.test.runTest
@@ -111,5 +114,28 @@ class HistoryServiceTest {
     assertEquals(0, stats.repertoire)
     // A week with no practice breaks the streak.
     assertEquals(0, history.stats(sessions, ZoneOffset.UTC, today = LocalDate.of(1970, 1, 12)).currentStreak)
+  }
+
+  @Test
+  fun statsCountTunesReachingRepertoireThisMonth() = runTest {
+    val solar = db.standards().bySlug("solar")!!.id
+    val nardis = db.standards().bySlug("nardis")!!.id
+    db.tuneStates().upsert(TuneStateEntity(solar, Lifecycle.REPERTOIRE))
+    db.tuneStates().upsert(TuneStateEntity(nardis, Lifecycle.LEARNING))
+    val oct1 = LocalDate.of(2026, 10, 1).atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
+    fun crossing(id: Long, at: Long, before: Double, after: Double) = ReviewEventEntity(
+      itemKind = ReviewEventEntity.TUNE, itemId = id, exerciseId = null, transposition = "C", keyWrittenPitchClass = 0, keyWrittenMinor = false,
+      grade = Grade.GOOD, reviewedAt = at, elapsedMs = 0, schedulerId = "sm2", schedulerVersion = 1, intervalBefore = before, intervalAfter = after,
+      easeBefore = 2.5, easeAfter = 2.5,
+    )
+    // Solar reached 21 days this month, Nardis last month; a review already in repertoire does not count again.
+    db.reviewEvents().insert(crossing(solar, oct1 + day, 10.0, 25.0))
+    db.reviewEvents().insert(crossing(solar, oct1 + 5 * day, 25.0, 60.0))
+    db.reviewEvents().insert(crossing(nardis, oct1 - day, 10.0, 25.0))
+
+    val stats = history.stats(emptyList(), ZoneOffset.UTC, today = LocalDate.of(2026, 10, 16))
+    assertEquals(1, stats.repertoire)
+    assertEquals(1, stats.learning)
+    assertEquals(1, stats.reachedRepertoireThisMonth)
   }
 }
