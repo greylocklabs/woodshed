@@ -112,7 +112,7 @@ fun HelpScreen(topics: List<HelpTopic> = HELP_TOPICS) {
   LazyColumn(Modifier.fillMaxSize().testTag("help")) {
     item {
       Text(
-        "How Woodshed works",
+        "Help documentation",
         style = MaterialTheme.typography.headlineSmall,
         modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 8.dp),
       )
