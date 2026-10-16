@@ -27,6 +27,7 @@ import com.larakelley.woodshed.domain.PlanBlock
 import com.larakelley.woodshed.domain.Tonality
 import com.larakelley.woodshed.domain.Transposition
 import com.larakelley.woodshed.theme.WoodshedTheme
+import com.larakelley.woodshed.ui.help.HelpScreen
 import com.larakelley.woodshed.ui.history.HistoryActions
 import com.larakelley.woodshed.ui.history.HistoryScreen
 import com.larakelley.woodshed.ui.history.HistoryUi
@@ -267,4 +268,7 @@ class ScreenshotTest(private val mode: String) {
     )
     HistoryScreen(HistoryUi(sessions = listOf(historySession), stats = stats, loaded = true), HistoryActions(), onBack = {}, initialView = HistoryView.STATS)
   }
+
+  @Test
+  fun help() = capture("help") { HelpScreen() }
 }

@@ -34,6 +34,7 @@ import com.larakelley.woodshed.ui.browse.BrowseScreen
 import com.larakelley.woodshed.ui.browse.BrowseViewModel
 import com.larakelley.woodshed.ui.dice.DiceScreen
 import com.larakelley.woodshed.ui.dice.DiceViewModel
+import com.larakelley.woodshed.ui.help.HelpScreen
 import com.larakelley.woodshed.ui.history.HistoryActions
 import com.larakelley.woodshed.ui.history.HistoryScreen
 import com.larakelley.woodshed.ui.history.HistoryViewModel
@@ -197,6 +198,7 @@ class MainActivity : ComponentActivity() {
                   DroneActions(drone::toggle, drone::setPitchClass, drone::setOctave, drone::setFifth, drone::setVolume),
                 )
               },
+              helpTab = { HelpScreen() },
               tunerTab = {
                 // The microphone is only on while this tab is showing.
                 DisposableEffect(Unit) { onDispose { app.tuner.stop() } }
