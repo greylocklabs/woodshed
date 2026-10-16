@@ -57,9 +57,10 @@ val CallieLight = CallieColors(
   text = Color(0xFF2B1A26),
   textMuted = Color(0xFF6B5562),
   textFaint = Color(0xFF8F7A87),
-  accent = Color(0xFFE45F97),
-  accentText = Color(0xFF2E0F20),
+  // Deeper than Callie's pink, so near-white text on it is readable at any size.
+  accent = Color(0xFFC2407A),
+  accentText = Color(0xFFFFFAFC),
   danger = Color(0xFFC93C45),
   edge = Color(0xFFDCC8D3),
-  accentEdge = Color(0xFFA83A6D),
+  accentEdge = Color(0xFF8E2C5A),
 )
