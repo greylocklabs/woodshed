@@ -11,12 +11,19 @@ published as that release's GitHub notes, so the headings must stay
 
 - **practice:** a History tab: every session and how each block went, and a
   calendar of the days you practised. Sessions are recorded from this version
-  on.
+  on, and can be deleted.
 - **practice:** Stats: time practised, streaks, tunes learning and in
   repertoire, the most practised tunes and reps per key.
 - **app:** a Help tab explaining how Woodshed works.
 - **app:** an occasional prompt to rate Woodshed on Google Play after a
   finished session, and a Review on Google Play button in About.
+- **app:** reorder the tabs in Settings.
+
+### Changed
+
+- **app:** in light mode, primary buttons are a deeper pink with white text.
+- **practice:** the session's metronome and drone controls fit in one row,
+  and the drone button names the note it plays.
 
 ## 0.3.0
 
