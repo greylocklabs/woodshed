@@ -140,6 +140,24 @@ class SessionRunnerTest {
   }
 
   @Test
+  fun aCompletedSessionStaysCompletedThroughARestart() {
+    val first = runner()
+    first.start(plan)
+    first.next()
+    first.grade(Grade.GOOD)
+    val doneAt = clock
+    first.previous()
+    // The system kills the app on the reopened block; the next launch restores it and the user ends it.
+    clock += 60_000
+    val second = runner()
+    second.restore()
+    second.stop()
+    val session = runTestResult { db.sessions().all() }.single()
+    assertTrue(session.completed)
+    assertEquals(doneAt, session.endedAt)
+  }
+
+  @Test
   fun endingEarlyLeavesTheRestUnfinished() {
     val r = runner()
     r.start(plan)
