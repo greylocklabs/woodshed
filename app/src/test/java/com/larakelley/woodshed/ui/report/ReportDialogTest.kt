@@ -77,7 +77,7 @@ class ReportDialogTest {
     val sender = ReportSender { report, appVersion, _ ->
       sent += report
       assertEquals("1.0", appVersion)
-      Result.success(FiledReport(42, "https://github.com/lararosekelley/woodshed/issues/42"))
+      Result.success(FiledReport(42, "https://github.com/greylocklabs/woodshed/issues/42"))
     }
     compose.setContent {
       CompositionLocalProvider(LocalReportSender provides sender, LocalAppVersion provides "1.0") {

@@ -70,7 +70,7 @@ data class Report(
   }
 
   companion object {
-    const val REPO = "lararosekelley/woodshed"
+    const val REPO = "greylocklabs/woodshed"
 
     /** The report service, a Cloudflare Worker in worker/ that files reports as the woodshed-reports GitHub app. */
     const val SERVICE = "https://woodshed-reports.lararosekelley.workers.dev/report"

@@ -32,8 +32,8 @@ class ReportSenderTest {
 
   @Test
   fun aFiledReportComesBackWithItsIssue() = runTest {
-    val result = answer(201, """{"number":42,"url":"https://github.com/lararosekelley/woodshed/issues/42"}""").send(report, "0.2.0", "16")
-    assertEquals(FiledReport(42, "https://github.com/lararosekelley/woodshed/issues/42"), result.getOrThrow())
+    val result = answer(201, """{"number":42,"url":"https://github.com/greylocklabs/woodshed/issues/42"}""").send(report, "0.2.0", "16")
+    assertEquals(FiledReport(42, "https://github.com/greylocklabs/woodshed/issues/42"), result.getOrThrow())
     assertTrue(received.single().contains("\"problem\":\"An idea\""))
   }
 

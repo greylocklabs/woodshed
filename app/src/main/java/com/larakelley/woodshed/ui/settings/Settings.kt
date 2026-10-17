@@ -197,7 +197,7 @@ private const val MAX_INSTRUMENT_PILLS = 3
 
 const val KO_FI = "https://ko-fi.com/sayonara_lara"
 const val AUTHOR_SITE = "https://larakelley.com"
-const val SOURCE = "https://github.com/lararosekelley/woodshed"
+const val SOURCE = "https://github.com/greylocklabs/woodshed"
 const val WEBSITE = "https://woodshedapp.org"
 const val PRIVACY_POLICY = "https://woodshedapp.org/privacy.html"
 const val TERMS = "https://woodshedapp.org/terms.html"
