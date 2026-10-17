@@ -26,5 +26,5 @@ Roll a random tune, exercise and key when you would rather not plan. Make playli
 YOUR DATA STAYS YOURS
 Everything lives on your phone. Back it up to a file wherever you like and restore it on another phone. Woodshed goes online only to play a video you tap and to send a problem report you choose to send.
 
-Source code: https://github.com/lararosekelley/woodshed
+Source code: https://github.com/greylocklabs/woodshed
 Privacy policy: https://woodshedapp.org/privacy.html

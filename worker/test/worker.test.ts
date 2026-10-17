@@ -37,7 +37,7 @@ function fakeGitHub(status = 201) {
   const fetcher = (async (url: string, init: RequestInit) => {
     calls.push({ url, init });
     if (url.endsWith("/access_tokens")) return Response.json({ token: "inst-token", expires_at: new Date(Date.now() + 3_600_000).toISOString() });
-    return Response.json({ number: 42, html_url: "https://github.com/lararosekelley/woodshed/issues/42" }, { status });
+    return Response.json({ number: 42, html_url: "https://github.com/greylocklabs/woodshed/issues/42" }, { status });
   }) as unknown as typeof fetch;
   return { calls, fetcher };
 }
@@ -47,7 +47,7 @@ function env(pem: string, allowed = true): Env {
     GITHUB_APP_ID: "123",
     GITHUB_INSTALLATION_ID: "456",
     GITHUB_PRIVATE_KEY: pem,
-    GITHUB_REPO: "lararosekelley/woodshed",
+    GITHUB_REPO: "greylocklabs/woodshed",
     REPORT_LIMITER: { limit: async () => ({ success: allowed }) } as unknown as RateLimit,
   };
 }
@@ -114,14 +114,14 @@ describe("the GitHub app", () => {
   it("files the issue with an installation token, minted once and reused", async () => {
     const { pem } = await keyPair();
     const { calls, fetcher } = fakeGitHub();
-    const config = { appId: "123", installationId: "456", privateKey: pem, repo: "lararosekelley/woodshed" };
+    const config = { appId: "123", installationId: "456", privateKey: pem, repo: "greylocklabs/woodshed" };
     const issue = { title: "t", body: "b", labels: ["bug"] };
-    assert.deepEqual(await createIssue(config, issue, fetcher), { number: 42, url: "https://github.com/lararosekelley/woodshed/issues/42" });
+    assert.deepEqual(await createIssue(config, issue, fetcher), { number: 42, url: "https://github.com/greylocklabs/woodshed/issues/42" });
     await createIssue(config, issue, fetcher);
     assert.deepEqual(calls.map((c) => c.url), [
       "https://api.github.com/app/installations/456/access_tokens",
-      "https://api.github.com/repos/lararosekelley/woodshed/issues",
-      "https://api.github.com/repos/lararosekelley/woodshed/issues",
+      "https://api.github.com/repos/greylocklabs/woodshed/issues",
+      "https://api.github.com/repos/greylocklabs/woodshed/issues",
     ]);
     assert.equal((calls[1].init.headers as Record<string, string>).Authorization, "Bearer inst-token");
   });
@@ -132,7 +132,7 @@ describe("the endpoint", () => {
     const { pem } = await keyPair();
     const res = await handle(post(report), env(pem), fakeGitHub().fetcher);
     assert.equal(res.status, 201);
-    assert.deepEqual(await res.json(), { number: 42, url: "https://github.com/lararosekelley/woodshed/issues/42" });
+    assert.deepEqual(await res.json(), { number: 42, url: "https://github.com/greylocklabs/woodshed/issues/42" });
   });
 
   it("turns away other paths, other methods, bad bodies, floods and GitHub failures", async () => {

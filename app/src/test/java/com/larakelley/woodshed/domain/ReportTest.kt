@@ -26,7 +26,7 @@ class ReportTest {
   @Test
   fun opensTheRepositorysNewIssuePageWithEverythingEncoded() {
     val url = report.issueUrl("1.0", "17")
-    assertTrue(url.startsWith("https://github.com/lararosekelley/woodshed/issues/new?"))
+    assertTrue(url.startsWith("https://github.com/greylocklabs/woodshed/issues/new?"))
     assertTrue("spaces must not become plus signs", !url.contains("+"))
     val q = query(url)
     assertEquals("Wrong key in \"Body & Soul\"", q["title"])

@@ -19,7 +19,7 @@ account, ads or analytics. The website is [woodshedapp.org](https://woodshedapp.
 - **Backup and reports:** everything stays on the phone, backed up to a file of your choosing. Problem reports
   go through the report service below, without a GitHub account.
 
-Install it from the [latest release](https://github.com/lararosekelley/woodshed/releases/latest) APK. Google
+Install it from the [latest release](https://github.com/greylocklabs/woodshed/releases/latest) APK. Google
 Play is in testing.
 
 ## What is here

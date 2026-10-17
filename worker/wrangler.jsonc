@@ -7,7 +7,7 @@
   "compatibility_date": "2026-09-30",
   "observability": { "enabled": true },
   "vars": {
-    "GITHUB_REPO": "lararosekelley/woodshed",
+    "GITHUB_REPO": "greylocklabs/woodshed",
     "GITHUB_APP_ID": "5320150",
     "GITHUB_INSTALLATION_ID": "171473671"
   },
