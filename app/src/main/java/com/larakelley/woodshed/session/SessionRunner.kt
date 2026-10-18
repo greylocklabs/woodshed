@@ -52,8 +52,8 @@ data class SavedSession(
   val stepStartedAt: Long,
   val pausedAt: Long? = null,
   val reviewed: Int = 0,
-  /** The session's row in the history, or null for one saved before sessions were recorded. */
-  val sessionId: Long? = null,
+  /** The session's row in the history. */
+  val sessionId: Long,
   /** True when the session already passed its last block, and the user has gone back to one since. */
   val completed: Boolean = false,
 )
@@ -200,7 +200,10 @@ class SessionRunner(
 
   private fun save() {
     val s = _state.value
-    store.save(if (s.running && s.step != null) SavedSession(blocks, s.stepIndex, s.stepStartedAt, s.pausedAt, s.reviewed, sessionId, completed) else null)
+    val id = sessionId
+    store.save(
+      if (s.running && s.step != null && id != null) SavedSession(blocks, s.stepIndex, s.stepStartedAt, s.pausedAt, s.reviewed, id, completed) else null,
+    )
   }
 
   /** Shows block [index], skipping any whose tune, exercise or solo has gone; past the end, the session is done. */

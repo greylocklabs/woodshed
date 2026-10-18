@@ -212,6 +212,7 @@ class SessionRunnerTest {
     val startedAt = first.state.value.stepStartedAt
     clock += 2 * 60_000
     first.pause()
+    assertEquals(runTestResult { db.sessions().all() }.single().id, store.load()!!.sessionId)
 
     val second = runner()
     second.restore()
