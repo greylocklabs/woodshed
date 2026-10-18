@@ -7,14 +7,14 @@ philosophy, finding categories, scoring and output format; this file only refine
 
 An Android app for jazz horn practice: Kotlin, Jetpack Compose with Material3, Room with exported
 schemas and auto-migrations, kotlinx.serialization, and Robolectric for JVM tests. `data/` holds the
-seed JSON and ships as app assets. `tools/` holds a Python card prototype.
+seed JSON and ships as app assets. `tools/` holds the logo script and the Play graphics renderer.
 
 PRs come as a stack managed with git-stk, so a PR's base is often the branch below it, not `main`.
 
 ## What CI already covers, so never mention it
 
-On every PR: Android lint, the JVM unit and Robolectric test suite (including Room migration tests
-against the exported schemas), the Python tool tests, and commitlint.
+On every PR: the changelog check, Kotlin formatting, Android lint, the JVM unit, Robolectric and
+screenshot test suite (including any Room migration tests), and commitlint.
 
 ## What CI cannot cover, so it is yours
 
