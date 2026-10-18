@@ -5,6 +5,13 @@ published as that release's GitHub notes, so the headings must stay
 `## <version>`. Write the section for a version before running
 `make release`, which refuses to release without one.
 
+## Unreleased
+
+### Changed
+
+- **reports:** reports go to the shared Greylock Labs report service and are
+  filed in its format, the same whether sent from the app or opened on GitHub.
+
 ## 0.4.0
 
 ### Added
