@@ -5,6 +5,6 @@ module.exports = {
   ignores: [(message) => message.includes("Signed-off-by: dependabot[bot]")],
   rules: {
     "scope-empty": [2, "never"],
-    "scope-enum": [2, "always", ["app", "data", "tools", "plan", "docs", "design", "ci", "deps", "build", "tests", "release", "worker", "www"]],
+    "scope-enum": [2, "always", ["app", "data", "tools", "plan", "docs", "design", "ci", "deps", "build", "tests", "release", "www"]],
   },
 };
