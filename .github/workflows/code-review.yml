@@ -26,5 +26,7 @@ jobs:
     uses: lararosekelley/review-bot/.github/workflows/review.yml@v1
     with:
       repo-notes-file: .github/review-bot/REPO_NOTES.md
+      # The PR author is an org member here, not the repo owner.
+      allowed-associations: OWNER,MEMBER,COLLABORATOR
     secrets:
       anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
