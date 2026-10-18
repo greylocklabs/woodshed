@@ -336,6 +336,11 @@ abstract class WoodshedDatabase : RoomDatabase() {
   abstract fun sessions(): SessionDao
 
   companion object {
-    fun create(context: Context): WoodshedDatabase = Room.databaseBuilder(context, WoodshedDatabase::class.java, "woodshed.db").build()
+    /** Releases up to 0.3 shipped schema 13, from before the schema settled; those start over. */
+    private val UNSUPPORTED = (1..13).toList().toIntArray()
+
+    fun create(context: Context): WoodshedDatabase = Room.databaseBuilder(context, WoodshedDatabase::class.java, "woodshed.db")
+      .fallbackToDestructiveMigrationFrom(true, *UNSUPPORTED)
+      .build()
   }
 }
