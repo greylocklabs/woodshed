@@ -126,8 +126,7 @@ graphic. Play signs with the same key as the GitHub releases, so either install 
 Problem reports from the app go to the shared Greylock Labs report service in
 [greylocklabs/reports](https://github.com/greylocklabs/reports), a Cloudflare Worker at
 `https://greylocklabs-reports.lararosekelley.workers.dev/report`, which files them in this repo as the
-greylocklabs-reports GitHub App. It also answers at the old `woodshed-reports` address, which Woodshed 0.4
-and earlier use.
+greylocklabs-reports GitHub App.
 
 ## Releasing
 
