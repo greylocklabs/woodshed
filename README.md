@@ -30,7 +30,6 @@ Play is in testing.
 | `data/` | The seed, shipped as the app's assets: `standards.json` (2,522 tunes with composer, year, bars, meter, form, style and key where known), `exercises.json` (61 practice exercises) and `transcriptions.json` (seeded solos) |
 | `CHANGELOG.md` | Notable changes per release |
 | `PLAY.md` | What to enter in Google Play Console |
-| `worker/` | The report service, a Cloudflare Worker |
 | `www/` | The website |
 | `scripts/` | Release, version and changelog scripts behind the Makefile |
 | `tools/logo.py` | Generates `assets/logo.svg`, the website logo and the launcher, themed and notification icons from one shape list |
@@ -94,7 +93,7 @@ make record-screenshots  # rewrites the screenshots after a deliberate design ch
 make e2e                 # end-to-end tests on an emulator Gradle downloads (*)
 make format              # formats Kotlin with ktlint
 make lint                # formatting, Android lint (any warning fails) and the changelog
-make check               # CI's lint, test and worker jobs
+make check               # CI's lint and test jobs
 ```
 
 `make help` lists every task; each wraps a Gradle command you can also run directly. Debug builds install as
@@ -124,16 +123,11 @@ graphic. Play signs with the same key as the GitHub releases, so either install 
 
 ## Report service
 
-`worker/` is a Cloudflare Worker that files problem reports from the app as GitHub issues, signed in as the
-woodshed-reports GitHub App. It runs at `https://woodshed-reports.lararosekelley.workers.dev/report`.
-
-```
-make worker-test    # type-check and test it
-make worker-deploy  # deploy it; needs `npx wrangler login` with the personal Cloudflare account
-```
-
-The app's private key is a Worker secret, stored in the PKCS#8 form Web Crypto needs:
-`openssl pkcs8 -topk8 -nocrypt -in <key>.pem | npx wrangler secret put GITHUB_PRIVATE_KEY` from `worker/`.
+Problem reports from the app go to the shared Greylock Labs report service in
+[greylocklabs/reports](https://github.com/greylocklabs/reports), a Cloudflare Worker at
+`https://greylocklabs-reports.lararosekelley.workers.dev/report`, which files them in this repo as the
+greylocklabs-reports GitHub App. It also answers at the old `woodshed-reports` address, which Woodshed 0.4
+and earlier use.
 
 ## Releasing
 

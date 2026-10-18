@@ -19,17 +19,6 @@ updates:
       build-tools:
         patterns: ["com.diffplug.spotless*", "com.pinterest.ktlint*"]
 
-  - package-ecosystem: npm
-    directory: /worker
-    schedule:
-      interval: weekly
-    commit-message:
-      prefix: build
-      include: scope
-    groups:
-      worker:
-        patterns: ["*"]
-
   - package-ecosystem: github-actions
     directory: /
     schedule:
