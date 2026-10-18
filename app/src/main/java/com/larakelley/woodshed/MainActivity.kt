@@ -66,9 +66,7 @@ class MainActivity : ComponentActivity() {
     val metronome = app.metronome
 
     enableEdgeToEdge()
-    val info = packageManager.getPackageInfo(packageName, 0)
-    val version = info.versionName ?: ""
-    val freshInstall = info.firstInstallTime == info.lastUpdateTime
+    val version = packageManager.getPackageInfo(packageName, 0).versionName ?: ""
     setContent {
       val themeMode by app.repository.themeMode.collectAsStateWithLifecycle()
       val tabOrder by app.repository.tabOrder.collectAsStateWithLifecycle()
@@ -127,7 +125,7 @@ class MainActivity : ComponentActivity() {
           )
 
           var whatsNew by remember { mutableStateOf(emptyList<ChangelogRelease>()) }
-          LaunchedEffect(Unit) { whatsNew = withContext(Dispatchers.IO) { app.whatsNew.pending(version, freshInstall) } }
+          LaunchedEffect(Unit) { whatsNew = withContext(Dispatchers.IO) { app.whatsNew.pending(version) } }
           if (whatsNew.isNotEmpty()) {
             WhatsNewDialog(whatsNew) {
               app.whatsNew.markSeen(version)

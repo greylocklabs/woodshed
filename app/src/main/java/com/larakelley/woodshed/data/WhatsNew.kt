@@ -8,11 +8,11 @@ import com.larakelley.woodshed.domain.releasesSince
 
 /** Decides when the What's new dialog shows: once after each update, never on a fresh install. */
 class WhatsNew(private val prefs: SharedPreferences, private val readChangelog: () -> String) {
-  /** The releases to show for [current], or none. [freshInstall] means the app has never been updated. */
-  fun pending(current: String, freshInstall: Boolean): List<ChangelogRelease> {
+  /** The releases to show for [current], or none. No version seen yet means a fresh install. */
+  fun pending(current: String): List<ChangelogRelease> {
     val seen = prefs.getString(SEEN, null)
     if (seen == current) return emptyList()
-    if (seen == null && freshInstall) {
+    if (seen == null) {
       markSeen(current)
       return emptyList()
     }
