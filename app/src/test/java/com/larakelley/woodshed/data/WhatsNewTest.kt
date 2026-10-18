@@ -36,23 +36,18 @@ class WhatsNewTest {
 
   @Test
   fun aFreshInstallShowsNothingNowOrUntilTheNextUpdate() {
-    assertTrue(whatsNew.pending("0.2.0", freshInstall = true).isEmpty())
-    assertEquals(listOf("0.3.0"), whatsNew.pending("0.3.0", freshInstall = false).map { it.version })
+    assertTrue(whatsNew.pending("0.2.0").isEmpty())
+    assertEquals(listOf("0.3.0"), whatsNew.pending("0.3.0").map { it.version })
   }
 
   @Test
   fun anUpdateShowsUntilDismissed() {
     whatsNew.markSeen("0.2.0")
-    assertEquals(listOf("0.3.0"), whatsNew.pending("0.3.0", freshInstall = false).map { it.version })
+    assertEquals(listOf("0.3.0"), whatsNew.pending("0.3.0").map { it.version })
     // Closing the app without dismissing shows it again next launch.
-    assertEquals(listOf("0.3.0"), whatsNew.pending("0.3.0", freshInstall = false).map { it.version })
+    assertEquals(listOf("0.3.0"), whatsNew.pending("0.3.0").map { it.version })
     whatsNew.markSeen("0.3.0")
-    assertTrue(whatsNew.pending("0.3.0", freshInstall = false).isEmpty())
-  }
-
-  @Test
-  fun anUpdateFromBeforeTheDialogExistedShowsTheInstalledRelease() {
-    assertEquals(listOf("0.3.0"), whatsNew.pending("0.3.0", freshInstall = false).map { it.version })
+    assertTrue(whatsNew.pending("0.3.0").isEmpty())
   }
 
   @Test

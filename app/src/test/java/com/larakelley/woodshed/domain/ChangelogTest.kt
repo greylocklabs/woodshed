@@ -65,9 +65,4 @@ class ChangelogTest {
     // A changelog ahead of the installed build, as on main between releases, shows nothing newer than the app.
     assertEquals(listOf("0.9.0"), releasesSince(releases, "0.8.0", "0.9.0").map { it.version })
   }
-
-  @Test
-  fun withNoVersionSeenShowsOnlyTheInstalledRelease() {
-    assertEquals(listOf("0.10.0"), releasesSince(releases, null, "0.10.0").map { it.version })
-  }
 }

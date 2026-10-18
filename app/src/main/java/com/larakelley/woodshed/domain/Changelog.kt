@@ -80,11 +80,7 @@ fun compareVersions(a: String, b: String): Int {
   return 0
 }
 
-/**
- * The releases to show after updating from [seen] to [current], newest first. With no [seen] version, from before
- * the app kept one, only [current]'s release is shown.
- */
-fun releasesSince(releases: List<ChangelogRelease>, seen: String?, current: String): List<ChangelogRelease> = releases.filter {
-  compareVersions(it.version, current) <= 0 &&
-    if (seen == null) compareVersions(it.version, current) == 0 else compareVersions(it.version, seen) > 0
+/** The releases to show after updating from [seen] to [current], newest first. */
+fun releasesSince(releases: List<ChangelogRelease>, seen: String, current: String): List<ChangelogRelease> = releases.filter {
+  compareVersions(it.version, current) <= 0 && compareVersions(it.version, seen) > 0
 }
