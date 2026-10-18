@@ -9,6 +9,9 @@ published as that release's GitHub notes, so the headings must stay
 
 ### Changed
 
+- **library:** updating from 0.3 or earlier starts the library over: tune
+  progress, review history, playlists, overrides and added tunes are cleared.
+  Updates from 0.4 keep everything.
 - **reports:** reports go to the shared Greylock Labs report service and are
   filed in its format, the same whether sent from the app or opened on GitHub.
 
