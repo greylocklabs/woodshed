@@ -58,7 +58,7 @@ data class Report(
     append("Woodshed $appVersion, Android $androidVersion")
   }
 
-  /** The report as the report service takes it; worker/src/report.ts renders the same issue as [body]. */
+  /** The report as the report service takes it; greylocklabs/reports' src/woodshed.ts renders the same issue as [body]. */
   fun json(appVersion: String, androidVersion: String): String = Json.encodeToString(
     ReportPayload(subject.name, problem, item, id, details.map { listOf(it.first, it.second) }, note.ifBlank { null }, appVersion, androidVersion),
   )
@@ -72,8 +72,8 @@ data class Report(
   companion object {
     const val REPO = "greylocklabs/woodshed"
 
-    /** The report service, a Cloudflare Worker in worker/ that files reports as the woodshed-reports GitHub app. */
-    const val SERVICE = "https://woodshed-reports.lararosekelley.workers.dev/report"
+    /** The shared report service in greylocklabs/reports, which files reports as the greylocklabs-reports GitHub App. */
+    const val SERVICE = "https://greylocklabs-reports.lararosekelley.workers.dev/report"
 
     /** Notes ride in the issue page's address, which browsers and GitHub cut off past several thousand characters. */
     const val MAX_NOTE = 1500
