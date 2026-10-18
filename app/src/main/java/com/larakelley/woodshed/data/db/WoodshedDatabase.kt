@@ -1,20 +1,16 @@
 package com.larakelley.woodshed.data.db
 
 import android.content.Context
-import androidx.room.AutoMigration
 import androidx.room.Dao
 import androidx.room.Database
-import androidx.room.DeleteColumn
 import androidx.room.Insert
 import androidx.room.Query
-import androidx.room.RenameColumn
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverter
 import androidx.room.TypeConverters
 import androidx.room.Update
 import androidx.room.Upsert
-import androidx.room.migration.AutoMigrationSpec
 import com.larakelley.woodshed.domain.Family
 import com.larakelley.woodshed.domain.Grade
 import kotlinx.coroutines.flow.Flow
@@ -306,6 +302,7 @@ class Converters {
   fun stringToFamilies(value: String): List<Family> = if (value.isEmpty()) emptyList() else value.split(",").map { Family.valueOf(it) }
 }
 
+/** A schema change bumps the version and adds an AutoMigration (or a Migration) from the previous one, with a test. */
 @Database(
   entities = [
     StandardEntity::class, ExerciseEntity::class, TuneStateEntity::class, ReviewEventEntity::class, TuneKnowledgeEntity::class,
@@ -313,21 +310,6 @@ class Converters {
     TranscriptionEntity::class, TranscriptionStateEntity::class, SessionEntity::class, SessionBlockEntity::class,
   ],
   version = 14,
-  autoMigrations = [
-    AutoMigration(from = 1, to = 2),
-    AutoMigration(from = 2, to = 3),
-    AutoMigration(from = 3, to = 4),
-    AutoMigration(from = 4, to = 5, spec = WoodshedDatabase.DropBooks::class),
-    AutoMigration(from = 5, to = 6, spec = WoodshedDatabase.SplitKey::class),
-    AutoMigration(from = 6, to = 7),
-    AutoMigration(from = 7, to = 8),
-    AutoMigration(from = 8, to = 9),
-    AutoMigration(from = 9, to = 10),
-    AutoMigration(from = 10, to = 11),
-    AutoMigration(from = 11, to = 12),
-    AutoMigration(from = 12, to = 13),
-    AutoMigration(from = 13, to = 14),
-  ],
 )
 @TypeConverters(Converters::class)
 abstract class WoodshedDatabase : RoomDatabase() {
@@ -352,18 +334,6 @@ abstract class WoodshedDatabase : RoomDatabase() {
   abstract fun transcriptions(): TranscriptionDao
 
   abstract fun sessions(): SessionDao
-
-  /** Version 4 listed every fake book a tune is printed in; version 5 keeps only its collection. */
-  @DeleteColumn(tableName = "standards", columnName = "books")
-  class DropBooks : AutoMigrationSpec
-
-  /** Version 6 stores the tonic and the tonality separately; re-seeding fills both. */
-  @DeleteColumn.Entries(
-    DeleteColumn(tableName = "standards", columnName = "commonKeyRaw"),
-    DeleteColumn(tableName = "standards", columnName = "commonKeyMinor"),
-  )
-  @RenameColumn(tableName = "standards", fromColumnName = "commonKeyPitchClass", toColumnName = "keyPitchClass")
-  class SplitKey : AutoMigrationSpec
 
   companion object {
     fun create(context: Context): WoodshedDatabase = Room.databaseBuilder(context, WoodshedDatabase::class.java, "woodshed.db").build()
