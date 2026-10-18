@@ -43,30 +43,51 @@ data class Report(
   val title: String
     get() = listOfNotNull(problem, item?.let { "in \"$it\"" }).joinToString(" ")
 
+  /** The issue title: [title], with a long item name cut short to fit the service's limit. */
+  val summary: String
+    get() {
+      if (title.length <= MAX_SUMMARY || item == null) return title.take(MAX_SUMMARY)
+      val room = (MAX_SUMMARY - "$problem in \"...\"".length).coerceAtLeast(0)
+      return "$problem in \"${item.take(room).trimEnd()}...\"".take(MAX_SUMMARY)
+    }
+
+  val isIdea: Boolean
+    get() = subject == ReportSubject.APP && problem == "An idea"
+
+  /** [details] with what the report is about first. */
+  private val allDetails: List<Pair<String, String>>
+    get() = listOfNotNull(item?.let { subject.label to it }, id?.let { "Id" to it }) + details
+
+  /** The issue body for the GitHub fallback: what greylocklabs/reports' issueFor renders from [json], less its "Sent from the app" line. */
   fun body(appVersion: String, androidVersion: String): String = buildString {
-    appendLine("**${subject.label}:** ${item ?: "Woodshed"}${id?.let { " (`$it`)" } ?: ""}")
-    appendLine("**Problem:** $problem")
-    if (details.isNotEmpty()) {
+    appendLine(if (isIdea) "**The idea:**" else "**What happened:**")
+    appendLine(note.trim().ifEmpty { "(please describe)" })
+    if (allDetails.isNotEmpty()) {
       appendLine()
       appendLine("What the app shows:")
-      details.forEach { (k, v) -> appendLine("- $k: $v") }
+      allDetails.forEach { (k, v) -> appendLine("- $k: $v") }
     }
-    appendLine()
-    appendLine("**What it should be, or what happened:**")
-    appendLine(note.ifBlank { "(please describe)" })
     appendLine()
     append("Woodshed $appVersion, Android $androidVersion")
   }
 
-  /** The report as the report service takes it; greylocklabs/reports' src/woodshed.ts renders the same issue as [body]. */
+  /** The report in the shared report service's format. */
   fun json(appVersion: String, androidVersion: String): String = Json.encodeToString(
-    ReportPayload(subject.name, problem, item, id, details.map { listOf(it.first, it.second) }, note.ifBlank { null }, appVersion, androidVersion),
+    ReportPayload(
+      app = "woodshed",
+      kind = if (isIdea) "idea" else "bug",
+      summary = summary,
+      note = note.trim().ifEmpty { null },
+      details = allDetails.map { listOf(it.first, it.second) },
+      appVersion = appVersion,
+      platform = "Android $androidVersion",
+    ),
   )
 
   /** GitHub's new-issue page with the title, body and a label filled in. */
   fun issueUrl(appVersion: String, androidVersion: String, repo: String = REPO): String {
-    val label = if (subject == ReportSubject.APP && problem == "An idea") "enhancement" else "bug"
-    return "https://github.com/$repo/issues/new?title=${enc(title)}&body=${enc(body(appVersion, androidVersion))}&labels=${enc(label)}"
+    val label = if (isIdea) "enhancement" else "bug"
+    return "https://github.com/$repo/issues/new?title=${enc(summary)}&body=${enc(body(appVersion, androidVersion))}&labels=${enc(label)}"
   }
 
   companion object {
@@ -78,18 +99,20 @@ data class Report(
     /** Notes ride in the issue page's address, which browsers and GitHub cut off past several thousand characters. */
     const val MAX_NOTE = 1500
 
+    /** The longest summary the service takes. */
+    const val MAX_SUMMARY = 100
+
     private fun enc(s: String) = URLEncoder.encode(s, "UTF-8").replace("+", "%20")
   }
 }
 
 @Serializable
 private data class ReportPayload(
-  val subject: String,
-  val problem: String,
-  val item: String?,
-  val id: String?,
-  val details: List<List<String>>,
+  val app: String,
+  val kind: String,
+  val summary: String,
   val note: String?,
+  val details: List<List<String>>,
   val appVersion: String,
-  val androidVersion: String,
+  val platform: String,
 )

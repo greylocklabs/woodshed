@@ -31,30 +31,51 @@ class ReportTest {
     val q = query(url)
     assertEquals("Wrong key in \"Body & Soul\"", q["title"])
     assertEquals("bug", q["labels"])
-    val body = q.getValue("body")
-    assertTrue(body.contains("body-and-soul"))
-    assertTrue(body.contains("- Key: Concert Db"))
-    assertTrue(body.contains("most bands call it in Eb?"))
-    assertTrue(body.endsWith("Woodshed 1.0, Android 17"))
+    assertEquals(
+      """
+      **What happened:**
+      Real Book has it in Db, but most bands call it in Eb?
+
+      What the app shows:
+      - Tune: Body & Soul
+      - Id: body-and-soul
+      - Key: Concert Db
+
+      Woodshed 1.0, Android 17
+      """.trimIndent(),
+      q["body"],
+    )
   }
 
   @Test
   fun anEmptyNoteAsksForOneAndIdeasAreLabelledAsEnhancements() {
     val idea = Report(ReportSubject.APP, "An idea")
-    assertTrue(idea.body("1.0", "17").contains("(please describe)"))
+    assertEquals("**The idea:**\n(please describe)\n\nWoodshed 1.0, Android 17", idea.body("1.0", "17"))
     assertEquals("enhancement", query(idea.issueUrl("1.0", "17"))["labels"])
-    assertEquals("An idea", idea.title)
+    assertEquals("An idea", idea.summary)
   }
 
   @Test
-  fun theServiceGetsTheReportAsJson() {
+  fun aLongItemNameIsCutShortToFitTheSummary() {
+    val long = Report(ReportSubject.TUNE, "Wrong key", "x".repeat(200))
+    assertEquals(Report.MAX_SUMMARY, long.summary.length)
+    assertTrue(long.summary.startsWith("Wrong key in \"xxx"))
+    assertTrue(long.summary.endsWith("...\""))
+  }
+
+  @Test
+  fun theServiceGetsTheReportInTheSharedFormat() {
     val json = Json.parseToJsonElement(
       Report(ReportSubject.TUNE, "Wrong key", "Solar", "solar", listOf("Key" to "Concert C minor"), "").json("0.1.0", "16"),
     ).jsonObject
-    assertEquals("TUNE", json["subject"]!!.jsonPrimitive.content)
-    assertEquals("Solar", json["item"]!!.jsonPrimitive.content)
-    assertEquals("[[\"Key\",\"Concert C minor\"]]", json["details"].toString())
+    assertEquals(setOf("app", "kind", "summary", "note", "details", "appVersion", "platform"), json.keys)
+    assertEquals("woodshed", json["app"]!!.jsonPrimitive.content)
+    assertEquals("bug", json["kind"]!!.jsonPrimitive.content)
+    assertEquals("Wrong key in \"Solar\"", json["summary"]!!.jsonPrimitive.content)
+    assertEquals("[[\"Tune\",\"Solar\"],[\"Id\",\"solar\"],[\"Key\",\"Concert C minor\"]]", json["details"].toString())
     assertEquals(JsonNull, json["note"])
-    assertEquals("16", json["androidVersion"]!!.jsonPrimitive.content)
+    assertEquals("0.1.0", json["appVersion"]!!.jsonPrimitive.content)
+    assertEquals("Android 16", json["platform"]!!.jsonPrimitive.content)
+    assertEquals("idea", Json.parseToJsonElement(Report(ReportSubject.APP, "An idea").json("0.1.0", "16")).jsonObject["kind"]!!.jsonPrimitive.content)
   }
 }
