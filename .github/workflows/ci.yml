@@ -19,35 +19,28 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
-      # The Android app arrives partway up the first stack; branches before it have only the Python tools.
       - name: Setup Java
-        if: hashFiles('gradlew') != ''
         uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: 21
 
       - name: Setup Android SDK
-        if: hashFiles('gradlew') != ''
         uses: android-actions/setup-android@v4
         with:
           # The default also asks for "tools", which current command-line tools no longer ship.
           packages: platform-tools
 
       - name: Setup Gradle
-        if: hashFiles('gradlew') != ''
         uses: gradle/actions/setup-gradle@v6
 
       - name: Changelog has the current version
-        if: hashFiles('scripts/release-notes.sh') != ''
         run: scripts/release-notes.sh > /dev/null
 
       - name: Kotlin formatting
-        if: hashFiles('gradlew') != ''
         run: ./gradlew spotlessCheck
 
       - name: Android lint
-        if: hashFiles('gradlew') != ''
         run: ./gradlew lintDebug
 
   test:
@@ -57,30 +50,26 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Setup Java
-        if: hashFiles('gradlew') != ''
         uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: 21
 
       - name: Setup Android SDK
-        if: hashFiles('gradlew') != ''
         uses: android-actions/setup-android@v4
         with:
           # The default also asks for "tools", which current command-line tools no longer ship.
           packages: platform-tools
 
       - name: Setup Gradle
-        if: hashFiles('gradlew') != ''
         uses: gradle/actions/setup-gradle@v6
 
       # Runs every unit and Robolectric test, comparing the screenshot tests against app/src/test/screenshots.
       - name: Unit, Robolectric and screenshot tests
-        if: hashFiles('gradlew') != ''
         run: ./gradlew verifyRoborazziDebug
 
       - name: Upload screenshot differences
-        if: failure() && hashFiles('gradlew') != ''
+        if: failure()
         uses: actions/upload-artifact@v7
         with:
           name: screenshot-diffs

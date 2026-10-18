@@ -24,43 +24,36 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
-      # The Android app arrives partway up the first stack; branches before it have nothing to run.
       - name: Setup Java
-        if: hashFiles('gradlew') != ''
         uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: 21
 
       - name: Setup Android SDK
-        if: hashFiles('gradlew') != ''
         uses: android-actions/setup-android@v4
         with:
           packages: platform-tools
 
       - name: Setup Gradle
-        if: hashFiles('gradlew') != ''
         uses: gradle/actions/setup-gradle@v6
 
       # Hardware acceleration for the emulator.
       - name: Enable KVM
-        if: hashFiles('gradlew') != ''
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
       - name: End-to-end tests
-        if: hashFiles('gradlew') != ''
         run: ./gradlew pixel6api34DebugAndroidTest -Pandroid.testoptions.manageddevices.emulator.gpu=swiftshader_indirect
 
       # The same tests on the shrunk release build, signed with the debug key, catch what R8 removes or renames.
       - name: End-to-end tests on the release build
-        if: hashFiles('gradlew') != ''
         run: ./gradlew pixel6api34ReleaseAndroidTest -Pe2eRelease -Pandroid.testoptions.manageddevices.emulator.gpu=swiftshader_indirect
 
       - name: Upload test reports
-        if: failure() && hashFiles('gradlew') != ''
+        if: failure()
         uses: actions/upload-artifact@v7
         with:
           name: e2e-reports
