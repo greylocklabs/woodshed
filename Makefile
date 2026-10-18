@@ -5,7 +5,7 @@ GRADLE := ./gradlew
 EMULATOR_GPU ?= swiftshader_indirect
 
 .DEFAULT_GOAL := help
-.PHONY: help build apk e2e-release test www worker-test worker-deploy record-screenshots e2e format lint check clean version release-notes bump release
+.PHONY: help build apk e2e-release test www record-screenshots e2e format lint check clean version release-notes bump release
 
 help: ## List the tasks
 	@awk 'BEGIN { FS = ":.*## " } /^[a-z0-9-]+:.*## / { printf "  %-20s %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
@@ -47,7 +47,7 @@ lint: ## Check formatting, run Android lint and check the changelog has the curr
 	$(GRADLE) spotlessCheck :app:lintDebug
 	@scripts/release-notes.sh > /dev/null
 
-check: lint test worker-test ## CI's lint, test and worker jobs; commitlint runs in CI only
+check: lint test ## CI's lint and test jobs; commitlint runs in CI only
 
 # Website
 # -------
@@ -57,19 +57,6 @@ WWW_PORT ?= 8000
 www: ## Serve the website in www/ at http://localhost:8000 (WWW_PORT=... for another port)
 	@echo "Serving www/ at http://localhost:$(WWW_PORT); Ctrl+C stops it."
 	@python3 -m http.server $(WWW_PORT) --bind 127.0.0.1 -d www
-
-# Report service
-# --------------
-
-worker/node_modules: worker/package.json
-	cd worker && npm install --no-audit --no-fund
-	@touch $@
-
-worker-test: worker/node_modules ## Type-check and test the report service in worker/
-	cd worker && npx tsc --noEmit && npm test
-
-worker-deploy: worker-test ## Deploy the report service to Cloudflare (needs `npx wrangler login`)
-	cd worker && npx wrangler deploy
 
 # Releasing
 # ---------
