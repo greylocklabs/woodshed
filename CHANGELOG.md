@@ -5,7 +5,7 @@ published as that release's GitHub notes, so the headings must stay
 `## <version>`. Write the section for a version before running
 `make release`, which refuses to release without one.
 
-## Unreleased
+## 0.5.0
 
 ### Changed
 
