@@ -1,5 +1,5 @@
-# Weekly update PRs for Gradle dependencies and GitHub Actions, grouped to keep the PR count low.
-# Commit messages read "build(deps): ..." to satisfy commitlint.
+# Weekly update PRs for Gradle dependencies and GitHub Actions, grouped to keep the PR count low,
+# and a PR whenever core releases. Commit messages read "build(deps): ..." to satisfy commitlint.
 version: 2
 updates:
   - package-ecosystem: gradle
@@ -29,3 +29,12 @@ updates:
     groups:
       actions:
         patterns: ["*"]
+
+  # core's submodule tracks its release branch, which moves only when core tags a release.
+  - package-ecosystem: gitsubmodule
+    directory: /
+    schedule:
+      interval: daily
+    commit-message:
+      prefix: build
+      include: scope

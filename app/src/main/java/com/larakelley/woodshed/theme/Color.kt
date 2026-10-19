@@ -8,7 +8,7 @@ import androidx.compose.ui.graphics.Color
 data class Sticker(val fill: Color, val ink: Color, val edge: Color)
 
 /**
- * The Callie palette from the Callie calendar app (themes/callie.toml and callie-light.toml): plum-tinted
+ * The Callie palette, from core's themes/callie.toml and callie-light.toml: plum-tinted
  * neutrals, one pink accent, and the edges raised buttons sit on.
  */
 @Immutable
@@ -32,35 +32,13 @@ data class CallieColors(
   val easy: Sticker = Sticker(Color(0xFFA4E1C5), Color(0xFF002F1F), Color(0xFF409272)),
 )
 
-val CallieDark = CallieColors(
-  background = Color(0xFF1C1220),
-  surface = Color(0xFF261A2A),
-  surfaceAlt = Color(0xFF33243A),
-  hairline = Color(0xFF2C2031),
-  border = Color(0xFF3D2C42),
-  text = Color(0xFFF6EEF5),
-  textMuted = Color(0xFFC9B7C6),
-  textFaint = Color(0xFF9A8797),
-  accent = Color(0xFFF08FB8),
-  accentText = Color(0xFF2E0F20),
-  danger = Color(0xFFE66E6D),
-  edge = Color(0xFF140C17),
-  accentEdge = Color(0xFFA64B7A),
-)
+/** Callie, as core's callie.toml sets it. */
+val CallieDark = CoreCallie
 
-val CallieLight = CallieColors(
-  background = Color(0xFFFBF5F8),
-  surface = Color(0xFFFFFAFC),
-  surfaceAlt = Color(0xFFF3E7EE),
-  hairline = Color(0xFFEFE2E9),
-  border = Color(0xFFE0CCD7),
-  text = Color(0xFF2B1A26),
-  textMuted = Color(0xFF6B5562),
-  textFaint = Color(0xFF8F7A87),
+/** Callie Light from core's callie-light.toml, with a deeper pink accent. */
+val CallieLight = CoreCallieLight.copy(
   // Deeper than Callie's pink, so near-white text on it is readable at any size.
   accent = Color(0xFFC2407A),
   accentText = Color(0xFFFFFAFC),
-  danger = Color(0xFFC93C45),
-  edge = Color(0xFFDCC8D3),
   accentEdge = Color(0xFF8E2C5A),
 )
