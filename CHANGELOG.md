@@ -1,9 +1,8 @@
 # Changelog
 
-Notable changes per release. The section matching the version being tagged is
-published as that release's GitHub notes, so the headings must stay
-`## <version>`. Write the section for a version before running
-`make release`, which refuses to release without one.
+Notable changes per release. Notes collect under `## Unreleased`, which
+`make release` renames to `## <version>`; that section is published as the
+release's GitHub notes, and a release refuses to go out without one.
 
 ## 0.5.0
 

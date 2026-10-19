@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Cuts a release from main: bumps VERSION (major, minor or patch), commits it, tags v<version> and pushes the
-# tag, which starts the release workflow. "current" tags the version already in VERSION without bumping it.
-# Write the CHANGELOG.md section for the new version first; the release refuses to go out without it.
-# DRY_RUN=1 runs the checks and prints what would happen without committing, tagging or pushing.
+# Cuts a release from main: bumps VERSION (major, minor or patch), names the notes under ## Unreleased in
+# CHANGELOG.md for it, runs make check, commits, tags v<version> and pushes the tag, which starts the release
+# workflow. "current" tags the version already in VERSION without bumping it. The release refuses to go out
+# without notes. DRY_RUN=1 runs the checks and prints what would happen without committing, tagging or pushing.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -39,16 +39,31 @@ if git rev-parse --quiet --verify "refs/tags/v${version}" > /dev/null; then
   echo "release: v${version} is already tagged" >&2
   exit 1
 fi
-scripts/release-notes.sh "$version" > /dev/null
+# The notes collect under ## Unreleased until a release names them.
+name_notes=0
+if ! grep -qx "## ${version}" CHANGELOG.md && grep -qx "## Unreleased" CHANGELOG.md; then
+  name_notes=1
+  scripts/release-notes.sh Unreleased > /dev/null
+else
+  scripts/release-notes.sh "$version" > /dev/null
+fi
 
 if [ -n "${DRY_RUN:-}" ]; then
-  [ "$part" != "current" ] && echo "would bump VERSION to ${version} and commit chore(release): bump to ${version}"
-  echo "would tag v${version} and push it to origin together with main"
+  [ "$part" != "current" ] && echo "would bump VERSION to ${version}"
+  [ "$name_notes" = 1 ] && echo "would rename ## Unreleased in CHANGELOG.md to ## ${version}"
+  echo "would run make check, commit, tag v${version} and push it to origin together with main"
   exit 0
 fi
-if [ "$part" != "current" ]; then
-  scripts/bump-version.sh "$version" --write > /dev/null
-  git add VERSION
+start="$(git rev-parse HEAD)"
+[ "$part" = "current" ] || scripts/bump-version.sh "$version" --write > /dev/null
+[ "$name_notes" = 0 ] || sed -i "s/^## Unreleased\$/## ${version}/" CHANGELOG.md
+if ! make check; then
+  git checkout -- VERSION CHANGELOG.md
+  echo "release: make check failed on ${version}; VERSION and CHANGELOG.md are as they were" >&2
+  exit 1
+fi
+if [ -n "$(git status --porcelain --untracked-files=no)" ]; then
+  git add VERSION CHANGELOG.md
   git commit -m "chore(release): bump to ${version}"
 fi
 git tag -a "v${version}" -m "v${version}"
@@ -56,9 +71,7 @@ git tag -a "v${version}" -m "v${version}"
 # fails, nothing reached origin, so the local tag and bump are undone and the release can simply be run again.
 if ! git push --atomic origin main "refs/tags/v${version}"; then
   git tag -d "v${version}" > /dev/null
-  if [ "$part" != "current" ] && [ "$(git log -1 --format=%s)" = "chore(release): bump to ${version}" ]; then
-    git reset --quiet --hard HEAD~1
-  fi
+  git reset --quiet --hard "$start"
   echo "release: the push failed, so the local tag and version bump were undone; fix the problem and run it again" >&2
   exit 1
 fi
