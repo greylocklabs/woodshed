@@ -45,7 +45,7 @@ class HelpScreenTest {
   fun theContactAddressIsAnEmailLink() {
     val text = HELP_TOPICS.single { it.title == "Problems and ideas" }.paragraphs.joinToString(" ").let { inlineMarkdown(it, Color.Red) }
     val link = text.getLinkAnnotations(0, text.length).single().item as LinkAnnotation.Url
-    assertEquals("mailto:hello@woodshedapp.org", link.url)
-    assertTrue(text.text.contains("hello@woodshedapp.org"))
+    assertEquals("mailto:hello@greylocklabs.org", link.url)
+    assertTrue(text.text.contains("hello@greylocklabs.org"))
   }
 }
