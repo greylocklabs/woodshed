@@ -72,10 +72,15 @@ class Metronome(private val prefs: SharedPreferences) {
     if (_state.value.running) retune()
   }
 
-  @Synchronized
   fun start() {
-    if (thread != null) return
+    // Whatever else is sounding stops first, outside this lock, so tools starting together never wait on each other.
     onStart()
+    startThread()
+  }
+
+  @Synchronized
+  private fun startThread() {
+    if (thread != null) return
     _state.value = _state.value.copy(running = true)
     retune()
     thread = Thread(::run, "metronome").apply {

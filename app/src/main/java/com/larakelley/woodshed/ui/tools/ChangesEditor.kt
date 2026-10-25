@@ -102,7 +102,7 @@ internal fun ChangesEditor(
       keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
       modifier = Modifier.fillMaxWidth().testTag("changes-name"),
     )
-    Helper("Chords are named in ${Key.MAJOR_SPELLING[writtenKey]}, the Changes tab's key. Your changes play in any key, as the others do.")
+    Helper("Chords are named in ${Key.MAJOR_SPELLING[writtenKey]}, the key these changes play in. They play in any key, as the others do.")
 
     SectionLabel("Bars")
     val shape = RoundedCornerShape(6.dp)
