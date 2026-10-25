@@ -15,7 +15,9 @@ release's GitHub notes, and a release refuses to go out without one.
   turnarounds and key-to-key patterns on the drone's sound, in time with a
   click. It counts in, shows the chord now and next, keeps its own tempo
   (120 to start, with the metronome's common tempos), and uses the
-  metronome's feel, with the click optional.
+  metronome's feel, with the click optional. Each form and pattern keeps its
+  own key, and while changes play, a bar along the bottom of every other
+  screen shows them and stops them.
 - **changes:** write changes of your own, bar by bar with one or two chords a
   bar, or save a pattern as yours to edit further. They play in any key and
   go in backups.

@@ -21,20 +21,26 @@ import kotlin.math.floor
 /** A medium swing, a common place to start working on changes. */
 private const val DEFAULT_BPM = 120
 
-/** Something to play: a name for the screen, and its bars relative to the key for each time through. */
-data class ChangesSource(val id: String, val bars: (chorus: Int) -> List<Bar>)
+/**
+ * Something to play: its name, its bars relative to the key for each time through, and [keyId], what its key is
+ * remembered under, which stays the same when [id] changes with an edit or a pattern's settings.
+ */
+data class ChangesSource(val id: String, val keyId: String, val title: String, val bars: (chorus: Int) -> List<Bar>)
 
 data class ChangesState(
   val playing: Boolean = false,
-  /** Concert pitch class the changes are played in. */
+  /** Concert pitch class the loaded changes are played in. */
   val key: Int = 0,
+  /** The key each form, pattern and set of the user's changes was last played in, by [ChangesSource.keyId]. */
+  val keys: Map<String, Int> = emptyMap(),
   /** The changes keep a tempo of their own, apart from the metronome's, which practice blocks set. */
   val bpm: Int = DEFAULT_BPM,
   val click: Boolean = true,
   val countIn: Boolean = true,
   val keepGoing: Boolean = true,
-  /** The id of what is loaded. */
+  /** The id of what is loaded, and its name. */
   val source: String? = null,
+  val title: String = "",
   /** The bars of the time through being heard, relative to [key]. */
   val bars: List<Bar> = emptyList(),
   val chorus: Int = 0,
@@ -43,7 +49,10 @@ data class ChangesState(
   val beat: Int = -1,
   /** The count-in beat being heard, from 0, or -1. */
   val countInBeat: Int = -1,
-)
+) {
+  /** The concert key [keyId] plays in: its own, or else the one played last. */
+  fun keyFor(keyId: String): Int = keys[keyId] ?: key
+}
 
 /**
  * Plays changes: the drone's sound moving from chord to chord in time, over the metronome's clicks, from one audio
@@ -54,6 +63,7 @@ class ChangesPlayer(private val prefs: SharedPreferences, private val metronome:
   private val _state = MutableStateFlow(
     ChangesState(
       key = prefs.getInt(KEY, 0).coerceIn(0, 11),
+      keys = prefs.all.mapNotNull { (name, value) -> if (name.startsWith(KEY_OF) && value is Int) name.removePrefix(KEY_OF) to value else null }.toMap(),
       bpm = prefs.getInt(BPM, DEFAULT_BPM).coerceIn(ClickTrack.MIN_BPM, ClickTrack.MAX_BPM),
       click = prefs.getBoolean(CLICK, true),
       countIn = prefs.getBoolean(COUNT_IN, true),
@@ -63,6 +73,7 @@ class ChangesPlayer(private val prefs: SharedPreferences, private val metronome:
   val state: StateFlow<ChangesState> = _state.asStateFlow()
 
   @Volatile private var source: ChangesSource? = null
+  private var keyId: String? = null
   private var thread: Thread? = null
 
   fun toggle() = if (_state.value.playing) stop() else start()
@@ -72,10 +83,17 @@ class ChangesPlayer(private val prefs: SharedPreferences, private val metronome:
     if (_state.value.source == next.id) return
     stop()
     source = next
-    _state.value = _state.value.copy(source = next.id, bars = next.bars(0), chorus = 0)
+    keyId = next.keyId
+    _state.value = _state.value.copy(source = next.id, title = next.title, key = _state.value.keyFor(next.keyId), bars = next.bars(0), chorus = 0)
   }
 
-  fun setKey(key: Int) = update(restart = true) { it.copy(key = Math.floorMod(key, 12)) }
+  /** Sets the key [keyId] plays in; when it is what is loaded, it starts over in the new key. */
+  fun setKey(keyId: String, key: Int) {
+    val pitch = Math.floorMod(key, 12)
+    prefs.edit { putInt(KEY_OF + keyId, pitch) }
+    val loaded = keyId == this.keyId
+    update(restart = loaded) { it.copy(keys = it.keys + (keyId to pitch), key = if (loaded) pitch else it.key) }
+  }
 
   /** Starts over from the count-in, as a change to beats per bar needs, if it is playing. */
   fun restart() {
@@ -231,6 +249,9 @@ class ChangesPlayer(private val prefs: SharedPreferences, private val metronome:
     const val SAMPLE_RATE = 48_000
     const val CHUNK_FRAMES = 960
     const val KEY = "changes_key"
+
+    /** Each item's own key is kept under this prefix and its key id. */
+    const val KEY_OF = "changes_key:"
     const val BPM = "changes_bpm"
     const val CLICK = "changes_click"
     const val COUNT_IN = "changes_count_in"

@@ -115,6 +115,8 @@ fun BrowseScreen(
   metronomeTab: (@Composable () -> Unit)? = null,
   droneTab: (@Composable () -> Unit)? = null,
   changesTab: (@Composable () -> Unit)? = null,
+  /** Shown under every tab but Changes while changes play, so they can be stopped from anywhere. */
+  nowPlaying: (@Composable () -> Unit)? = null,
   tunerTab: (@Composable () -> Unit)? = null,
   helpTab: (@Composable () -> Unit)? = null,
   /** The user's tab order; tabs it does not name keep their default places. */
@@ -174,6 +176,11 @@ fun BrowseScreen(
 
       // The Transcribe tab takes the request once it is showing.
       is Destination.Solo -> if ("Transcribe" in tabs) tabName = "Transcribe" else navigation.take()
+
+      Destination.Changes -> {
+        navigation.take()
+        tabName = "Changes"
+      }
     }
   }
 
@@ -290,57 +297,60 @@ fun BrowseScreen(
           }, text = { Text("${TAB_EMOJI[label].orEmpty()} $label".trim()) }, modifier = Modifier.testTag("tab-$label"))
         }
       }
-      when (tabs[tab]) {
-        "Practice" -> practiceTab?.invoke()
+      Column(Modifier.weight(1f)) {
+        when (tabs[tab]) {
+          "Practice" -> practiceTab?.invoke()
 
-        "History" -> historyTab?.invoke()
+          "History" -> historyTab?.invoke()
 
-        "Random" -> diceTab?.invoke()
+          "Random" -> diceTab?.invoke()
 
-        "Transcribe" -> transcribeTab?.invoke()
+          "Transcribe" -> transcribeTab?.invoke()
 
-        "Metronome" -> metronomeTab?.invoke()
+          "Metronome" -> metronomeTab?.invoke()
 
-        "Drone" -> droneTab?.invoke()
+          "Drone" -> droneTab?.invoke()
 
-        "Changes" -> changesTab?.invoke()
+          "Changes" -> changesTab?.invoke()
 
-        "Tuner" -> tunerTab?.invoke()
+          "Tuner" -> tunerTab?.invoke()
 
-        "Help" -> helpTab?.invoke()
+          "Help" -> helpTab?.invoke()
 
-        "Tunes" -> {
-          TuneFilters(state, onTuneFilter, onAdd = { editing = NEW_TUNE }, onPlaylists = { playlistsOpen = true })
-          if (state.tunes.isEmpty()) {
-            EmptyState(
-              "🔍",
-              "No tunes match",
-              "Nothing fits this search and these filters. Clear them, or add the tune yourself.",
-              action = "Clear search and filters",
-              onAction = { onTuneFilter { TuneFilter(sort = it.sort) } },
-              scrolls = true,
-            )
-          } else {
-            TuneList(state.tunes, alphabetical = state.tuneFilter.sort == TuneSort.TITLE && state.tuneFilter.playlistId == null, onOpen = { openSlug = it })
+          "Tunes" -> {
+            TuneFilters(state, onTuneFilter, onAdd = { editing = NEW_TUNE }, onPlaylists = { playlistsOpen = true })
+            if (state.tunes.isEmpty()) {
+              EmptyState(
+                "🔍",
+                "No tunes match",
+                "Nothing fits this search and these filters. Clear them, or add the tune yourself.",
+                action = "Clear search and filters",
+                onAction = { onTuneFilter { TuneFilter(sort = it.sort) } },
+                scrolls = true,
+              )
+            } else {
+              TuneList(state.tunes, alphabetical = state.tuneFilter.sort == TuneSort.TITLE && state.tuneFilter.playlistId == null, onOpen = { openSlug = it })
+            }
           }
-        }
 
-        else -> {
-          ExerciseFilters(state, onExerciseFilter, onAdd = { editingExercise = NEW_EXERCISE })
-          if (state.exercises.isEmpty()) {
-            EmptyState(
-              "💪",
-              "No exercises match",
-              "Nothing fits this search and these filters.",
-              action = "Clear search and filters",
-              onAction = { onExerciseFilter { ExerciseFilter(instrument = it.instrument, sort = it.sort) } },
-              scrolls = true,
-            )
-          } else {
-            ExerciseList(state.exercises, onOpen = { openExercise = it })
+          else -> {
+            ExerciseFilters(state, onExerciseFilter, onAdd = { editingExercise = NEW_EXERCISE })
+            if (state.exercises.isEmpty()) {
+              EmptyState(
+                "💪",
+                "No exercises match",
+                "Nothing fits this search and these filters.",
+                action = "Clear search and filters",
+                onAction = { onExerciseFilter { ExerciseFilter(instrument = it.instrument, sort = it.sort) } },
+                scrolls = true,
+              )
+            } else {
+              ExerciseList(state.exercises, onOpen = { openExercise = it })
+            }
           }
         }
       }
+      if (tabs[tab] != "Changes") nowPlaying?.invoke()
     }
   }
 }
