@@ -11,12 +11,16 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performTextInput
 import com.larakelley.woodshed.audio.ChangesSource
 import com.larakelley.woodshed.audio.ChangesState
 import com.larakelley.woodshed.audio.DroneState
 import com.larakelley.woodshed.audio.MetronomeState
+import com.larakelley.woodshed.data.MyChanges
 import com.larakelley.woodshed.domain.ChangesLibrary
 import com.larakelley.woodshed.domain.Transposition
+import com.larakelley.woodshed.domain.bars
+import com.larakelley.woodshed.domain.numerals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -131,5 +135,61 @@ class ChangesScreenTest {
     compose.onNodeWithText("F7, bar 5 of 12").assertExists()
     compose.onNodeWithTag("now-playing-stop", useUnmergedTree = true).performClick()
     assertTrue(stopped)
+  }
+
+  @Test
+  fun yourOwnChangesAreWrittenPlayedEditedAndDeleted() {
+    val saved = mutableListOf<Triple<Long?, String, String>>()
+    val deleted = mutableListOf<Long>()
+    val loaded = mutableListOf<String>()
+    var mine by mutableStateOf(emptyList<MyChanges>())
+    compose.setContent {
+      ChangesScreen(
+        ChangesState(),
+        MetronomeState(),
+        DroneState(),
+        Transposition.C,
+        ChangesActions(
+          load = { loaded += it.id },
+          save = { id, name, bars -> saved += Triple(id, name, numerals(bars)) },
+          delete = { deleted += it },
+        ),
+        mine,
+      )
+    }
+    compose.onNodeWithTag("changes-new").performScrollTo().performClick()
+    compose.onNodeWithTag("changes-name").performTextInput("Vamp")
+    compose.onNodeWithTag("changes-save").performScrollTo().performClick()
+    assertEquals(Triple(null, "Vamp", "I | I | I | I"), saved.single())
+    // Saved, it shows under Yours and plays.
+    mine = listOf(MyChanges(7, "Vamp", bars("I | IV")))
+    compose.onNodeWithTag("changes-mine-7").performScrollTo().performClick()
+    compose.waitForIdle()
+    assertTrue(loaded.single().startsWith("mine:7:"))
+    // Edited, it loads again; deleted, the list shows.
+    compose.onNodeWithTag("changes-edit").performClick()
+    compose.onNodeWithTag("changes-save").performScrollTo().performClick()
+    assertEquals(Triple(7L, "Vamp", "I | IV"), saved.last())
+    mine = listOf(MyChanges(7, "Vamp", bars("I | IV | V")))
+    compose.waitForIdle()
+    assertEquals(2, loaded.size)
+    compose.onNodeWithTag("changes-edit").performClick()
+    compose.onNodeWithTag("changes-delete").performScrollTo().performClick()
+    compose.onNodeWithTag("changes-delete-confirm").performClick()
+    assertEquals(listOf(7L), deleted)
+    mine = emptyList()
+    compose.onNodeWithTag("changes-new").performScrollTo().assertExists()
+  }
+
+  @Test
+  fun aPatternIsSavedAsYoursOneTimeThrough() {
+    val saved = mutableListOf<Pair<String, Int>>()
+    compose.setContent {
+      ChangesScreen(ChangesState(), MetronomeState(), DroneState(), Transposition.C, ChangesActions(save = { _, name, bars -> saved += name to bars.size }))
+    }
+    compose.onNodeWithTag("changes-circle").performScrollTo().performClick()
+    compose.onNodeWithTag("pattern-save").performClick()
+    assertEquals(listOf("Around the circle" to 24), saved)
+    compose.onNodeWithTag("changes-list").assertExists()
   }
 }
