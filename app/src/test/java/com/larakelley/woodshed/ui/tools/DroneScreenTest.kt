@@ -8,6 +8,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import com.larakelley.woodshed.audio.DroneState
+import com.larakelley.woodshed.domain.ChordQuality
 import com.larakelley.woodshed.domain.Transposition
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -31,5 +32,26 @@ class DroneScreenTest {
     // Picking a written D asks for concert C.
     compose.onNodeWithTag("drone-note-2").performScrollTo().performClick()
     assertEquals(0, Math.floorMod(picked.single(), 12))
+  }
+
+  @Test
+  fun chordsAreNamedAndSpelledForTheHorn() {
+    val picked = mutableListOf<ChordQuality>()
+    compose.setContent {
+      DroneScreen(DroneState(pitchClass = 8, chord = ChordQuality.DOMINANT7), Transposition.Bb, 440, DroneActions(setChord = { picked += it }))
+    }
+    // Concert Ab7 is written Bb7 on a Bb horn.
+    compose.onNodeWithTag("drone-note").assertTextEquals("Bb7")
+    compose.onNodeWithText("Bb D F Ab. Concert Ab7", substring = true).assertExists()
+    compose.onNodeWithTag("drone-chord-minor7").performScrollTo().performClick()
+    assertEquals(listOf(ChordQuality.MINOR7), picked)
+    // Voicing shows only for chords it changes.
+    compose.onNodeWithTag("drone-voicing-shell").assertExists()
+  }
+
+  @Test
+  fun voicingIsHiddenForASingleNote() {
+    compose.setContent { DroneScreen(DroneState(chord = ChordQuality.NOTE), Transposition.C, 440, DroneActions()) }
+    compose.onNodeWithTag("drone-voicing-shell").assertDoesNotExist()
   }
 }

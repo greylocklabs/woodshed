@@ -38,15 +38,15 @@ class DroneToneTest {
     val tone = DroneTone(48_000)
     val buffer = ShortArray(2_048)
     // The first buffer starts from silence, so a start never clicks.
-    tone.render(buffer, 220.0, 1.0, fifth = true)
+    tone.render(buffer, 220.0, 1.0, listOf(0, 7))
     assertTrue(abs(buffer[0].toInt()) < 50)
     var peak = 0
     repeat(20) {
-      tone.render(buffer, 220.0, 1.0, fifth = true)
+      tone.render(buffer, 220.0, 1.0, listOf(0, 7))
       peak = maxOf(peak, buffer.maxOf { abs(it.toInt()) })
     }
     assertTrue("peak $peak", peak in 10_000 until Short.MAX_VALUE.toInt())
-    assertEquals(0.0, tone.render(buffer, 220.0, 0.0, fifth = true), 1e-9)
+    assertEquals(0.0, tone.render(buffer, 220.0, 0.0, listOf(0, 7)), 1e-9)
     assertTrue(abs(buffer.last().toInt()) < 50)
   }
 
@@ -54,10 +54,27 @@ class DroneToneTest {
   fun itSoundsAtTheAskedPitch() {
     val tone = DroneTone(48_000)
     val buffer = ShortArray(48_000)
-    tone.render(ShortArray(2_048), 110.0, 1.0, fifth = false)
-    tone.render(buffer, 110.0, 1.0, fifth = false)
+    tone.render(ShortArray(2_048), 110.0, 1.0, listOf(0))
+    tone.render(buffer, 110.0, 1.0, listOf(0))
     // The overtones are all in phase with the root, so the waveform crosses upward once a cycle.
     val upward = (1 until buffer.size).count { buffer[it - 1] < 0 && buffer[it] >= 0 }
     assertEquals(110.0, upward.toDouble(), 2.0)
+  }
+
+  @Test
+  fun aChordIsNoLouderThanARootAndFifth() {
+    fun peak(notes: List<Int>): Int {
+      val tone = DroneTone(48_000)
+      val buffer = ShortArray(2_048)
+      var peak = 0
+      repeat(40) {
+        tone.render(buffer, 110.0, 1.0, notes)
+        peak = maxOf(peak, buffer.maxOf { abs(it.toInt()) })
+      }
+      return peak
+    }
+    val fifth = peak(listOf(0, 7))
+    val thirteenth = peak(voice(ChordQuality.THIRTEEN, Voicing.SPREAD))
+    assertTrue("13th $thirteenth against fifth $fifth", thirteenth <= fifth * 1.05 && thirteenth < Short.MAX_VALUE)
   }
 }

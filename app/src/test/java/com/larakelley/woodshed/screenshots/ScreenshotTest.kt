@@ -19,6 +19,7 @@ import com.larakelley.woodshed.data.db.BlockOutcome
 import com.larakelley.woodshed.data.db.TranscriptionEntity
 import com.larakelley.woodshed.data.db.TranscriptionStateEntity
 import com.larakelley.woodshed.data.db.TranscriptionStatus
+import com.larakelley.woodshed.domain.ChordQuality
 import com.larakelley.woodshed.domain.Focus
 import com.larakelley.woodshed.domain.Grade
 import com.larakelley.woodshed.domain.Instrument
@@ -213,7 +214,7 @@ class ScreenshotTest(private val mode: String) {
 
   @Test
   fun drone() = capture("drone") {
-    DroneScreen(DroneState(pitchClass = 3, fifth = true), Transposition.Bb, 440, DroneActions())
+    DroneScreen(DroneState(pitchClass = 3, chord = ChordQuality.DOMINANT7), Transposition.Bb, 440, DroneActions())
   }
 
   @Test
