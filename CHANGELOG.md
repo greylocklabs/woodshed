@@ -4,6 +4,15 @@ Notable changes per release. Notes collect under `## Unreleased`, which
 `make release` renames to `## <version>`; that section is published as the
 release's GitHub notes, and a release refuses to go out without one.
 
+## Unreleased
+
+### Fixed
+
+- **drone:** Low, Middle and High each sit in one octave of concert pitch,
+  so every note in a range sounds at the same height whatever its name or
+  your instrument's key. Low used to put a Bb horn's C nearly an octave above
+  a C instrument's.
+
 ## 0.5.0
 
 ### Changed
