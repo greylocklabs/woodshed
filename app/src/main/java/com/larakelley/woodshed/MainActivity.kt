@@ -45,6 +45,8 @@ import com.larakelley.woodshed.ui.report.LocalAppVersion
 import com.larakelley.woodshed.ui.settings.SettingsActions
 import com.larakelley.woodshed.ui.settings.SettingsScreen
 import com.larakelley.woodshed.ui.settings.SettingsViewModel
+import com.larakelley.woodshed.ui.tools.ChangesActions
+import com.larakelley.woodshed.ui.tools.ChangesScreen
 import com.larakelley.woodshed.ui.tools.DroneActions
 import com.larakelley.woodshed.ui.tools.DroneScreen
 import com.larakelley.woodshed.ui.tools.MetronomeActions
@@ -98,6 +100,7 @@ class MainActivity : ComponentActivity() {
           val practiceUi by practice.ui.collectAsStateWithLifecycle()
           val diceUi by dice.ui.collectAsStateWithLifecycle()
           val click by metronome.state.collectAsStateWithLifecycle()
+          val changing by app.changes.state.collectAsStateWithLifecycle()
           val tuning by app.tuner.state.collectAsStateWithLifecycle()
           val droning by app.drone.state.collectAsStateWithLifecycle()
 
@@ -179,7 +182,10 @@ class MainActivity : ComponentActivity() {
               metronomeTab = {
                 MetronomeScreen(
                   click,
-                  MetronomeActions(metronome::toggle, metronome::setBpm, metronome::setBeatsPerBar, metronome::setAccentFirst, metronome::setFeel),
+                  MetronomeActions({
+                    app.changes.stop()
+                    metronome.toggle()
+                  }, metronome::setBpm, metronome::setBeatsPerBar, metronome::setAccentFirst, metronome::setFeel),
                 )
               },
               tuneSolos = tuneSolos,
@@ -190,7 +196,36 @@ class MainActivity : ComponentActivity() {
                   droning,
                   browseState.transposition,
                   tuning.a4,
-                  DroneActions(drone::toggle, drone::setPitchClass, drone::setRange, drone::setChord, drone::setVoicing, drone::setVolume),
+                  DroneActions({
+                    app.changes.stop()
+                    drone.toggle()
+                  }, drone::setPitchClass, drone::setRange, drone::setChord, drone::setVoicing, drone::setVolume),
+                )
+              },
+              changesTab = {
+                val changes = app.changes
+                ChangesScreen(
+                  changing,
+                  click,
+                  droning,
+                  browseState.transposition,
+                  ChangesActions(
+                    load = changes::load,
+                    toggle = changes::toggle,
+                    setKey = changes::setKey,
+                    setClick = changes::setClick,
+                    setCountIn = changes::setCountIn,
+                    setKeepGoing = changes::setKeepGoing,
+                    setBpm = metronome::setBpm,
+                    setBeatsPerBar = {
+                      metronome.setBeatsPerBar(it)
+                      changes.restart()
+                    },
+                    setAccentFirst = metronome::setAccentFirst,
+                    setFeel = metronome::setFeel,
+                    setRange = app.drone::setRange,
+                    setVoicing = app.drone::setVoicing,
+                  ),
                 )
               },
               historyTab = {
@@ -237,7 +272,7 @@ class MainActivity : ComponentActivity() {
 
   /** Asks for a Play review after a finished session, when nothing is sounding and the prompt is due. */
   private fun maybeAskForReview() {
-    if (app.metronome.state.value.running || app.drone.state.value.playing || app.tuner.state.value.listening) return
+    if (app.metronome.state.value.running || app.drone.state.value.playing || app.changes.state.value.playing || app.tuner.state.value.listening) return
     lifecycleScope.launch {
       if (!app.reviewPrompt.shouldAsk(app.practiceTimes())) return@launch
       app.reviewPrompt.asked()
@@ -256,6 +291,7 @@ class MainActivity : ComponentActivity() {
     if (!app.sessions.state.value.running) {
       app.metronome.stop()
       app.drone.stop()
+      app.changes.stop()
     }
     app.tuner.stop()
   }

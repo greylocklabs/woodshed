@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 import androidx.core.content.ContextCompat
+import com.larakelley.woodshed.audio.ChangesPlayer
 import com.larakelley.woodshed.audio.Drone
 import com.larakelley.woodshed.audio.Metronome
 import com.larakelley.woodshed.audio.Tuner
@@ -45,6 +46,9 @@ class WoodshedApplication : Application() {
 
   /** Shares the tuner's reference pitch, so the two always agree. */
   val drone: Drone by lazy { Drone(prefs) { tuner.state.value.a4 } }
+
+  /** Plays the Changes tab's progressions with the metronome's timing and the drone's sound. */
+  val changes: ChangesPlayer by lazy { ChangesPlayer(prefs, metronome, drone) { tuner.state.value.a4 } }
 
   val practice: PracticeService by lazy { PracticeService(database) }
 
@@ -93,6 +97,7 @@ class WoodshedApplication : Application() {
         if (!running) {
           metronome.stop()
           drone.stop()
+          changes.stop()
         }
       }
     }

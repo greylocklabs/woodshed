@@ -79,7 +79,7 @@ val HELP_TOPICS = listOf(
     "Random, and the tools",
     listOf(
       "**🎲 Random** rolls a tune with an exercise and a key, an exercise, or a solo, within limits you set, for when you'd rather not plan.",
-      "The **⏱️ Metronome** has tap tempo, jazz tempo presets and clicks on 2 and 4. The **🔊 Drone** sounds a note named for your instrument, with an optional fifth. The **🎯 Tuner** reads your pitch in your instrument's key.",
+      "The **⏱️ Metronome** has tap tempo, jazz tempo presets and clicks on 2 and 4. The **🔊 Drone** sounds a note or a chord named for your instrument. **🎹 Changes** plays blues, forms, turnarounds and key-to-key patterns on the drone's sound, in time with a click. The **🎯 Tuner** reads your pitch in your instrument's key.",
     ),
   ),
   HelpTopic(

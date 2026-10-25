@@ -48,6 +48,15 @@ class ClickTrack(val sampleRate: Int, val bpm: Int, val beatsPerBar: Int, val ac
 
   fun sounds(index: Long): Boolean = feel.sounds(beatInBar(index))
 
+  /** The click beat [index] sounds, or null for a silent beat; for callers that place clicks themselves. */
+  fun clickFor(index: Long): ShortArray? = if (!sounds(index)) {
+    null
+  } else if (isAccent(index)) {
+    accent
+  } else {
+    normal
+  }
+
   /** Fills [out] with the frames starting at [startFrame]: clicks where beats fall, silence elsewhere. */
   fun render(startFrame: Long, out: ShortArray) {
     out.fill(0)

@@ -56,7 +56,7 @@ data class MetronomeActions(
   val setFeel: (Feel) -> Unit = {},
 )
 
-private val METERS = listOf(2, 3, 4, 5, 6, 7)
+internal val METERS = listOf(2, 3, 4, 5, 6, 7)
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -117,7 +117,7 @@ fun MetronomeScreen(state: MetronomeState, actions: MetronomeActions) {
 
 /** One dot per beat: the sounding beat swells in pink, beats that stay silent are hollow. */
 @Composable
-private fun BeatDots(state: MetronomeState, modifier: Modifier = Modifier) {
+internal fun BeatDots(state: MetronomeState, modifier: Modifier = Modifier) {
   val callie = LocalCallie.current
   Row(modifier, horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
     repeat(state.beatsPerBar) { i ->
@@ -135,7 +135,7 @@ private fun BeatDots(state: MetronomeState, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun RoundSticker(label: String, onClick: () -> Unit) {
+internal fun RoundSticker(label: String, onClick: () -> Unit) {
   StickerButton(onClick = onClick, sticker = neutralSticker, radius = 26.dp, modifier = Modifier.size(52.dp), contentPadding = PaddingValues(0.dp)) {
     Text(label, style = MaterialTheme.typography.headlineSmall)
   }
