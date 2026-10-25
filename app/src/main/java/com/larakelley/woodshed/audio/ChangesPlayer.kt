@@ -98,7 +98,8 @@ class ChangesPlayer(private val prefs: SharedPreferences, private val metronome:
     update(restart = loaded) { it.copy(keys = it.keys + (keyId to pitch), key = if (loaded) pitch else it.key) }
   }
 
-  /** Starts over from the count-in, as a change to beats per bar needs, if it is playing. */
+  /** Starts over from the count-in, as a change to beats per bar needs, if it is playing; a Stop meanwhile holds. */
+  @Synchronized
   fun restart() {
     if (!_state.value.playing) return
     stop()
@@ -113,12 +114,17 @@ class ChangesPlayer(private val prefs: SharedPreferences, private val metronome:
 
   fun setKeepGoing(keepGoing: Boolean) = update { it.copy(keepGoing = keepGoing) }
 
-  @Synchronized
   fun start() {
-    if (thread != null || source == null) return
+    if (source == null) return
     // One thing sounds at a time; the changes bring their own click and drone.
     metronome.stop()
     drone.stop()
+    startThread()
+  }
+
+  @Synchronized
+  private fun startThread() {
+    if (thread != null || source == null) return
     _state.update { it.copy(playing = true) }
     thread = Thread(::run, "changes").apply {
       priority = Thread.MAX_PRIORITY

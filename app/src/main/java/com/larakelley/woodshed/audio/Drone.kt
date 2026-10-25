@@ -53,10 +53,15 @@ class Drone(private val prefs: SharedPreferences, private val a4: () -> Int) {
 
   fun setVolume(volume: Float) = update { it.copy(volume = volume.coerceIn(0f, 1f)) }
 
-  @Synchronized
   fun start() {
-    if (thread != null) return
+    // Whatever else is sounding stops first, outside this lock, so tools starting together never wait on each other.
     onStart()
+    startThread()
+  }
+
+  @Synchronized
+  private fun startThread() {
+    if (thread != null) return
     _state.value = _state.value.copy(playing = true)
     thread = Thread(::run, "drone").apply { start() }
   }
