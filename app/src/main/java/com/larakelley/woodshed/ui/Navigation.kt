@@ -10,8 +10,8 @@ sealed interface Destination {
 
   data class Solo(val id: Long) : Destination
 
-  /** The Changes tab, where changes left playing show again. */
-  data object Changes : Destination
+  /** A main tab by name, such as a tool's, to go back to what it has playing. */
+  data class Tab(val name: String) : Destination
 }
 
 /** Carries a [Destination] from one tab to the screen that shows it, which takes it once it has opened. */

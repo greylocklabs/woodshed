@@ -23,6 +23,7 @@ import com.google.android.play.core.review.ReviewManagerFactory
 import com.larakelley.woodshed.data.ThemeMode
 import com.larakelley.woodshed.data.recordedLabel
 import com.larakelley.woodshed.domain.ChangelogRelease
+import com.larakelley.woodshed.domain.Key
 import com.larakelley.woodshed.domain.Phase
 import com.larakelley.woodshed.theme.WoodshedTheme
 import com.larakelley.woodshed.ui.AppNavigation
@@ -31,6 +32,7 @@ import com.larakelley.woodshed.ui.SoloLink
 import com.larakelley.woodshed.ui.WhatsNewDialog
 import com.larakelley.woodshed.ui.browse.BrowseScreen
 import com.larakelley.woodshed.ui.browse.BrowseViewModel
+import com.larakelley.woodshed.ui.browse.NowPlaying
 import com.larakelley.woodshed.ui.dice.DiceScreen
 import com.larakelley.woodshed.ui.dice.DiceViewModel
 import com.larakelley.woodshed.ui.help.HelpScreen
@@ -52,6 +54,7 @@ import com.larakelley.woodshed.ui.tools.DroneScreen
 import com.larakelley.woodshed.ui.tools.MetronomeActions
 import com.larakelley.woodshed.ui.tools.MetronomeScreen
 import com.larakelley.woodshed.ui.tools.NowPlayingBar
+import com.larakelley.woodshed.ui.tools.PlayingBar
 import com.larakelley.woodshed.ui.tools.TunerActions
 import com.larakelley.woodshed.ui.tools.TunerScreen
 import com.larakelley.woodshed.ui.transcribe.TranscribeScreen
@@ -198,18 +201,49 @@ class MainActivity : ComponentActivity() {
                   DroneActions(drone::toggle, drone::setPitchClass, drone::setRange, drone::setChord, drone::setVoicing, drone::setVolume),
                 )
               },
-              nowPlaying = if (changing.playing) {
-                {
-                  NowPlayingBar(
-                    changing,
-                    click.beatsPerBar,
-                    browseState.transposition,
-                    onOpen = { navigation.go(Destination.Changes) },
-                    onStop = app.changes::stop,
+              nowPlaying = buildList {
+                // A running session shows its own drone and metronome buttons, so their bars stay off its tab.
+                val session = if (practiceUi.running) setOf("Practice") else emptySet()
+                if (changing.playing) {
+                  add(
+                    NowPlaying(setOf("Changes")) {
+                      NowPlayingBar(
+                        changing,
+                        click.beatsPerBar,
+                        browseState.transposition,
+                        onOpen = { navigation.go(Destination.Tab("Changes")) },
+                        onStop = app.changes::stop,
+                      )
+                    },
                   )
                 }
-              } else {
-                null
+                if (droning.playing) {
+                  val written = Key(Math.floorMod(droning.pitchClass + browseState.transposition.offset, 12), minor = false).displayName
+                  add(
+                    NowPlaying(setOf("Drone") + session) {
+                      PlayingBar(
+                        "🔊 Drone",
+                        "$written${droning.chord.symbol}, ${droning.range.label.lowercase()} range",
+                        "now-playing-drone",
+                        onOpen = { navigation.go(Destination.Tab("Drone")) },
+                        onStop = app.drone::stop,
+                      )
+                    },
+                  )
+                }
+                if (click.running) {
+                  add(
+                    NowPlaying(setOf("Metronome") + session) {
+                      PlayingBar(
+                        "⏱️ Metronome",
+                        "${click.bpm} bpm, ${click.beatsPerBar}/4",
+                        "now-playing-metronome",
+                        onOpen = { navigation.go(Destination.Tab("Metronome")) },
+                        onStop = metronome::stop,
+                      )
+                    },
+                  )
+                }
               },
               changesTab = {
                 val changes = app.changes

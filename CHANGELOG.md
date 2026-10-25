@@ -16,8 +16,9 @@ release's GitHub notes, and a release refuses to go out without one.
   click. It counts in, shows the chord now and next, keeps its own tempo
   (120 to start, with the metronome's common tempos), and uses the
   metronome's feel, with the click optional. Each form and pattern keeps its
-  own key, and while changes play, a bar along the bottom of every other
-  screen shows them and stops them.
+  own key.
+- **tools:** while changes, the drone or the metronome sound, a bar along the
+  bottom of every other tab shows what is playing and stops it.
 - **changes:** write changes of your own, bar by bar with one or two chords a
   bar, or save a pattern as yours to edit further. They play in any key and
   go in backups.
