@@ -92,6 +92,9 @@ private fun PlaylistButton(tune: TuneRow, playlists: List<Playlist>, actions: Pl
 /** The exercise editor's target while adding rather than editing. */
 private const val NEW_EXERCISE = -1L
 
+/** Something sounding and its bar, hidden on [hiddenOn], the tabs that already show and stop it. */
+data class NowPlaying(val hiddenOn: Set<String>, val bar: @Composable () -> Unit)
+
 /** The editor's target while adding a tune rather than editing one. */
 private const val NEW_TUNE = "+new"
 
@@ -115,8 +118,8 @@ fun BrowseScreen(
   metronomeTab: (@Composable () -> Unit)? = null,
   droneTab: (@Composable () -> Unit)? = null,
   changesTab: (@Composable () -> Unit)? = null,
-  /** Shown under every tab but Changes while changes play, so they can be stopped from anywhere. */
-  nowPlaying: (@Composable () -> Unit)? = null,
+  /** What is sounding, each shown under every tab but the ones it names, so it can be stopped from anywhere. */
+  nowPlaying: List<NowPlaying> = emptyList(),
   tunerTab: (@Composable () -> Unit)? = null,
   helpTab: (@Composable () -> Unit)? = null,
   /** The user's tab order; tabs it does not name keep their default places. */
@@ -177,9 +180,9 @@ fun BrowseScreen(
       // The Transcribe tab takes the request once it is showing.
       is Destination.Solo -> if ("Transcribe" in tabs) tabName = "Transcribe" else navigation.take()
 
-      Destination.Changes -> {
+      is Destination.Tab -> {
         navigation.take()
-        tabName = "Changes"
+        if (to.name in tabs) tabName = to.name
       }
     }
   }
@@ -350,7 +353,7 @@ fun BrowseScreen(
           }
         }
       }
-      if (tabs[tab] != "Changes") nowPlaying?.invoke()
+      nowPlaying.filter { tabs[tab] !in it.hiddenOn }.forEach { it.bar() }
     }
   }
 }

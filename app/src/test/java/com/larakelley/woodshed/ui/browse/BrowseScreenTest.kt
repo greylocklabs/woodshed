@@ -28,7 +28,9 @@ import com.larakelley.woodshed.domain.Lifecycle
 import com.larakelley.woodshed.domain.Tonality
 import com.larakelley.woodshed.domain.Transposition
 import com.larakelley.woodshed.ui.AppNavigation
+import com.larakelley.woodshed.ui.Destination
 import com.larakelley.woodshed.ui.SoloLink
+import com.larakelley.woodshed.ui.tools.PlayingBar
 import com.larakelley.woodshed.ui.transcribe.SoloActions
 import com.larakelley.woodshed.ui.transcribe.SoloRow
 import com.larakelley.woodshed.ui.transcribe.TranscribeScreen
@@ -235,5 +237,33 @@ class BrowseScreenTest {
   fun seedErrorIsShownNotSwallowed() {
     compose.setContent { BrowseScreen(BrowseState(seedError = "duplicate slug: x"), onSelectTransposition = {}) }
     compose.onNodeWithText("Could not load the bundled data: duplicate slug: x").assertExists()
+  }
+
+  @Test
+  fun whatIsSoundingShowsOnEveryOtherTab() {
+    var stopped = 0
+    val navigation = AppNavigation()
+    compose.setContent {
+      BrowseScreen(
+        BrowseState(Transposition.C, emptyList(), 0, emptyList(), 0),
+        onSelectTransposition = {},
+        droneTab = { Text("drone screen") },
+        metronomeTab = { Text("metronome screen") },
+        nowPlaying = listOf(
+          NowPlaying(setOf("Drone")) {
+            PlayingBar("🔊 Drone", "C, middle range", "now-playing-drone", onOpen = { navigation.go(Destination.Tab("Drone")) }, onStop = { stopped++ })
+          },
+        ),
+        navigation = navigation,
+      )
+    }
+    // Shown on another tab, and stopped from there.
+    compose.onNodeWithTag("tab-Metronome").performClick()
+    compose.onNodeWithTag("now-playing-drone-stop", useUnmergedTree = true).performClick()
+    assertEquals(1, stopped)
+    // Tapped, it goes to its own tab, where it is not shown.
+    compose.onNodeWithTag("now-playing-drone").performClick()
+    compose.onNodeWithText("drone screen").assertExists()
+    compose.onNodeWithTag("now-playing-drone").assertDoesNotExist()
   }
 }

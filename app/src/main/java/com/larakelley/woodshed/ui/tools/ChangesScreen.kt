@@ -231,34 +231,19 @@ private fun ChangesList(
   }
 }
 
-/**
- * What is playing, shown wherever its own screen is not, so changes left playing can always be stopped. Tapping it
- * goes back to them.
- */
+/** The changes playing, for screens other than their player. */
 @Composable
 fun NowPlayingBar(state: ChangesState, beatsPerBar: Int, transposition: Transposition, onOpen: () -> Unit, onStop: () -> Unit, modifier: Modifier = Modifier) {
-  val callie = LocalCallie.current
   val written = Math.floorMod(state.key + transposition.offset, 12)
   val chord = state.bars.getOrNull(state.bar)?.chordOn(state.beat.coerceAtLeast(0), beatsPerBar)?.name(written)
-  Column(modifier.fillMaxWidth().background(callie.surface)) {
-    HorizontalDivider()
-    Row(
-      Modifier.fillMaxWidth().clickable(onClick = onOpen).padding(start = 16.dp, end = 12.dp, top = 8.dp, bottom = 8.dp).testTag("now-playing"),
-      verticalAlignment = Alignment.CenterVertically,
-    ) {
-      Column(Modifier.weight(1f)) {
-        Text("🎹 ${state.title}", style = MaterialTheme.typography.titleSmall, maxLines = 1)
-        Text(
-          if (chord == null) "Counting in" else "$chord, bar ${state.bar + 1} of ${state.bars.size}",
-          style = MaterialTheme.typography.bodySmall,
-          color = callie.textMuted,
-        )
-      }
-      StickerButton(onClick = onStop, modifier = Modifier.height(40.dp).testTag("now-playing-stop"), contentPadding = PaddingValues(horizontal = 16.dp)) {
-        Text("◼ Stop", style = MaterialTheme.typography.labelLarge)
-      }
-    }
-  }
+  PlayingBar(
+    "🎹 ${state.title}",
+    if (chord == null) "Counting in" else "$chord, bar ${state.bar + 1} of ${state.bars.size}",
+    "now-playing",
+    onOpen,
+    onStop,
+    modifier,
+  )
 }
 
 @Composable
