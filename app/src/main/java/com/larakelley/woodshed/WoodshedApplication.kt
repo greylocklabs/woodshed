@@ -49,7 +49,13 @@ class WoodshedApplication : Application() {
   val drone: Drone by lazy { Drone(prefs) { tuner.state.value.a4 } }
 
   /** Plays the Changes tab's progressions with the metronome's timing and the drone's sound. */
-  val changes: ChangesPlayer by lazy { ChangesPlayer(prefs, metronome, drone) { tuner.state.value.a4 } }
+  val changes: ChangesPlayer by lazy {
+    ChangesPlayer(prefs, metronome, drone) { tuner.state.value.a4 }.also { player ->
+      // However the metronome or drone is started, from its tab or a practice session, the changes stop first.
+      metronome.onStart = player::stop
+      drone.onStart = player::stop
+    }
+  }
 
   val practice: PracticeService by lazy { PracticeService(database) }
 

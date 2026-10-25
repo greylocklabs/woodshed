@@ -15,6 +15,8 @@ import com.larakelley.woodshed.domain.voice
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.updateAndGet
 import kotlin.math.ceil
 import kotlin.math.floor
 
@@ -74,7 +76,8 @@ class ChangesPlayer(private val prefs: SharedPreferences, private val metronome:
 
   @Volatile private var source: ChangesSource? = null
   private var keyId: String? = null
-  private var thread: Thread? = null
+
+  @Volatile private var thread: Thread? = null
 
   fun toggle() = if (_state.value.playing) stop() else start()
 
@@ -84,7 +87,7 @@ class ChangesPlayer(private val prefs: SharedPreferences, private val metronome:
     stop()
     source = next
     keyId = next.keyId
-    _state.value = _state.value.copy(source = next.id, title = next.title, key = _state.value.keyFor(next.keyId), bars = next.bars(0), chorus = 0)
+    _state.update { it.copy(source = next.id, title = next.title, key = it.keyFor(next.keyId), bars = next.bars(0), chorus = 0) }
   }
 
   /** Sets the key [keyId] plays in; when it is what is loaded, it starts over in the new key. */
@@ -116,7 +119,7 @@ class ChangesPlayer(private val prefs: SharedPreferences, private val metronome:
     // One thing sounds at a time; the changes bring their own click and drone.
     metronome.stop()
     drone.stop()
-    _state.value = _state.value.copy(playing = true)
+    _state.update { it.copy(playing = true) }
     thread = Thread(::run, "changes").apply {
       priority = Thread.MAX_PRIORITY
       start()
@@ -126,12 +129,13 @@ class ChangesPlayer(private val prefs: SharedPreferences, private val metronome:
   /** Fades the chord out rather than cutting it off. */
   @Synchronized
   fun stop() {
-    _state.value = _state.value.copy(playing = false, bar = -1, beat = -1, countInBeat = -1)
+    _state.update { it.copy(playing = false, bar = -1, beat = -1, countInBeat = -1) }
     thread = null
   }
 
   private fun update(restart: Boolean = false, change: (ChangesState) -> ChangesState) {
-    val next = change(_state.value)
+    // Changed in place, so a stop from the audio thread between reading and writing is never undone.
+    val next = _state.updateAndGet(change)
     prefs.edit {
       putInt(KEY, next.key)
       putInt(BPM, next.bpm)
@@ -139,7 +143,6 @@ class ChangesPlayer(private val prefs: SharedPreferences, private val metronome:
       putBoolean(COUNT_IN, next.countIn)
       putBoolean(KEEP_GOING, next.keepGoing)
     }
-    _state.value = next
     if (restart) restart()
   }
 
@@ -178,6 +181,8 @@ class ChangesPlayer(private val prefs: SharedPreferences, private val metronome:
         val m = metronome.state.value
         val d = drone.state.value
         val stopping = !_state.value.playing || thread !== me || finished
+        // Bars are laid out for the beats per bar they started with, so a change on the Metronome tab starts over.
+        if (!stopping && m.beatsPerBar != beats) restart()
         val bpm = _state.value.bpm
         val framesPerBeat = SAMPLE_RATE * 60.0 / bpm
         val beatClicks = clicks?.takeIf { it.bpm == bpm && it.accentFirst == m.accentFirst && it.feel == m.feel }
@@ -222,7 +227,7 @@ class ChangesPlayer(private val prefs: SharedPreferences, private val metronome:
         if (audio.write(buffer, 0, buffer.size) < 0) break
         written += buffer.size
         if (stopping && reached <= 0.0001) break
-        if (!stopping) report(timeline, position - (written - audio.playbackHeadPosition.toLong()) / framesPerBeat)
+        if (!stopping) report(me, timeline, position - (written - audio.playbackHeadPosition.toLong()) / framesPerBeat)
       }
     } finally {
       audio.pause()
@@ -234,15 +239,21 @@ class ChangesPlayer(private val prefs: SharedPreferences, private val metronome:
   }
 
   /** Shows the beat being heard, which trails what was written by what the track still holds. */
-  private fun report(timeline: ChangesTimeline, heard: Double) {
+  private fun report(me: Thread, timeline: ChangesTimeline, heard: Double) {
     if (heard < 0) return
-    val s = _state.value
-    val next = when (val at = timeline.at(floor(heard).toLong())) {
-      is ChangesBeat.CountIn -> s.copy(countInBeat = at.beat, bar = -1, beat = -1)
-      is ChangesBeat.Playing -> s.copy(countInBeat = -1, bar = at.bar, beat = at.beat, chorus = at.chorus, bars = timeline.bars(at.chorus))
-      ChangesBeat.Done -> s
+    val at = timeline.at(floor(heard).toLong())
+    // Only while this thread is the one playing, checked as the state changes, so a stop is never undone.
+    _state.update { s ->
+      if (!s.playing || thread !== me) {
+        s
+      } else {
+        when (at) {
+          is ChangesBeat.CountIn -> s.copy(countInBeat = at.beat, bar = -1, beat = -1)
+          is ChangesBeat.Playing -> s.copy(countInBeat = -1, bar = at.bar, beat = at.beat, chorus = at.chorus, bars = timeline.bars(at.chorus))
+          ChangesBeat.Done -> s
+        }
+      }
     }
-    if (next != s && s.playing) _state.value = next
   }
 
   private companion object {

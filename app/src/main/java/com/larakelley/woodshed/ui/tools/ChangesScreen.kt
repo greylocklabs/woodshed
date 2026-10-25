@@ -479,7 +479,10 @@ private fun PatternScreen(
     SectionLabel("Move")
     PillChoice(Move.entries.map { it.label to it }, move, { move = it }, tagPrefix = "pattern-move")
     SectionLabel("In each key")
-    PillChoice(PatternUnit.entries.map { it.label to it }, unit, { unit = it }, tagPrefix = "pattern-unit")
+    PillChoice(PatternUnit.entries.map { it.label to it }, unit, {
+      unit = it
+      barsPerKey = it.barsNear(barsPerKey)
+    }, tagPrefix = "pattern-unit")
     when (unit) {
       PatternUnit.ONE_CHORD -> {
         SectionLabel("Chord")
@@ -503,7 +506,7 @@ private fun PatternScreen(
     }
     if (unit != PatternUnit.FORM) {
       SectionLabel("Bars in each key")
-      PillChoice(listOf(1, 2, 4, 8).map { "$it" to it }, barsPerKey, { barsPerKey = it }, tagPrefix = "pattern-bars")
+      PillChoice(unit.barChoices.map { "$it" to it }, barsPerKey, { barsPerKey = it }, tagPrefix = "pattern-bars")
     }
     SwitchRow("Keep going", state.keepGoing, actions.setKeepGoing, helper = "Start around again after all the keys")
     SectionLabel("The keys, in order")

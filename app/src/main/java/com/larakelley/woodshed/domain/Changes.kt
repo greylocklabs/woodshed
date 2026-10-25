@@ -75,11 +75,21 @@ enum class Move(val label: String, private val step: Int) {
 }
 
 /** What a pattern plays in each key. */
-enum class PatternUnit(val label: String) {
-  ONE_CHORD("One chord"),
-  TWO_FIVE("ii-V"),
-  TWO_FIVE_ONE("ii-V-I"),
-  FORM("A form"),
+enum class PatternUnit(val label: String, val barChoices: List<Int>) {
+  ONE_CHORD("One chord", listOf(1, 2, 4, 8)),
+
+  /** In one bar, or the ii and the V taking half the bars each. */
+  TWO_FIVE("ii-V", listOf(1, 2, 4)),
+
+  /** Short, with ii and V sharing a bar and the I in the next, or long, a bar each and the I for two. */
+  TWO_FIVE_ONE("ii-V-I", listOf(2, 4)),
+
+  /** As long as the form is. */
+  FORM("A form", emptyList()),
+  ;
+
+  /** [bars] if this unit plays that many in each key, or else the nearest it does. */
+  fun barsNear(bars: Int): Int = barChoices.minByOrNull { kotlin.math.abs(it - bars) } ?: bars
 }
 
 /** A key-to-key drill: [unit] played in each key [move] goes through. */
@@ -99,15 +109,18 @@ data class Pattern(
     unitBars().map { bar -> Bar(bar.chords.map { it.copy(root = Math.floorMod(it.root + key, 12)) }) }
   }
 
-  private fun unitBars(): List<Bar> = when (unit) {
-    PatternUnit.ONE_CHORD -> List(barsPerKey) { Bar(listOf(ProgressionChord(0, chord))) }
+  private fun unitBars(): List<Bar> {
+    val barsPerKey = unit.barsNear(barsPerKey)
+    return when (unit) {
+      PatternUnit.ONE_CHORD -> List(barsPerKey) { Bar(listOf(ProgressionChord(0, chord))) }
 
-    PatternUnit.TWO_FIVE -> if (barsPerKey <= 1) listOf(bar("IIm7 V7")) else List(barsPerKey) { if (it < barsPerKey / 2) bar("IIm7") else bar("V7") }
+      PatternUnit.TWO_FIVE -> if (barsPerKey <= 1) listOf(bar("IIm7 V7")) else List(barsPerKey) { if (it < barsPerKey / 2) bar("IIm7") else bar("V7") }
 
-    // The short ii-V-I puts ii and V in one bar; the long one gives each a bar and the I two.
-    PatternUnit.TWO_FIVE_ONE -> if (barsPerKey <= 2) bars("IIm7 V7 | Imaj7") else bars("IIm7 | V7 | Imaj7 | Imaj7")
+      // The short ii-V-I puts ii and V in one bar; the long one gives each a bar and the I two.
+      PatternUnit.TWO_FIVE_ONE -> if (barsPerKey <= 2) bars("IIm7 V7 | Imaj7") else bars("IIm7 | V7 | Imaj7 | Imaj7")
 
-    PatternUnit.FORM -> form?.bars ?: emptyList()
+      PatternUnit.FORM -> form?.bars ?: emptyList()
+    }
   }
 }
 
@@ -285,6 +298,10 @@ class ChangesTimeline(
   /** Every time through is as long as the first; only a random pattern's keys change from one to the next. */
   private val length = barsFor(0).size
   private var cachedChorus = -1
+
+  /** The furthest time through reached, and once "keep going" is off, the last to play. */
+  private var reached = 0
+  private var last = Int.MAX_VALUE
   private var cachedBars: List<Bar> = emptyList()
 
   fun bars(chorus: Int): List<Bar> {
@@ -302,7 +319,10 @@ class ChangesTimeline(
     if (length == 0) return ChangesBeat.Done
     val barNumber = played / beatsPerBar
     val chorus = (barNumber / length).toInt()
-    if (chorus > 0 && !keepGoing()) return ChangesBeat.Done
+    // Turned off partway, the time through being played still finishes; turned on again, it carries on.
+    last = if (keepGoing()) Int.MAX_VALUE else minOf(last, reached)
+    reached = maxOf(reached, chorus)
+    if (chorus > last) return ChangesBeat.Done
     val bar = (barNumber % length).toInt()
     val beat = (played % beatsPerBar).toInt()
     return ChangesBeat.Playing(chorus, bar, beat, bars(chorus)[bar].chordOn(beat, beatsPerBar))
