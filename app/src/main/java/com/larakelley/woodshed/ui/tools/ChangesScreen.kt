@@ -20,6 +20,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -41,6 +43,7 @@ import com.larakelley.woodshed.domain.ChangesLibrary
 import com.larakelley.woodshed.domain.ChangesSection
 import com.larakelley.woodshed.domain.ChordGroup
 import com.larakelley.woodshed.domain.ChordQuality
+import com.larakelley.woodshed.domain.ClickTrack
 import com.larakelley.woodshed.domain.DroneRange
 import com.larakelley.woodshed.domain.Feel
 import com.larakelley.woodshed.domain.Form
@@ -49,6 +52,7 @@ import com.larakelley.woodshed.domain.Move
 import com.larakelley.woodshed.domain.Pattern
 import com.larakelley.woodshed.domain.PatternUnit
 import com.larakelley.woodshed.domain.ProgressionChord
+import com.larakelley.woodshed.domain.TempoPreset
 import com.larakelley.woodshed.domain.Transposition
 import com.larakelley.woodshed.domain.Voicing
 import com.larakelley.woodshed.theme.BackButton
@@ -62,7 +66,7 @@ import com.larakelley.woodshed.theme.SwitchRow
 import com.larakelley.woodshed.ui.browse.DropdownChip
 import kotlin.random.Random
 
-/** What the Changes tab can change; tempo and feel are the metronome's, range and voicing the drone's. */
+/** What the Changes tab can change; beats per bar, accent and feel are the metronome's, range and voicing the drone's. */
 data class ChangesActions(
   val load: (ChangesSource) -> Unit = {},
   val toggle: () -> Unit = {},
@@ -161,6 +165,7 @@ private fun ChangesRow(title: String, description: String, key: String, tag: Str
 }
 
 /** Plays the loaded changes, with the metronome's controls and the drone's sound beneath. */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun ChangesPlayerScreen(
   title: String,
@@ -209,12 +214,33 @@ internal fun ChangesPlayerScreen(
 
     SectionLabel("Tempo")
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
-      RoundSticker("-") { actions.setBpm(metronome.bpm - 1) }
+      RoundSticker("-") { actions.setBpm(state.bpm - 1) }
       Column(Modifier.width(170.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-        Text("${metronome.bpm}", style = MaterialTheme.typography.displayMedium, modifier = Modifier.testTag("changes-bpm"))
+        Text("${state.bpm}", style = MaterialTheme.typography.displayMedium, modifier = Modifier.testTag("changes-bpm"))
         Text("bpm", style = MaterialTheme.typography.bodyMedium, color = callie.textMuted)
       }
-      RoundSticker("+") { actions.setBpm(metronome.bpm + 1) }
+      RoundSticker("+") { actions.setBpm(state.bpm + 1) }
+    }
+    Slider(
+      value = state.bpm.toFloat(),
+      onValueChange = { actions.setBpm(it.toInt()) },
+      valueRange = ClickTrack.MIN_BPM.toFloat()..ClickTrack.MAX_BPM.toFloat(),
+      colors = SliderDefaults.colors(thumbColor = callie.accent, activeTrackColor = callie.accent, inactiveTrackColor = callie.surfaceAlt),
+      modifier = Modifier.testTag("changes-bpm-slider"),
+    )
+    SectionLabel("Common tempos")
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+      TempoPreset.entries.forEach { p ->
+        CallieChip(
+          selected = state.bpm == p.bpm,
+          onClick = {
+            actions.setBpm(p.bpm)
+            p.beatsPerBar?.let(actions.setBeatsPerBar)
+          },
+          label = { Text("${p.label} ${p.bpm}") },
+          modifier = Modifier.testTag("changes-preset-${p.name.lowercase()}"),
+        )
+      }
     }
     SectionLabel("Beats per bar")
     PillChoice(METERS.map { "$it/4" to it }, metronome.beatsPerBar, actions.setBeatsPerBar, tagPrefix = "changes-meter")

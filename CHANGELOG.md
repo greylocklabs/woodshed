@@ -13,8 +13,9 @@ release's GitHub notes, and a release refuses to go out without one.
   place of the fifth switch.
 - **changes:** a new 🎹 Changes tab plays blues, standard forms, cadences,
   turnarounds and key-to-key patterns on the drone's sound, in time with a
-  click. It counts in, shows the chord now and next, and uses the
-  metronome's tempo and feel, with the click optional.
+  click. It counts in, shows the chord now and next, keeps its own tempo
+  (120 to start, with the metronome's common tempos), and uses the
+  metronome's feel, with the click optional.
 
 ### Fixed
 
