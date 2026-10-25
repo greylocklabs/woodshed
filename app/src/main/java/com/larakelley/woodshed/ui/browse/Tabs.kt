@@ -9,6 +9,7 @@ val TAB_EMOJI = linkedMapOf(
   "Tunes" to "🎵",
   "Exercises" to "💪",
   "Drone" to "🔊",
+  "Changes" to "🎹",
   "Tuner" to "🎯",
   "Metronome" to "⏱️",
   "Help" to "❓",

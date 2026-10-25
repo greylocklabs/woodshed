@@ -114,6 +114,7 @@ fun BrowseScreen(
   transcribeTab: (@Composable () -> Unit)? = null,
   metronomeTab: (@Composable () -> Unit)? = null,
   droneTab: (@Composable () -> Unit)? = null,
+  changesTab: (@Composable () -> Unit)? = null,
   tunerTab: (@Composable () -> Unit)? = null,
   helpTab: (@Composable () -> Unit)? = null,
   /** The user's tab order; tabs it does not name keep their default places. */
@@ -146,6 +147,7 @@ fun BrowseScreen(
       add("Tunes")
       add("Exercises")
       if (droneTab != null) add("Drone")
+      if (changesTab != null) add("Changes")
       if (tunerTab != null) add("Tuner")
       if (metronomeTab != null) add("Metronome")
       if (helpTab != null) add("Help")
@@ -300,6 +302,8 @@ fun BrowseScreen(
         "Metronome" -> metronomeTab?.invoke()
 
         "Drone" -> droneTab?.invoke()
+
+        "Changes" -> changesTab?.invoke()
 
         "Tuner" -> tunerTab?.invoke()
 

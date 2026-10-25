@@ -16,7 +16,7 @@ class TabsTest {
   @Test
   fun theDefaultOrderPutsPracticeAndRandomFirstAndHelpLast() {
     assertEquals(
-      listOf("Practice", "Random", "History", "Transcribe", "Tunes", "Exercises", "Drone", "Tuner", "Metronome", "Help"),
+      listOf("Practice", "Random", "History", "Transcribe", "Tunes", "Exercises", "Drone", "Changes", "Tuner", "Metronome", "Help"),
       DEFAULT_TABS,
     )
   }

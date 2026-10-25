@@ -8,6 +8,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onRoot
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
 import com.github.takahirom.roborazzi.captureRoboImage
+import com.larakelley.woodshed.audio.ChangesState
 import com.larakelley.woodshed.audio.DroneState
 import com.larakelley.woodshed.audio.MetronomeState
 import com.larakelley.woodshed.audio.TunerState
@@ -19,7 +20,9 @@ import com.larakelley.woodshed.data.db.BlockOutcome
 import com.larakelley.woodshed.data.db.TranscriptionEntity
 import com.larakelley.woodshed.data.db.TranscriptionStateEntity
 import com.larakelley.woodshed.data.db.TranscriptionStatus
+import com.larakelley.woodshed.domain.ChangesLibrary
 import com.larakelley.woodshed.domain.ChordQuality
+import com.larakelley.woodshed.domain.Feel
 import com.larakelley.woodshed.domain.Focus
 import com.larakelley.woodshed.domain.Grade
 import com.larakelley.woodshed.domain.Instrument
@@ -47,6 +50,9 @@ import com.larakelley.woodshed.ui.practice.droneNote
 import com.larakelley.woodshed.ui.settings.SettingsActions
 import com.larakelley.woodshed.ui.settings.SettingsScreen
 import com.larakelley.woodshed.ui.settings.SettingsUi
+import com.larakelley.woodshed.ui.tools.ChangesActions
+import com.larakelley.woodshed.ui.tools.ChangesPlayerScreen
+import com.larakelley.woodshed.ui.tools.ChangesScreen
 import com.larakelley.woodshed.ui.tools.DroneActions
 import com.larakelley.woodshed.ui.tools.DroneScreen
 import com.larakelley.woodshed.ui.tools.MetronomeActions
@@ -215,6 +221,25 @@ class ScreenshotTest(private val mode: String) {
   @Test
   fun drone() = capture("drone") {
     DroneScreen(DroneState(pitchClass = 3, chord = ChordQuality.DOMINANT7), Transposition.Bb, 440, DroneActions())
+  }
+
+  @Test
+  fun changesList() = capture("changes-list") {
+    ChangesScreen(ChangesState(key = 3), MetronomeState(), DroneState(), Transposition.Bb, ChangesActions())
+  }
+
+  @Test
+  fun changesPlaying() = capture("changes-playing") {
+    val blues = ChangesLibrary.form("jazz-blues")!!.bars
+    ChangesPlayerScreen(
+      "Jazz blues",
+      "Back to changes",
+      ChangesState(playing = true, key = 3, source = "form:jazz-blues", bars = blues, chorus = 1, bar = 5, beat = 2),
+      MetronomeState(running = true, bpm = 160, feel = Feel.BACKBEAT, beat = 2),
+      DroneState(chord = ChordQuality.DOMINANT7),
+      Transposition.Bb,
+      ChangesActions(),
+    ) {}
   }
 
   @Test
