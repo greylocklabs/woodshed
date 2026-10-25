@@ -38,6 +38,9 @@ class Drone(private val prefs: SharedPreferences, private val a4: () -> Int) {
   val state: StateFlow<DroneState> = _state.asStateFlow()
   private var thread: Thread? = null
 
+  /** Runs as it starts, so whatever else is sounding can stop; one thing sounds at a time. */
+  var onStart: () -> Unit = {}
+
   fun toggle() = if (_state.value.playing) stop() else start()
 
   fun setPitchClass(pc: Int) = update { it.copy(pitchClass = Math.floorMod(pc, 12)) }
@@ -53,6 +56,7 @@ class Drone(private val prefs: SharedPreferences, private val a4: () -> Int) {
   @Synchronized
   fun start() {
     if (thread != null) return
+    onStart()
     _state.value = _state.value.copy(playing = true)
     thread = Thread(::run, "drone").apply { start() }
   }

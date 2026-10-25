@@ -53,6 +53,9 @@ class ChangesTest {
     assertEquals(48, twoFiveOnes.bars().size)
     assertEquals(listOf("Dm7", "G7", "Cmaj7", "Cmaj7", "Cm7"), names(twoFiveOnes.bars(), 0).take(5))
     assertEquals(listOf("Dm7 G7", "Cm7 F7"), names(ChangesLibrary.pattern("two-five-chain")!!.bars(), 0).take(2))
+    // A unit plays only the bar counts it offers; asked for another, it plays the nearest.
+    assertEquals(48, twoFiveOnes.copy(barsPerKey = 8).bars().size)
+    assertEquals(24, twoFiveOnes.copy(barsPerKey = 1).bars().size)
     val blues = circle.copy(unit = PatternUnit.FORM, form = ChangesLibrary.form("blues"))
     assertEquals(144, blues.bars().size)
     assertEquals("Bb7", names(blues.bars(), 5)[12])
@@ -68,8 +71,14 @@ class ChangesTest {
     assertEquals("G7", (timeline.at(6) as ChangesBeat.Playing).chord.name(0))
     assertEquals(ChangesBeat.Playing(0, 1, 0, bars("Imaj7")[0].chords[0]), timeline.at(8))
     assertEquals(1, (timeline.at(12) as ChangesBeat.Playing).chorus)
+    // Turned off in the second time through, that one still finishes, and the third does not start.
     keepGoing = false
-    assertEquals(ChangesBeat.Done, timeline.at(12))
+    assertEquals(1, (timeline.at(19) as ChangesBeat.Playing).chorus)
+    assertEquals(ChangesBeat.Done, timeline.at(20))
+    // Off from the start, the changes play once.
+    val once = ChangesTimeline(4, 0, { false }) { bars("I") }
+    assertEquals(0, (once.at(3) as ChangesBeat.Playing).chorus)
+    assertEquals(ChangesBeat.Done, once.at(4))
     // In 3/4, the larger half is the first.
     val waltz = ChangesTimeline(3, 0, { true }) { bars("I V") }
     assertEquals(listOf("C", "C", "G"), (0L..2L).map { (waltz.at(it) as ChangesBeat.Playing).chord.name(0) })

@@ -184,10 +184,7 @@ class MainActivity : ComponentActivity() {
               metronomeTab = {
                 MetronomeScreen(
                   click,
-                  MetronomeActions({
-                    app.changes.stop()
-                    metronome.toggle()
-                  }, metronome::setBpm, metronome::setBeatsPerBar, metronome::setAccentFirst, metronome::setFeel),
+                  MetronomeActions(metronome::toggle, metronome::setBpm, metronome::setBeatsPerBar, metronome::setAccentFirst, metronome::setFeel),
                 )
               },
               tuneSolos = tuneSolos,
@@ -198,10 +195,7 @@ class MainActivity : ComponentActivity() {
                   droning,
                   browseState.transposition,
                   tuning.a4,
-                  DroneActions({
-                    app.changes.stop()
-                    drone.toggle()
-                  }, drone::setPitchClass, drone::setRange, drone::setChord, drone::setVoicing, drone::setVolume),
+                  DroneActions(drone::toggle, drone::setPitchClass, drone::setRange, drone::setChord, drone::setVoicing, drone::setVolume),
                 )
               },
               nowPlaying = if (changing.playing) {
@@ -232,10 +226,7 @@ class MainActivity : ComponentActivity() {
                     setCountIn = changes::setCountIn,
                     setKeepGoing = changes::setKeepGoing,
                     setBpm = changes::setBpm,
-                    setBeatsPerBar = {
-                      metronome.setBeatsPerBar(it)
-                      changes.restart()
-                    },
+                    setBeatsPerBar = metronome::setBeatsPerBar,
                     setAccentFirst = metronome::setAccentFirst,
                     setFeel = metronome::setFeel,
                     setRange = app.drone::setRange,

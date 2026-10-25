@@ -36,6 +36,9 @@ class Metronome(private val prefs: SharedPreferences) {
   )
   val state: StateFlow<MetronomeState> = _state.asStateFlow()
 
+  /** Runs as it starts, so whatever else is sounding can stop; one thing sounds at a time. */
+  var onStart: () -> Unit = {}
+
   @Volatile private var track: ClickTrack? = null
 
   @Volatile private var restartAt = 0L
@@ -72,6 +75,7 @@ class Metronome(private val prefs: SharedPreferences) {
   @Synchronized
   fun start() {
     if (thread != null) return
+    onStart()
     _state.value = _state.value.copy(running = true)
     retune()
     thread = Thread(::run, "metronome").apply {
