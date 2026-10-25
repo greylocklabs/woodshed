@@ -5,8 +5,8 @@ import android.media.AudioAttributes
 import android.media.AudioFormat
 import android.media.AudioTrack
 import androidx.core.content.edit
+import com.larakelley.woodshed.domain.DroneRange
 import com.larakelley.woodshed.domain.DroneTone
-import com.larakelley.woodshed.domain.pitchHz
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -15,7 +15,7 @@ data class DroneState(
   val playing: Boolean = false,
   /** Concert pitch class, C = 0. */
   val pitchClass: Int = 0,
-  val octave: Int = 4,
+  val range: DroneRange = DroneRange.MIDDLE,
   val fifth: Boolean = false,
   val volume: Float = 0.6f,
 )
@@ -25,7 +25,7 @@ class Drone(private val prefs: SharedPreferences, private val a4: () -> Int) {
   private val _state = MutableStateFlow(
     DroneState(
       pitchClass = prefs.getInt(PITCH, 0).coerceIn(0, 11),
-      octave = prefs.getInt(OCTAVE, 4).coerceIn(OCTAVES),
+      range = DroneRange.entries.firstOrNull { it.name == prefs.getString(RANGE, null) } ?: DroneRange.MIDDLE,
       fifth = prefs.getBoolean(FIFTH, false),
       volume = prefs.getFloat(VOLUME, 0.6f).coerceIn(0f, 1f),
     ),
@@ -37,7 +37,7 @@ class Drone(private val prefs: SharedPreferences, private val a4: () -> Int) {
 
   fun setPitchClass(pc: Int) = update { it.copy(pitchClass = Math.floorMod(pc, 12)) }
 
-  fun setOctave(octave: Int) = update { it.copy(octave = octave.coerceIn(OCTAVES)) }
+  fun setRange(range: DroneRange) = update { it.copy(range = range) }
 
   fun setFifth(fifth: Boolean) = update { it.copy(fifth = fifth) }
 
@@ -61,7 +61,7 @@ class Drone(private val prefs: SharedPreferences, private val a4: () -> Int) {
     val next = change(_state.value)
     prefs.edit {
       putInt(PITCH, next.pitchClass)
-      putInt(OCTAVE, next.octave)
+      putString(RANGE, next.range.name)
       putBoolean(FIFTH, next.fifth)
       putFloat(VOLUME, next.volume)
     }
@@ -87,7 +87,7 @@ class Drone(private val prefs: SharedPreferences, private val a4: () -> Int) {
         val s = _state.value
         // This thread is done once stopped or replaced; it keeps rendering at zero volume until faded out.
         val stopping = !s.playing || thread !== me
-        val reached = tone.render(buffer, pitchHz(s.pitchClass, s.octave, a4().toDouble()), if (stopping) 0.0 else s.volume.toDouble(), s.fifth)
+        val reached = tone.render(buffer, s.range.rootHz(s.pitchClass, a4().toDouble()), if (stopping) 0.0 else s.volume.toDouble(), s.fifth)
         if (audio.write(buffer, 0, buffer.size) < 0) break
         if (stopping && reached <= 0.0001) break
       }
@@ -104,10 +104,8 @@ class Drone(private val prefs: SharedPreferences, private val a4: () -> Int) {
     /** Each buffer is also one fade step, about 40 ms. */
     const val CHUNK_FRAMES = 2_048
 
-    /** Phone speakers lose most of a note below about 150 Hz, so the middle range starts at C4 rather than C3. */
-    val OCTAVES = 3..5
     const val PITCH = "drone_pitch"
-    const val OCTAVE = "drone_octave"
+    const val RANGE = "drone_range"
     const val FIFTH = "drone_fifth"
     const val VOLUME = "drone_volume"
   }

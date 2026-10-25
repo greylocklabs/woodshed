@@ -190,7 +190,7 @@ class MainActivity : ComponentActivity() {
                   droning,
                   browseState.transposition,
                   tuning.a4,
-                  DroneActions(drone::toggle, drone::setPitchClass, drone::setOctave, drone::setFifth, drone::setVolume),
+                  DroneActions(drone::toggle, drone::setPitchClass, drone::setRange, drone::setFifth, drone::setVolume),
                 )
               },
               historyTab = {

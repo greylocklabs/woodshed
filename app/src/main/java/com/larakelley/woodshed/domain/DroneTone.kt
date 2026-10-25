@@ -4,10 +4,23 @@ import kotlin.math.PI
 import kotlin.math.pow
 import kotlin.math.sin
 
-/** The frequency of [pitchClass] (C = 0) in [octave], numbered so A4 is the [a4] reference. */
-fun pitchHz(pitchClass: Int, octave: Int, a4: Double = 440.0): Double {
-  val midi = 12 * (octave + 1) + pitchClass
-  return a4 * 2.0.pow((midi - 69) / 12.0)
+/** The frequency of MIDI note [midi], tuned so A4 (69) is the [a4] reference. */
+fun midiHz(midi: Int, a4: Double = 440.0): Double = a4 * 2.0.pow((midi - 69) / 12.0)
+
+/**
+ * Where the drone sits. Each range is one octave of concert pitches, from F up to the E above, so every root
+ * lands at the same height whatever its name or the instrument's key.
+ */
+enum class DroneRange(val label: String, val lowestMidi: Int) {
+  LOW("Low", 41),
+  MIDDLE("Middle", 53),
+  HIGH("High", 65),
+  ;
+
+  /** The MIDI note of [pitchClass] (C = 0) within this range. */
+  fun rootMidi(pitchClass: Int): Int = lowestMidi + Math.floorMod(pitchClass - lowestMidi, 12)
+
+  fun rootHz(pitchClass: Int, a4: Double = 440.0): Double = midiHz(rootMidi(pitchClass), a4)
 }
 
 /**

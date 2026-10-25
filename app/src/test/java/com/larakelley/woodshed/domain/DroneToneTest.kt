@@ -8,10 +8,29 @@ import kotlin.math.abs
 class DroneToneTest {
   @Test
   fun pitchesAreTunedToTheReference() {
-    assertEquals(440.0, pitchHz(9, 4), 1e-9)
-    assertEquals(261.626, pitchHz(0, 4), 1e-3)
-    assertEquals(130.813, pitchHz(0, 3), 1e-3)
-    assertEquals(442.0, pitchHz(9, 4, a4 = 442.0), 1e-9)
+    assertEquals(440.0, midiHz(69), 1e-9)
+    assertEquals(261.626, midiHz(60), 1e-3)
+    assertEquals(442.0, midiHz(69, a4 = 442.0), 1e-9)
+    assertEquals(221.0, DroneRange.MIDDLE.rootHz(9, a4 = 442.0), 1e-9)
+  }
+
+  @Test
+  fun everyDroneInARangeSitsInTheSameOctave() {
+    // Written notes on every instrument, so a Bb horn's C (concert Bb) sits where a C instrument's C does.
+    for (range in DroneRange.entries) {
+      val lowest = midiHz(range.lowestMidi)
+      val highest = midiHz(range.lowestMidi + 11)
+      for (transposition in Transposition.entries) {
+        for (written in 0..11) {
+          val concert = Math.floorMod(written - transposition.offset, 12)
+          val root = range.rootHz(concert)
+          assertTrue("$range $transposition written $written: $root Hz", root in lowest..highest)
+        }
+      }
+    }
+    assertEquals(listOf(DroneRange.LOW, DroneRange.MIDDLE, DroneRange.HIGH), DroneRange.entries.sortedBy { it.lowestMidi })
+    // Ranges meet without overlapping: the top of each is a half step under the next.
+    DroneRange.entries.zipWithNext { below, above -> assertEquals(above.lowestMidi, below.lowestMidi + 12) }
   }
 
   @Test
