@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -38,6 +39,7 @@ import com.larakelley.woodshed.audio.ChangesSource
 import com.larakelley.woodshed.audio.ChangesState
 import com.larakelley.woodshed.audio.DroneState
 import com.larakelley.woodshed.audio.MetronomeState
+import com.larakelley.woodshed.data.MyChanges
 import com.larakelley.woodshed.domain.Bar
 import com.larakelley.woodshed.domain.ChangesLibrary
 import com.larakelley.woodshed.domain.ChangesSection
@@ -55,6 +57,7 @@ import com.larakelley.woodshed.domain.ProgressionChord
 import com.larakelley.woodshed.domain.TempoPreset
 import com.larakelley.woodshed.domain.Transposition
 import com.larakelley.woodshed.domain.Voicing
+import com.larakelley.woodshed.domain.numerals
 import com.larakelley.woodshed.theme.BackButton
 import com.larakelley.woodshed.theme.CallieChip
 import com.larakelley.woodshed.theme.Helper
@@ -63,6 +66,7 @@ import com.larakelley.woodshed.theme.PillChoice
 import com.larakelley.woodshed.theme.SectionLabel
 import com.larakelley.woodshed.theme.StickerButton
 import com.larakelley.woodshed.theme.SwitchRow
+import com.larakelley.woodshed.theme.neutralSticker
 import com.larakelley.woodshed.ui.browse.DropdownChip
 import kotlin.random.Random
 
@@ -81,6 +85,9 @@ data class ChangesActions(
   val setFeel: (Feel) -> Unit = {},
   val setRange: (DroneRange) -> Unit = {},
   val setVoicing: (Voicing) -> Unit = {},
+  /** Saves the user's own changes, adding them when the id is null. */
+  val save: (id: Long?, name: String, bars: List<Bar>) -> Unit = { _, _, _ -> },
+  val delete: (id: Long) -> Unit = {},
 )
 
 /** The chords a pattern offers before "More chords" shows the rest. */
@@ -91,13 +98,62 @@ private fun noteName(pitchClass: Int) = Key(Math.floorMod(pitchClass, 12), minor
 
 /** Progressions to play over: forms, cadences and turnarounds, and patterns that move through the keys. */
 @Composable
-fun ChangesScreen(state: ChangesState, metronome: MetronomeState, drone: DroneState, transposition: Transposition, actions: ChangesActions) {
-  // "form:<id>" or "pattern:<id>" while one is open, and "run:<id>" while a pattern plays.
+fun ChangesScreen(
+  state: ChangesState,
+  metronome: MetronomeState,
+  drone: DroneState,
+  transposition: Transposition,
+  actions: ChangesActions,
+  mine: List<MyChanges> = emptyList(),
+) {
+  // "form:<id>", "pattern:<id>" or "mine:<id>" while one is open, "run:<id>" while a pattern plays, and
+  // "edit:<id>" or "edit:new" while writing changes.
   var open by rememberSaveable { mutableStateOf<String?>(null) }
   val writtenKey = Math.floorMod(state.key + transposition.offset, 12)
   val current = open
   when {
-    current == null -> ChangesList(writtenKey, transposition, actions) { open = it }
+    current == null -> ChangesList(writtenKey, transposition, actions, mine) { open = it }
+
+    current.startsWith("mine:") -> {
+      val changes = mine.firstOrNull { it.id == current.removePrefix("mine:").toLongOrNull() }
+      if (changes == null) {
+        open = null
+        return
+      }
+      // Saved again after an edit, the changes load afresh.
+      val id = "mine:${changes.id}:${numerals(changes.bars).hashCode()}"
+      LaunchedEffect(id) { actions.load(ChangesSource(id) { changes.bars }) }
+      val bars = if (state.source == id) state.bars else changes.bars
+      ChangesPlayerScreen(
+        changes.name,
+        "Back to changes",
+        state.copy(bars = bars),
+        metronome,
+        drone,
+        transposition,
+        actions,
+        onEdit = { open = "edit:${changes.id}" },
+      ) { open = null }
+    }
+
+    current.startsWith("edit:") -> {
+      val changes = mine.firstOrNull { it.id == current.removePrefix("edit:").toLongOrNull() }
+      ChangesEditor(
+        changes,
+        writtenKey,
+        onSave = { name, bars ->
+          actions.save(changes?.id, name, bars)
+          open = changes?.let { "mine:${it.id}" }
+        },
+        onCancel = { open = changes?.let { "mine:${it.id}" } },
+        onDelete = changes?.let {
+          {
+            actions.delete(it.id)
+            open = null
+          }
+        },
+      )
+    }
 
     current.startsWith("form:") -> {
       val form = ChangesLibrary.form(current.removePrefix("form:"))
@@ -123,7 +179,7 @@ fun ChangesScreen(state: ChangesState, metronome: MetronomeState, drone: DroneSt
 }
 
 @Composable
-private fun ChangesList(writtenKey: Int, transposition: Transposition, actions: ChangesActions, onOpen: (String) -> Unit) {
+private fun ChangesList(writtenKey: Int, transposition: Transposition, actions: ChangesActions, mine: List<MyChanges>, onOpen: (String) -> Unit) {
   Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(bottom = 24.dp).testTag("changes-list")) {
     Column(Modifier.padding(horizontal = 16.dp).padding(top = 16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
       DropdownChip("Key", noteName(writtenKey), (0..11).map { noteName(it) to it }) { it?.let { w -> actions.setKey(w - transposition.offset) } }
@@ -143,6 +199,18 @@ private fun ChangesList(writtenKey: Int, transposition: Transposition, actions: 
         }
       }
     }
+    SectionLabel("Yours", Modifier.padding(horizontal = 16.dp))
+    mine.forEach { c ->
+      ChangesRow(c.name, "${c.bars.size} ${if (c.bars.size == 1) "bar" else "bars"}", noteName(writtenKey), "changes-mine-${c.id}", "🪵 Yours") {
+        onOpen("mine:${c.id}")
+      }
+    }
+    StickerButton(
+      onClick = { onOpen("edit:new") },
+      sticker = neutralSticker,
+      modifier = Modifier.align(Alignment.CenterHorizontally).padding(top = 16.dp).height(44.dp).testTag("changes-new"),
+      contentPadding = PaddingValues(horizontal = 18.dp),
+    ) { Text("+ New changes", style = MaterialTheme.typography.labelLarge) }
   }
 }
 
@@ -175,6 +243,7 @@ internal fun ChangesPlayerScreen(
   drone: DroneState,
   transposition: Transposition,
   actions: ChangesActions,
+  onEdit: (() -> Unit)? = null,
   onBack: () -> Unit,
 ) {
   val callie = LocalCallie.current
@@ -182,7 +251,15 @@ internal fun ChangesPlayerScreen(
   val bars = state.bars
   val playingBar = if (state.playing) state.bar else -1
   Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-    BackButton(back, onBack)
+    Row(verticalAlignment = Alignment.CenterVertically) {
+      BackButton(back, onBack, Modifier.weight(1f, fill = false))
+      Spacer(Modifier.weight(1f))
+      if (onEdit != null) {
+        StickerButton(onClick = onEdit, sticker = neutralSticker, modifier = Modifier.height(40.dp).testTag("changes-edit")) {
+          Text("✏️ Edit", style = MaterialTheme.typography.labelLarge)
+        }
+      }
+    }
     Text(title, style = MaterialTheme.typography.headlineMedium)
     Text(
       "In ${noteName(written)}" + (if (transposition == Transposition.C) "" else ", concert ${noteName(state.key)}") +
@@ -340,7 +417,17 @@ private fun PatternScreen(
   }
   val keys = move.keys()
   Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-    BackButton("Back to changes", onBack)
+    Row(verticalAlignment = Alignment.CenterVertically) {
+      BackButton("Back to changes", onBack, Modifier.weight(1f, fill = false))
+      Spacer(Modifier.weight(1f))
+      // The pattern as it stands, one time through, becomes changes of one's own to edit further.
+      StickerButton(onClick = {
+        actions.save(null, preset.name, pattern.bars())
+        onBack()
+      }, sticker = neutralSticker, modifier = Modifier.height(40.dp).testTag("pattern-save")) {
+        Text("🪵 Save as yours", style = MaterialTheme.typography.labelLarge)
+      }
+    }
     Text(preset.name, style = MaterialTheme.typography.headlineMedium)
     Text(
       "From ${noteName(written)}" + (if (transposition == Transposition.C) "" else ", concert ${noteName(state.key)}") +

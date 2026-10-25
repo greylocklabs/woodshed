@@ -361,3 +361,7 @@ data class TranscriptionStateEntity(
 
   fun withCardState(s: CardState) = copy(reps = s.reps, lapses = s.lapses, intervalDays = s.intervalDays, ease = s.ease, dueAt = s.dueAt)
 }
+
+/** Changes the user wrote, kept in the Roman numerals [com.larakelley.woodshed.domain.bars] reads, so they play in any key. */
+@Entity(tableName = "my_changes")
+data class MyChangesEntity(@PrimaryKey(autoGenerate = true) val id: Long = 0, val name: String, val bars: String, val updatedAt: Long)

@@ -1,6 +1,7 @@
 package com.larakelley.woodshed.data.db
 
 import android.content.Context
+import androidx.room.AutoMigration
 import androidx.room.Dao
 import androidx.room.Database
 import androidx.room.Insert
@@ -257,6 +258,25 @@ interface ReviewEventDao {
 }
 
 @Dao
+interface MyChangesDao {
+  @Query("SELECT * FROM my_changes ORDER BY name COLLATE NOCASE")
+  fun observeAll(): Flow<List<MyChangesEntity>>
+
+  @Query("SELECT * FROM my_changes")
+  suspend fun all(): List<MyChangesEntity>
+
+  @Insert suspend fun insert(changes: MyChangesEntity): Long
+
+  @Update suspend fun update(changes: MyChangesEntity)
+
+  @Query("DELETE FROM my_changes WHERE id = :id")
+  suspend fun delete(id: Long)
+
+  @Query("DELETE FROM my_changes")
+  suspend fun deleteAll()
+}
+
+@Dao
 interface SessionDao {
   @Insert suspend fun insert(session: SessionEntity): Long
 
@@ -308,8 +328,10 @@ class Converters {
     StandardEntity::class, ExerciseEntity::class, TuneStateEntity::class, ReviewEventEntity::class, TuneKnowledgeEntity::class,
     TuneOverrideEntity::class, PlaylistEntity::class, PlaylistTuneEntity::class, ExerciseOverrideEntity::class, TuneMediaEntity::class,
     TranscriptionEntity::class, TranscriptionStateEntity::class, SessionEntity::class, SessionBlockEntity::class,
+    MyChangesEntity::class,
   ],
-  version = 14,
+  version = 15,
+  autoMigrations = [AutoMigration(from = 14, to = 15)],
 )
 @TypeConverters(Converters::class)
 abstract class WoodshedDatabase : RoomDatabase() {
@@ -334,6 +356,8 @@ abstract class WoodshedDatabase : RoomDatabase() {
   abstract fun transcriptions(): TranscriptionDao
 
   abstract fun sessions(): SessionDao
+
+  abstract fun myChanges(): MyChangesDao
 
   companion object {
     /** Releases up to 0.3 shipped schema 13, from before the schema settled; those start over. */

@@ -16,6 +16,8 @@ import com.larakelley.woodshed.domain.KeyPolicy
 import com.larakelley.woodshed.domain.Lifecycle
 import com.larakelley.woodshed.domain.PlanBlock
 import com.larakelley.woodshed.domain.Transposition
+import com.larakelley.woodshed.domain.bars
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import org.junit.After
@@ -52,6 +54,16 @@ class BackupTest {
   fun tearDown() = db.close()
 
   private suspend fun id(slug: String) = db.standards().bySlug(slug)!!.id
+
+  @Test
+  fun theUsersOwnChangesComeBack() = runTest {
+    val library = MyChangesLibrary(db)
+    library.save(null, "Stella bridge", bars("IIm7b5 | V7b9 | Im7 | Im7"))
+    val text = backups.export()
+    library.save(null, "made after the backup", bars("I"))
+    backups.restore(text)
+    assertEquals(listOf("Stella bridge" to bars("IIm7b5 | V7b9 | Im7 | Im7")), library.all.first().map { it.name to it.bars })
+  }
 
   @Test
   fun exportThenRestoreBringsEverythingBack() = runTest {

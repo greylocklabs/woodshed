@@ -74,4 +74,12 @@ class ChangesTest {
     val waltz = ChangesTimeline(3, 0, { true }) { bars("I V") }
     assertEquals(listOf("C", "C", "G"), (0L..2L).map { (waltz.at(it) as ChangesBeat.Playing).chord.name(0) })
   }
+
+  @Test
+  fun changesWriteBackAsTheyRead() {
+    for (form in ChangesLibrary.forms) assertEquals(form.id, form.bars, bars(numerals(form.bars)))
+    val every = ChordQuality.entries.filter { it != ChordQuality.NOTE }.mapIndexed { i, q -> Bar(listOf(ProgressionChord(i % 12, q))) }
+    assertEquals(every, bars(numerals(every)))
+    assertEquals("IIm7 V7 | Imaj7 | #IVdim7", numerals(bars("IIm7 V7 | Imaj7 | bVdim7")))
+  }
 }

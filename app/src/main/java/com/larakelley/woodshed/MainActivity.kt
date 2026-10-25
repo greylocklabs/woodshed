@@ -101,6 +101,7 @@ class MainActivity : ComponentActivity() {
           val diceUi by dice.ui.collectAsStateWithLifecycle()
           val click by metronome.state.collectAsStateWithLifecycle()
           val changing by app.changes.state.collectAsStateWithLifecycle()
+          val myChanges by app.myChanges.all.collectAsStateWithLifecycle(emptyList())
           val tuning by app.tuner.state.collectAsStateWithLifecycle()
           val droning by app.drone.state.collectAsStateWithLifecycle()
 
@@ -225,7 +226,10 @@ class MainActivity : ComponentActivity() {
                     setFeel = metronome::setFeel,
                     setRange = app.drone::setRange,
                     setVoicing = app.drone::setVoicing,
+                    save = { id, name, bars -> lifecycleScope.launch { app.myChanges.save(id, name, bars) } },
+                    delete = { id -> lifecycleScope.launch { app.myChanges.delete(id) } },
                   ),
+                  myChanges,
                 )
               },
               historyTab = {
