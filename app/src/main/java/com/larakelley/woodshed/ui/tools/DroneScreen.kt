@@ -87,19 +87,7 @@ fun DroneScreen(state: DroneState, transposition: Transposition, a4: Int, action
       }
     }
     SectionLabel("Chord")
-    ChordGroup.entries.forEach { group ->
-      group.label?.let { Helper(it, Modifier.padding(top = 8.dp)) }
-      FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-        ChordQuality.entries.filter { it.group == group }.forEach { chord ->
-          CallieChip(
-            selected = chord == state.chord,
-            onClick = { actions.setChord(chord) },
-            label = { Text(chord.label) },
-            modifier = Modifier.testTag("drone-chord-${chord.name.lowercase()}"),
-          )
-        }
-      }
-    }
+    ChordChips(state.chord, actions.setChord, "drone-chord")
     SectionLabel("Range")
     PillChoice(DroneRange.entries.map { it.label to it }, state.range, actions.setRange, tagPrefix = "drone-range")
     if (state.chord.voiced) {
@@ -118,5 +106,24 @@ fun DroneScreen(state: DroneState, transposition: Transposition, a4: Int, action
       "Notes are named for your instrument's key. The pitch follows the tuner's reference, A = $a4 Hz. Sounds best through headphones or speakers.",
       Modifier.padding(top = 8.dp),
     )
+  }
+}
+
+/** Every chord quality in [groups], under each group's name, the [selected] one picked. */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+internal fun ChordChips(selected: ChordQuality?, onSelect: (ChordQuality) -> Unit, tagPrefix: String, groups: List<ChordGroup> = ChordGroup.entries) {
+  groups.forEach { group ->
+    group.label?.let { Helper(it, Modifier.padding(top = 8.dp)) }
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+      ChordQuality.entries.filter { it.group == group }.forEach { chord ->
+        CallieChip(
+          selected = chord == selected,
+          onClick = { onSelect(chord) },
+          label = { Text(chord.label) },
+          modifier = Modifier.testTag("$tagPrefix-${chord.name.lowercase()}"),
+        )
+      }
+    }
   }
 }

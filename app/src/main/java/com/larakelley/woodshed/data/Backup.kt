@@ -4,6 +4,7 @@ import androidx.room.withTransaction
 import com.larakelley.woodshed.data.db.BlockOutcome
 import com.larakelley.woodshed.data.db.ExerciseEntity
 import com.larakelley.woodshed.data.db.ExerciseOverrideEntity
+import com.larakelley.woodshed.data.db.MyChangesEntity
 import com.larakelley.woodshed.data.db.Performer
 import com.larakelley.woodshed.data.db.PlaylistEntity
 import com.larakelley.woodshed.data.db.PlaylistTuneEntity
@@ -29,6 +30,7 @@ import com.larakelley.woodshed.domain.KeyPolicy
 import com.larakelley.woodshed.domain.Lifecycle
 import com.larakelley.woodshed.domain.MediaLink
 import com.larakelley.woodshed.domain.Tonality
+import com.larakelley.woodshed.domain.bars
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -65,6 +67,8 @@ data class Backup(
   val tunes: List<BackupTune>,
   val knowledge: List<BackupKnowledge>,
   val reviews: List<BackupReview>,
+  /** Changes the user wrote, in the Roman numerals the Changes tab reads. */
+  @SerialName("my_changes") val myChanges: List<BackupMyChanges> = emptyList(),
   /** Practice sessions, newest first, with their blocks naming tunes and solos by slug and exercises by name. */
   val sessions: List<BackupSession> = emptyList(),
 ) {
@@ -73,6 +77,9 @@ data class Backup(
     const val VERSION = 1
   }
 }
+
+@Serializable
+data class BackupMyChanges(val name: String, val bars: String)
 
 @Serializable
 data class BackupSettings(
@@ -290,6 +297,7 @@ class BackupService(private val db: WoodshedDatabase, private val repository: Wo
       myTunes = db.standards().userCreated().filter { it.archivedAt == null }.map {
         BackupMyTune(it.slug, it.title, it.composer, it.year, it.bars, it.timeSignature, it.form, it.style, it.keyName, it.tonality, it.collection)
       },
+      myChanges = db.myChanges().all().map { BackupMyChanges(it.name, it.bars) },
       myExercises = db.exercises().userCreated().filter { it.archivedAt == null }.map {
         BackupExercise(it.name, it.category, it.description, it.minutes, it.difficulty, it.tempoBpm, it.families, it.appliesToTune)
       },
@@ -429,6 +437,11 @@ class BackupService(private val db: WoodshedDatabase, private val repository: Wo
         } else if (existing.userCreated) {
           db.standards().update(listOf(row.copy(id = existing.id)))
         }
+      }
+      // The backup's own changes replace the ones here; any that do not read as changes are left out.
+      db.myChanges().deleteAll()
+      for (c in backup.myChanges.filter { runCatching { bars(it.bars) }.isSuccess }) {
+        db.myChanges().insert(MyChangesEntity(name = c.name, bars = c.bars, updatedAt = now()))
       }
       val keepExercises = backup.myExercises.map { it.name }.toSet()
       for (old in db.exercises().userCreated()) {

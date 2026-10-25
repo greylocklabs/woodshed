@@ -117,6 +117,14 @@ data class Pattern(
  */
 fun bars(text: String): List<Bar> = text.split('|').map { bar(it) }
 
+/** [bars] written back as [bars] reads them, as "IIm7 V7 | Imaj7". */
+fun numerals(bars: List<Bar>): String = bars.joinToString(" | ") { bar ->
+  bar.chords.joinToString(" ") { NUMERALS[it.root] + if (it.quality == ChordQuality.MAJOR) "" else it.quality.symbol }
+}
+
+/** Each root above the key as written; a tritone over the key reads as #IV, as in a jazz blues. */
+private val NUMERALS = listOf("I", "bII", "II", "bIII", "III", "IV", "#IV", "V", "bVI", "VI", "bVII", "VII")
+
 private fun bar(text: String): Bar = Bar(text.trim().split(Regex("\\s+")).map(::chord))
 
 private val NUMERAL = Regex("^([b#]?)(VII|VI|V|IV|III|II|I)(.*)$")
