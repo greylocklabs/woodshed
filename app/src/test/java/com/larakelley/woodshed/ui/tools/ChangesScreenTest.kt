@@ -73,4 +73,25 @@ class ChangesScreenTest {
     compose.onNodeWithTag("pattern-start").performScrollTo().performClick()
     assertTrue(calls.toString(), calls.size == 2 && calls[0].startsWith("pattern:circle:") && calls[1] == "start")
   }
+
+  @Test
+  fun commonTemposSetTheChangesTempo() {
+    val bpm = mutableListOf<Int>()
+    val beats = mutableListOf<Int>()
+    compose.setContent {
+      ChangesScreen(
+        ChangesState(source = "form:blues", bars = ChangesLibrary.form("blues")!!.bars),
+        MetronomeState(),
+        DroneState(),
+        Transposition.C,
+        ChangesActions(setBpm = { bpm += it }, setBeatsPerBar = { beats += it }),
+      )
+    }
+    compose.onNodeWithTag("changes-blues").performClick()
+    compose.onNodeWithTag("changes-bpm").assertTextEquals("120")
+    compose.onNodeWithTag("changes-preset-jazz_waltz").performScrollTo().performClick()
+    assertEquals(listOf(160), bpm)
+    // A jazz waltz is in three.
+    assertEquals(listOf(3), beats)
+  }
 }

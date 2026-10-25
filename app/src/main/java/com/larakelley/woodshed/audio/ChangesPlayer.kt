@@ -18,6 +18,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlin.math.ceil
 import kotlin.math.floor
 
+/** A medium swing, a common place to start working on changes. */
+private const val DEFAULT_BPM = 120
+
 /** Something to play: a name for the screen, and its bars relative to the key for each time through. */
 data class ChangesSource(val id: String, val bars: (chorus: Int) -> List<Bar>)
 
@@ -25,6 +28,8 @@ data class ChangesState(
   val playing: Boolean = false,
   /** Concert pitch class the changes are played in. */
   val key: Int = 0,
+  /** The changes keep a tempo of their own, apart from the metronome's, which practice blocks set. */
+  val bpm: Int = DEFAULT_BPM,
   val click: Boolean = true,
   val countIn: Boolean = true,
   val keepGoing: Boolean = true,
@@ -42,13 +47,14 @@ data class ChangesState(
 
 /**
  * Plays changes: the drone's sound moving from chord to chord in time, over the metronome's clicks, from one audio
- * thread so chords land on the beat. Tempo, beats per bar, accent and feel are the metronome's, and range,
- * voicing and volume the drone's, so each tool keeps the settings the others use.
+ * thread so chords land on the beat. Beats per bar, accent and feel are the metronome's, and range, voicing and
+ * volume the drone's, so each tool keeps the settings the others use; the tempo is the changes' own.
  */
 class ChangesPlayer(private val prefs: SharedPreferences, private val metronome: Metronome, private val drone: Drone, private val a4: () -> Int) {
   private val _state = MutableStateFlow(
     ChangesState(
       key = prefs.getInt(KEY, 0).coerceIn(0, 11),
+      bpm = prefs.getInt(BPM, DEFAULT_BPM).coerceIn(ClickTrack.MIN_BPM, ClickTrack.MAX_BPM),
       click = prefs.getBoolean(CLICK, true),
       countIn = prefs.getBoolean(COUNT_IN, true),
       keepGoing = prefs.getBoolean(KEEP_GOING, true),
@@ -77,6 +83,8 @@ class ChangesPlayer(private val prefs: SharedPreferences, private val metronome:
     stop()
     start()
   }
+
+  fun setBpm(bpm: Int) = update { it.copy(bpm = bpm.coerceIn(ClickTrack.MIN_BPM, ClickTrack.MAX_BPM)) }
 
   fun setClick(click: Boolean) = update { it.copy(click = click) }
 
@@ -108,6 +116,7 @@ class ChangesPlayer(private val prefs: SharedPreferences, private val metronome:
     val next = change(_state.value)
     prefs.edit {
       putInt(KEY, next.key)
+      putInt(BPM, next.bpm)
       putBoolean(CLICK, next.click)
       putBoolean(COUNT_IN, next.countIn)
       putBoolean(KEEP_GOING, next.keepGoing)
@@ -151,12 +160,13 @@ class ChangesPlayer(private val prefs: SharedPreferences, private val metronome:
         val m = metronome.state.value
         val d = drone.state.value
         val stopping = !_state.value.playing || thread !== me || finished
-        val framesPerBeat = SAMPLE_RATE * 60.0 / m.bpm
-        val beatClicks = clicks?.takeIf { it.bpm == m.bpm && it.accentFirst == m.accentFirst && it.feel == m.feel }
-          ?: ClickTrack(SAMPLE_RATE, m.bpm, beats, m.accentFirst, m.feel).also { clicks = it }
+        val bpm = _state.value.bpm
+        val framesPerBeat = SAMPLE_RATE * 60.0 / bpm
+        val beatClicks = clicks?.takeIf { it.bpm == bpm && it.accentFirst == m.accentFirst && it.feel == m.feel }
+          ?: ClickTrack(SAMPLE_RATE, bpm, beats, m.accentFirst, m.feel).also { clicks = it }
         // The count-in clicks every beat, whatever the feel, so the first bar is easy to find.
         val counting =
-          countClicks?.takeIf { it.bpm == m.bpm } ?: ClickTrack(SAMPLE_RATE, m.bpm, beats, accentFirst = true, Feel.EVERY_BEAT).also { countClicks = it }
+          countClicks?.takeIf { it.bpm == bpm } ?: ClickTrack(SAMPLE_RATE, bpm, beats, accentFirst = true, Feel.EVERY_BEAT).also { countClicks = it }
         var filled = 0
         var reached = 0.0
         while (filled < buffer.size) {
@@ -221,6 +231,7 @@ class ChangesPlayer(private val prefs: SharedPreferences, private val metronome:
     const val SAMPLE_RATE = 48_000
     const val CHUNK_FRAMES = 960
     const val KEY = "changes_key"
+    const val BPM = "changes_bpm"
     const val CLICK = "changes_click"
     const val COUNT_IN = "changes_count_in"
     const val KEEP_GOING = "changes_keep_going"

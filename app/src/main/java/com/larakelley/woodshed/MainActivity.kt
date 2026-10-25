@@ -216,7 +216,7 @@ class MainActivity : ComponentActivity() {
                     setClick = changes::setClick,
                     setCountIn = changes::setCountIn,
                     setKeepGoing = changes::setKeepGoing,
-                    setBpm = metronome::setBpm,
+                    setBpm = changes::setBpm,
                     setBeatsPerBar = {
                       metronome.setBeatsPerBar(it)
                       changes.restart()
