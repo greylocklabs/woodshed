@@ -18,7 +18,7 @@ showing ads or adding a permission.
 | Free or paid | Free (permanent) |
 | Category | Music & Audio |
 | Tags | Music, Education |
-| Contact email | hello@woodshedapp.org |
+| Contact email | hello@greylocklabs.org |
 | Website | https://woodshedapp.org |
 | Privacy policy | https://woodshedapp.org/privacy.html |
 
@@ -45,7 +45,7 @@ report service (a Cloudflare Worker) to a public GitHub issue.
 
 - **Does the app collect or share user data?** Yes, because of problem reports.
 - **Is all collected data encrypted in transit?** Yes (HTTPS).
-- **Can users request deletion?** Yes: ask at hello@woodshedapp.org, or close the issue on GitHub.
+- **Can users request deletion?** Yes: ask at hello@greylocklabs.org, or close the issue on GitHub.
 
 Data types to declare:
 

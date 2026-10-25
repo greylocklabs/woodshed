@@ -101,7 +101,7 @@ val HELP_TOPICS = listOf(
     listOf(
       "Each tune, exercise and solo has a **🚩 Report a problem** button for a wrong key or a broken link, " +
         "and **⚙️ Settings › About** has one for anything else. " +
-        "You can also write to [hello@woodshedapp.org](mailto:hello@woodshedapp.org).",
+        "You can also write to [hello@greylocklabs.org](mailto:hello@greylocklabs.org).",
     ),
   ),
 )
