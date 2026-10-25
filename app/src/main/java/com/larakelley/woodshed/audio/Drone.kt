@@ -5,8 +5,11 @@ import android.media.AudioAttributes
 import android.media.AudioFormat
 import android.media.AudioTrack
 import androidx.core.content.edit
+import com.larakelley.woodshed.domain.ChordQuality
 import com.larakelley.woodshed.domain.DroneRange
 import com.larakelley.woodshed.domain.DroneTone
+import com.larakelley.woodshed.domain.Voicing
+import com.larakelley.woodshed.domain.voice
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -16,7 +19,8 @@ data class DroneState(
   /** Concert pitch class, C = 0. */
   val pitchClass: Int = 0,
   val range: DroneRange = DroneRange.MIDDLE,
-  val fifth: Boolean = false,
+  val chord: ChordQuality = ChordQuality.NOTE,
+  val voicing: Voicing = Voicing.CLOSE,
   val volume: Float = 0.6f,
 )
 
@@ -26,7 +30,8 @@ class Drone(private val prefs: SharedPreferences, private val a4: () -> Int) {
     DroneState(
       pitchClass = prefs.getInt(PITCH, 0).coerceIn(0, 11),
       range = DroneRange.entries.firstOrNull { it.name == prefs.getString(RANGE, null) } ?: DroneRange.MIDDLE,
-      fifth = prefs.getBoolean(FIFTH, false),
+      chord = ChordQuality.entries.firstOrNull { it.name == prefs.getString(CHORD, null) } ?: ChordQuality.NOTE,
+      voicing = Voicing.entries.firstOrNull { it.name == prefs.getString(VOICING, null) } ?: Voicing.CLOSE,
       volume = prefs.getFloat(VOLUME, 0.6f).coerceIn(0f, 1f),
     ),
   )
@@ -39,7 +44,9 @@ class Drone(private val prefs: SharedPreferences, private val a4: () -> Int) {
 
   fun setRange(range: DroneRange) = update { it.copy(range = range) }
 
-  fun setFifth(fifth: Boolean) = update { it.copy(fifth = fifth) }
+  fun setChord(chord: ChordQuality) = update { it.copy(chord = chord) }
+
+  fun setVoicing(voicing: Voicing) = update { it.copy(voicing = voicing) }
 
   fun setVolume(volume: Float) = update { it.copy(volume = volume.coerceIn(0f, 1f)) }
 
@@ -62,7 +69,8 @@ class Drone(private val prefs: SharedPreferences, private val a4: () -> Int) {
     prefs.edit {
       putInt(PITCH, next.pitchClass)
       putString(RANGE, next.range.name)
-      putBoolean(FIFTH, next.fifth)
+      putString(CHORD, next.chord.name)
+      putString(VOICING, next.voicing.name)
       putFloat(VOLUME, next.volume)
     }
     _state.value = next
@@ -87,7 +95,7 @@ class Drone(private val prefs: SharedPreferences, private val a4: () -> Int) {
         val s = _state.value
         // This thread is done once stopped or replaced; it keeps rendering at zero volume until faded out.
         val stopping = !s.playing || thread !== me
-        val reached = tone.render(buffer, s.range.rootHz(s.pitchClass, a4().toDouble()), if (stopping) 0.0 else s.volume.toDouble(), s.fifth)
+        val reached = tone.render(buffer, s.range.rootHz(s.pitchClass, a4().toDouble()), if (stopping) 0.0 else s.volume.toDouble(), voice(s.chord, s.voicing))
         if (audio.write(buffer, 0, buffer.size) < 0) break
         if (stopping && reached <= 0.0001) break
       }
@@ -106,7 +114,8 @@ class Drone(private val prefs: SharedPreferences, private val a4: () -> Int) {
 
     const val PITCH = "drone_pitch"
     const val RANGE = "drone_range"
-    const val FIFTH = "drone_fifth"
+    const val CHORD = "drone_chord"
+    const val VOICING = "drone_voicing"
     const val VOLUME = "drone_volume"
   }
 }

@@ -6,6 +6,12 @@ release's GitHub notes, and a release refuses to go out without one.
 
 ## Unreleased
 
+### Added
+
+- **drone:** play a chord, not just a note: triads, sevenths, sixths and
+  extensions, voiced close, spread or as a shell. "Note and fifth" takes the
+  place of the fifth switch.
+
 ### Fixed
 
 - **drone:** Low, Middle and High each sit in one octave of concert pitch,

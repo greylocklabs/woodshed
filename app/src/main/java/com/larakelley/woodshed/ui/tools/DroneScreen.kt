@@ -21,30 +21,34 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.larakelley.woodshed.audio.DroneState
+import com.larakelley.woodshed.domain.ChordGroup
+import com.larakelley.woodshed.domain.ChordQuality
 import com.larakelley.woodshed.domain.DroneRange
 import com.larakelley.woodshed.domain.Key
 import com.larakelley.woodshed.domain.Transposition
+import com.larakelley.woodshed.domain.Voicing
+import com.larakelley.woodshed.domain.spell
 import com.larakelley.woodshed.theme.CallieChip
 import com.larakelley.woodshed.theme.Helper
 import com.larakelley.woodshed.theme.LocalCallie
 import com.larakelley.woodshed.theme.PillChoice
 import com.larakelley.woodshed.theme.SectionLabel
 import com.larakelley.woodshed.theme.StickerButton
-import com.larakelley.woodshed.theme.SwitchRow
 
 data class DroneActions(
   val toggle: () -> Unit = {},
   /** Takes a concert pitch class. */
   val setPitchClass: (Int) -> Unit = {},
   val setRange: (DroneRange) -> Unit = {},
-  val setFifth: (Boolean) -> Unit = {},
+  val setChord: (ChordQuality) -> Unit = {},
+  val setVoicing: (Voicing) -> Unit = {},
   val setVolume: (Float) -> Unit = {},
 )
 
 /** A note name as major keys spell it, which is how drones are usually named. */
 private fun noteName(pitchClass: Int) = Key(pitchClass, minor = false).displayName
 
-/** A sustained note to play against, named for [transposition] and sounding in concert pitch. */
+/** A sustained note or chord to play against, named for [transposition] and sounding in concert pitch. */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun DroneScreen(state: DroneState, transposition: Transposition, a4: Int, actions: DroneActions) {
@@ -52,9 +56,15 @@ fun DroneScreen(state: DroneState, transposition: Transposition, a4: Int, action
   val written = Math.floorMod(state.pitchClass + transposition.offset, 12)
   Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp).padding(bottom = 24.dp)) {
     Spacer(Modifier.height(24.dp))
-    Text(noteName(written), style = MaterialTheme.typography.displayLarge, modifier = Modifier.align(Alignment.CenterHorizontally).testTag("drone-note"))
+    val name = noteName(written)
     Text(
-      (if (transposition == Transposition.C) "" else "Concert ${noteName(state.pitchClass)}, ") +
+      name + state.chord.symbol,
+      style = MaterialTheme.typography.displayLarge,
+      modifier = Modifier.align(Alignment.CenterHorizontally).testTag("drone-note"),
+    )
+    Text(
+      (if (state.chord == ChordQuality.NOTE) "" else spell(name, state.chord).joinToString(" ") + ". ") +
+        (if (transposition == Transposition.C) "" else "Concert ${noteName(state.pitchClass)}${state.chord.symbol}, ") +
         "%.1f Hz".format(state.range.rootHz(state.pitchClass, a4.toDouble())),
       style = MaterialTheme.typography.bodyMedium,
       color = callie.textMuted,
@@ -76,15 +86,27 @@ fun DroneScreen(state: DroneState, transposition: Transposition, a4: Int, action
         )
       }
     }
+    SectionLabel("Chord")
+    ChordGroup.entries.forEach { group ->
+      group.label?.let { Helper(it, Modifier.padding(top = 8.dp)) }
+      FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        ChordQuality.entries.filter { it.group == group }.forEach { chord ->
+          CallieChip(
+            selected = chord == state.chord,
+            onClick = { actions.setChord(chord) },
+            label = { Text(chord.label) },
+            modifier = Modifier.testTag("drone-chord-${chord.name.lowercase()}"),
+          )
+        }
+      }
+    }
     SectionLabel("Range")
     PillChoice(DroneRange.entries.map { it.label to it }, state.range, actions.setRange, tagPrefix = "drone-range")
-    SwitchRow(
-      "Add the fifth",
-      state.fifth,
-      actions.setFifth,
-      helper = "A root and fifth, for hearing thirds and sevenths against",
-      modifier = Modifier.testTag("drone-fifth"),
-    )
+    if (state.chord.voiced) {
+      SectionLabel("Voicing")
+      PillChoice(Voicing.entries.map { it.label to it }, state.voicing, actions.setVoicing, tagPrefix = "drone-voicing")
+      Helper("Close keeps the notes together; spread opens them out; shell plays the root, 3rd and 7th.")
+    }
     SectionLabel("Volume")
     Slider(
       value = state.volume,
