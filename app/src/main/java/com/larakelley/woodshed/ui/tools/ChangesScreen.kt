@@ -74,8 +74,8 @@ import kotlin.random.Random
 data class ChangesActions(
   val load: (ChangesSource) -> Unit = {},
   val toggle: () -> Unit = {},
-  /** Takes a concert pitch class. */
-  val setKey: (Int) -> Unit = {},
+  /** Sets the concert key an item, by its key id, plays in. */
+  val setKey: (keyId: String, key: Int) -> Unit = { _, _ -> },
   val setClick: (Boolean) -> Unit = {},
   val setCountIn: (Boolean) -> Unit = {},
   val setKeepGoing: (Boolean) -> Unit = {},
@@ -96,6 +96,15 @@ private val COMMON_CHORDS =
 
 private fun noteName(pitchClass: Int) = Key(Math.floorMod(pitchClass, 12), minor = false).displayName
 
+/** Where a playing source's screen is, so coming back to the tab while it plays shows it again. */
+private fun routeOf(source: String?): String? = when {
+  source == null -> null
+  source.startsWith("form:") -> source
+  source.startsWith("mine:") -> "mine:" + source.removePrefix("mine:").substringBefore(':')
+  source.startsWith("pattern:") -> "run:" + source.removePrefix("pattern:").substringBefore(':')
+  else -> null
+}
+
 /** Progressions to play over: forms, cadences and turnarounds, and patterns that move through the keys. */
 @Composable
 fun ChangesScreen(
@@ -107,12 +116,12 @@ fun ChangesScreen(
   mine: List<MyChanges> = emptyList(),
 ) {
   // "form:<id>", "pattern:<id>" or "mine:<id>" while one is open, "run:<id>" while a pattern plays, and
-  // "edit:<id>" or "edit:new" while writing changes.
-  var open by rememberSaveable { mutableStateOf<String?>(null) }
-  val writtenKey = Math.floorMod(state.key + transposition.offset, 12)
+  // "edit:<id>" or "edit:new" while writing changes. Back on the tab while changes play, their screen shows.
+  var open by rememberSaveable { mutableStateOf(if (state.playing) routeOf(state.source) else null) }
+  fun written(keyId: String) = Math.floorMod(state.keyFor(keyId) + transposition.offset, 12)
   val current = open
   when {
-    current == null -> ChangesList(writtenKey, transposition, actions, mine) { open = it }
+    current == null -> ChangesList(state, metronome.beatsPerBar, transposition, actions, mine, ::written) { open = it }
 
     current.startsWith("mine:") -> {
       val changes = mine.firstOrNull { it.id == current.removePrefix("mine:").toLongOrNull() }
@@ -122,10 +131,12 @@ fun ChangesScreen(
       }
       // Saved again after an edit, the changes load afresh.
       val id = "mine:${changes.id}:${numerals(changes.bars).hashCode()}"
-      LaunchedEffect(id) { actions.load(ChangesSource(id) { changes.bars }) }
+      val keyId = "mine:${changes.id}"
+      LaunchedEffect(id) { actions.load(ChangesSource(id, keyId, changes.name) { changes.bars }) }
       val bars = if (state.source == id) state.bars else changes.bars
       ChangesPlayerScreen(
         changes.name,
+        keyId,
         "Back to changes",
         state.copy(bars = bars),
         metronome,
@@ -140,7 +151,7 @@ fun ChangesScreen(
       val changes = mine.firstOrNull { it.id == current.removePrefix("edit:").toLongOrNull() }
       ChangesEditor(
         changes,
-        writtenKey,
+        written(changes?.let { "mine:${it.id}" } ?: ""),
         onSave = { name, bars ->
           actions.save(changes?.id, name, bars)
           open = changes?.let { "mine:${it.id}" }
@@ -161,10 +172,11 @@ fun ChangesScreen(
         open = null
         return
       }
-      LaunchedEffect(form.id) { actions.load(ChangesSource("form:${form.id}") { form.bars }) }
+      val id = "form:${form.id}"
+      LaunchedEffect(form.id) { actions.load(ChangesSource(id, id, form.name) { form.bars }) }
       // Until the player has it, the form shows from the library.
-      val bars = if (state.source == "form:${form.id}") state.bars else form.bars
-      ChangesPlayerScreen(form.name, "Back to changes", state.copy(bars = bars), metronome, drone, transposition, actions) { open = null }
+      val bars = if (state.source == id) state.bars else form.bars
+      ChangesPlayerScreen(form.name, id, "Back to changes", state.copy(bars = bars), metronome, drone, transposition, actions) { open = null }
     }
 
     else -> {
@@ -179,38 +191,73 @@ fun ChangesScreen(
 }
 
 @Composable
-private fun ChangesList(writtenKey: Int, transposition: Transposition, actions: ChangesActions, mine: List<MyChanges>, onOpen: (String) -> Unit) {
-  Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(bottom = 24.dp).testTag("changes-list")) {
-    Column(Modifier.padding(horizontal = 16.dp).padding(top = 16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-      DropdownChip("Key", noteName(writtenKey), (0..11).map { noteName(it) to it }) { it?.let { w -> actions.setKey(w - transposition.offset) } }
-      Helper(
-        (if (transposition == Transposition.C) "" else "Concert ${noteName(writtenKey - transposition.offset)}. ") +
-          "Forms play in this key, and patterns start from it.",
-      )
-    }
-    ChangesSection.entries.forEach { section ->
-      SectionLabel(section.label, Modifier.padding(horizontal = 16.dp))
-      if (section == ChangesSection.PATTERNS) {
-        ChangesLibrary.patterns.forEach { p -> ChangesRow(p.name, p.description, noteName(writtenKey), "changes-${p.id}") { onOpen("pattern:${p.id}") } }
-      } else {
-        ChangesLibrary.forms.filter { it.section == section }.forEach { f ->
-          val key = noteName(writtenKey) + if (f.minor) "m" else ""
-          ChangesRow(f.name, f.description, key, "changes-${f.id}", if (f.advanced) "Advanced" else null) { onOpen("form:${f.id}") }
+private fun ChangesList(
+  state: ChangesState,
+  beatsPerBar: Int,
+  transposition: Transposition,
+  actions: ChangesActions,
+  mine: List<MyChanges>,
+  written: (keyId: String) -> Int,
+  onOpen: (String) -> Unit,
+) {
+  Column(Modifier.fillMaxSize()) {
+    Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(top = 8.dp, bottom = 24.dp).testTag("changes-list")) {
+      ChangesSection.entries.forEach { section ->
+        SectionLabel(section.label, Modifier.padding(horizontal = 16.dp))
+        if (section == ChangesSection.PATTERNS) {
+          ChangesLibrary.patterns.forEach { p ->
+            ChangesRow(p.name, p.description, noteName(written("pattern:${p.id}")), "changes-${p.id}") { onOpen("pattern:${p.id}") }
+          }
+        } else {
+          ChangesLibrary.forms.filter { it.section == section }.forEach { f ->
+            val key = noteName(written("form:${f.id}")) + if (f.minor) "m" else ""
+            ChangesRow(f.name, f.description, key, "changes-${f.id}", if (f.advanced) "Advanced" else null) { onOpen("form:${f.id}") }
+          }
         }
       }
+      SectionLabel("Yours", Modifier.padding(horizontal = 16.dp))
+      mine.forEach { c ->
+        val bars = "${c.bars.size} ${if (c.bars.size == 1) "bar" else "bars"}"
+        ChangesRow(c.name, bars, noteName(written("mine:${c.id}")), "changes-mine-${c.id}", "🪵 Yours") { onOpen("mine:${c.id}") }
+      }
+      StickerButton(
+        onClick = { onOpen("edit:new") },
+        sticker = neutralSticker,
+        modifier = Modifier.align(Alignment.CenterHorizontally).padding(top = 16.dp).height(44.dp).testTag("changes-new"),
+        contentPadding = PaddingValues(horizontal = 18.dp),
+      ) { Text("+ New changes", style = MaterialTheme.typography.labelLarge) }
     }
-    SectionLabel("Yours", Modifier.padding(horizontal = 16.dp))
-    mine.forEach { c ->
-      ChangesRow(c.name, "${c.bars.size} ${if (c.bars.size == 1) "bar" else "bars"}", noteName(writtenKey), "changes-mine-${c.id}", "🪵 Yours") {
-        onOpen("mine:${c.id}")
+    if (state.playing) NowPlayingBar(state, beatsPerBar, transposition, onOpen = { routeOf(state.source)?.let(onOpen) }, onStop = actions.toggle)
+  }
+}
+
+/**
+ * What is playing, shown wherever its own screen is not, so changes left playing can always be stopped. Tapping it
+ * goes back to them.
+ */
+@Composable
+fun NowPlayingBar(state: ChangesState, beatsPerBar: Int, transposition: Transposition, onOpen: () -> Unit, onStop: () -> Unit, modifier: Modifier = Modifier) {
+  val callie = LocalCallie.current
+  val written = Math.floorMod(state.key + transposition.offset, 12)
+  val chord = state.bars.getOrNull(state.bar)?.chordOn(state.beat.coerceAtLeast(0), beatsPerBar)?.name(written)
+  Column(modifier.fillMaxWidth().background(callie.surface)) {
+    HorizontalDivider()
+    Row(
+      Modifier.fillMaxWidth().clickable(onClick = onOpen).padding(start = 16.dp, end = 12.dp, top = 8.dp, bottom = 8.dp).testTag("now-playing"),
+      verticalAlignment = Alignment.CenterVertically,
+    ) {
+      Column(Modifier.weight(1f)) {
+        Text("🎹 ${state.title}", style = MaterialTheme.typography.titleSmall, maxLines = 1)
+        Text(
+          if (chord == null) "Counting in" else "$chord, bar ${state.bar + 1} of ${state.bars.size}",
+          style = MaterialTheme.typography.bodySmall,
+          color = callie.textMuted,
+        )
+      }
+      StickerButton(onClick = onStop, modifier = Modifier.height(40.dp).testTag("now-playing-stop"), contentPadding = PaddingValues(horizontal = 16.dp)) {
+        Text("◼ Stop", style = MaterialTheme.typography.labelLarge)
       }
     }
-    StickerButton(
-      onClick = { onOpen("edit:new") },
-      sticker = neutralSticker,
-      modifier = Modifier.align(Alignment.CenterHorizontally).padding(top = 16.dp).height(44.dp).testTag("changes-new"),
-      contentPadding = PaddingValues(horizontal = 18.dp),
-    ) { Text("+ New changes", style = MaterialTheme.typography.labelLarge) }
   }
 }
 
@@ -237,6 +284,7 @@ private fun ChangesRow(title: String, description: String, key: String, tag: Str
 @Composable
 internal fun ChangesPlayerScreen(
   title: String,
+  keyId: String,
   back: String,
   state: ChangesState,
   metronome: MetronomeState,
@@ -247,7 +295,7 @@ internal fun ChangesPlayerScreen(
   onBack: () -> Unit,
 ) {
   val callie = LocalCallie.current
-  val written = Math.floorMod(state.key + transposition.offset, 12)
+  val written = Math.floorMod(state.keyFor(keyId) + transposition.offset, 12)
   val bars = state.bars
   val playingBar = if (state.playing) state.bar else -1
   Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -261,10 +309,7 @@ internal fun ChangesPlayerScreen(
       }
     }
     Text(title, style = MaterialTheme.typography.headlineMedium)
-    Text(
-      "In ${noteName(written)}" + (if (transposition == Transposition.C) "" else ", concert ${noteName(state.key)}") +
-        if (state.playing && state.chorus > 0) ". Chorus ${state.chorus + 1}" else "",
-    )
+    KeyLine(keyId, state, transposition, actions, if (state.playing && state.chorus > 0) "Chorus ${state.chorus + 1}" else null)
 
     val now = bars.getOrNull(playingBar.coerceAtLeast(0))?.chordOn(state.beat.coerceAtLeast(0), metronome.beatsPerBar)
     Text(
@@ -408,11 +453,12 @@ private fun PatternScreen(
   var formId by rememberSaveable(preset.id) { mutableStateOf(preset.form?.id ?: ChangesLibrary.forms.first().id) }
   var allChords by rememberSaveable(preset.id) { mutableStateOf(false) }
   val pattern = preset.copy(move = move, unit = unit, chord = chord, barsPerKey = barsPerKey, form = ChangesLibrary.form(formId))
-  val written = Math.floorMod(state.key + transposition.offset, 12)
+  val keyId = "pattern:${preset.id}"
+  val written = Math.floorMod(state.keyFor(keyId) + transposition.offset, 12)
   if (running) {
     // Reopened after the app was away, the pattern loads again, in a fresh order if it is random.
     if (state.source?.startsWith("pattern:${preset.id}:") != true) LaunchedEffect(preset.id) { actions.load(source(pattern)) }
-    ChangesPlayerScreen(preset.name, "Back to the pattern", state, metronome, drone, transposition, actions) { onOpen("pattern:${preset.id}") }
+    ChangesPlayerScreen(preset.name, keyId, "Back to the pattern", state, metronome, drone, transposition, actions) { onOpen("pattern:${preset.id}") }
     return
   }
   val keys = move.keys()
@@ -429,10 +475,7 @@ private fun PatternScreen(
       }
     }
     Text(preset.name, style = MaterialTheme.typography.headlineMedium)
-    Text(
-      "From ${noteName(written)}" + (if (transposition == Transposition.C) "" else ", concert ${noteName(state.key)}") +
-        ". ${pattern.bars().size} bars" + if (state.keepGoing) ", then again" else "",
-    )
+    KeyLine(keyId, state, transposition, actions, "${pattern.bars().size} bars" + if (state.keepGoing) ", then again" else "")
     SectionLabel("Move")
     PillChoice(Move.entries.map { it.label to it }, move, { move = it }, tagPrefix = "pattern-move")
     SectionLabel("In each key")
@@ -480,5 +523,17 @@ private fun PatternScreen(
 private fun source(pattern: Pattern): ChangesSource {
   val seed = Random.nextInt()
   val id = listOf(pattern.id, pattern.move, pattern.unit, pattern.chord, pattern.barsPerKey, pattern.form?.id, seed).joinToString(":")
-  return ChangesSource("pattern:$id") { pattern.bars(seed + it) }
+  return ChangesSource("pattern:$id", "pattern:${pattern.id}", pattern.name) { pattern.bars(seed + it) }
+}
+
+/** The key [keyId] plays in, to change it there, with the concert key beside it and [extra] after. */
+@Composable
+private fun KeyLine(keyId: String, state: ChangesState, transposition: Transposition, actions: ChangesActions, extra: String?) {
+  val concert = state.keyFor(keyId)
+  val written = Math.floorMod(concert + transposition.offset, 12)
+  Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+    DropdownChip("Key", noteName(written), (0..11).map { noteName(it) to it }) { it?.let { w -> actions.setKey(keyId, w - transposition.offset) } }
+    val parts = listOfNotNull(if (transposition == Transposition.C) null else "Concert ${noteName(concert)}", extra)
+    if (parts.isNotEmpty()) Text(parts.joinToString(". "), style = MaterialTheme.typography.bodyMedium, color = LocalCallie.current.textMuted)
+  }
 }

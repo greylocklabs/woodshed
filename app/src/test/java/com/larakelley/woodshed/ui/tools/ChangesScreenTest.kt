@@ -1,6 +1,10 @@
 package com.larakelley.woodshed.ui.tools
 
 import android.app.Application
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
@@ -29,17 +33,27 @@ class ChangesScreenTest {
   @Test
   fun aFormLoadsAndPlaysInTheHornsKey() {
     val loaded = mutableListOf<ChangesSource>()
-    var state = ChangesState(key = 3)
+    val keys = mutableListOf<Pair<String, Int>>()
     compose.setContent {
-      ChangesScreen(state, MetronomeState(), DroneState(), Transposition.Bb, ChangesActions(load = { loaded += it }))
+      ChangesScreen(
+        ChangesState(key = 0, keys = mapOf("form:blues" to 3)),
+        MetronomeState(),
+        DroneState(),
+        Transposition.Bb,
+        ChangesActions(load = { loaded += it }, setKey = { id, key -> keys += id to key }),
+      )
     }
-    // Concert Eb is written F on a Bb horn.
-    compose.onNodeWithText("Key: F").assertExists()
-    compose.onNodeWithText("Concert Eb", substring = true).assertExists()
     compose.onNodeWithTag("changes-blues").performClick()
     compose.waitForIdle()
-    assertEquals("form:blues", loaded.single().id)
+    assertEquals("form:blues", loaded.single().keyId)
+    // The blues keeps its own key: concert Eb, written F on a Bb horn.
+    compose.onNodeWithText("Key: F").assertExists()
+    compose.onNodeWithText("Concert Eb", substring = true).assertExists()
     compose.onNodeWithTag("changes-chord").assertTextEquals("F7")
+    compose.onNodeWithText("Key: F").performClick()
+    compose.onNodeWithText("G").performClick()
+    // Written G on a Bb horn is concert F.
+    assertEquals(listOf("form:blues" to 5), keys)
     compose.onNodeWithText("12 bars").assertExists()
   }
 
@@ -93,5 +107,29 @@ class ChangesScreenTest {
     assertEquals(listOf(160), bpm)
     // A jazz waltz is in three.
     assertEquals(listOf(3), beats)
+  }
+
+  @Test
+  fun changesLeftPlayingCanBeStoppedFromTheList() {
+    var stopped = false
+    val blues = ChangesLibrary.form("blues")!!.bars
+    compose.setContent {
+      var open by remember { mutableStateOf(true) }
+      if (open) {
+        ChangesScreen(
+          ChangesState(playing = true, source = "form:blues", title = "12-bar blues", bars = blues, bar = 4, beat = 0),
+          MetronomeState(),
+          DroneState(),
+          Transposition.C,
+          ChangesActions(toggle = { stopped = true }),
+        )
+      }
+    }
+    // Back on the tab while it plays, the player shows; back from it, the list shows what plays.
+    compose.onNodeWithTag("changes-chord").assertTextEquals("F7")
+    compose.onNodeWithText("Back to changes").performClick()
+    compose.onNodeWithText("F7, bar 5 of 12").assertExists()
+    compose.onNodeWithTag("now-playing-stop", useUnmergedTree = true).performClick()
+    assertTrue(stopped)
   }
 }

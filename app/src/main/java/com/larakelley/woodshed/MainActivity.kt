@@ -51,6 +51,7 @@ import com.larakelley.woodshed.ui.tools.DroneActions
 import com.larakelley.woodshed.ui.tools.DroneScreen
 import com.larakelley.woodshed.ui.tools.MetronomeActions
 import com.larakelley.woodshed.ui.tools.MetronomeScreen
+import com.larakelley.woodshed.ui.tools.NowPlayingBar
 import com.larakelley.woodshed.ui.tools.TunerActions
 import com.larakelley.woodshed.ui.tools.TunerScreen
 import com.larakelley.woodshed.ui.transcribe.TranscribeScreen
@@ -202,6 +203,19 @@ class MainActivity : ComponentActivity() {
                     drone.toggle()
                   }, drone::setPitchClass, drone::setRange, drone::setChord, drone::setVoicing, drone::setVolume),
                 )
+              },
+              nowPlaying = if (changing.playing) {
+                {
+                  NowPlayingBar(
+                    changing,
+                    click.beatsPerBar,
+                    browseState.transposition,
+                    onOpen = { navigation.go(Destination.Changes) },
+                    onStop = app.changes::stop,
+                  )
+                }
+              } else {
+                null
               },
               changesTab = {
                 val changes = app.changes
