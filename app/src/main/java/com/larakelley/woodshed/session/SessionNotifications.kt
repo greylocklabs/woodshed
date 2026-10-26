@@ -56,7 +56,7 @@ object SessionNotifications {
     } else {
       builder.setWhen(ends).setShowWhen(true).setUsesChronometer(true).setChronometerCountDown(true)
     }
-    builder.addAction(0, if (step is StepView.Exercise) "Done" else "Skip", action(context, SessionActionReceiver.NEXT))
+    builder.addAction(0, nextLabel(step), action(context, SessionActionReceiver.NEXT))
     builder.addAction(0, if (paused) "Resume" else "Pause", action(context, if (paused) SessionActionReceiver.RESUME else SessionActionReceiver.PAUSE))
     builder.addAction(0, "End", action(context, SessionActionReceiver.STOP))
     return builder.build()
@@ -71,6 +71,9 @@ object SessionNotifications {
     .setAutoCancel(true)
     .setContentIntent(openApp(context))
     .build()
+
+  /** Moving on finishes an exercise or changes, and skips a tune or solo, which want a grade. */
+  fun nextLabel(step: StepView): String = if (step is StepView.Exercise || step is StepView.Changes) "Done" else "Skip"
 
   /** The block as one line, such as "Long tones" or "Solar: Melody from memory". */
   fun title(step: StepView): String = when (step) {

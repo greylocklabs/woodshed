@@ -141,6 +141,13 @@ class DiceTest {
     fun routes(pool: ChangesPool) = (1..200).mapNotNull { rollChanges(mine, pool, Random(it))?.route }.toSet()
     assertTrue(routes(ChangesPool.BLUES).all { ChangesLibrary.form(it.removePrefix("form:"))?.section == ChangesSection.BLUES })
     assertTrue(routes(ChangesPool.PATTERNS).all { it.startsWith("pattern:") })
+    // Every section can be rolled on its own.
+    for (section in ChangesSection.entries) assertTrue(ChangesPool.entries.any { it.section == section })
+    assertTrue(
+      routes(ChangesPool.MORE).isNotEmpty() && routes(ChangesPool.MORE).all {
+        ChangesLibrary.form(it.removePrefix("form:"))?.section == ChangesSection.MORE
+      },
+    )
     assertEquals(setOf("mine:7"), routes(ChangesPool.MINE))
     assertTrue(routes(ChangesPool.ANY).let { r -> "mine:7" in r && r.any { it.startsWith("form:") } && r.any { it.startsWith("pattern:") } })
     assertNull(rollChanges(emptyList(), ChangesPool.MINE, Random(1)))

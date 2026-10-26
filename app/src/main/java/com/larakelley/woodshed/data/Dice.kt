@@ -40,6 +40,7 @@ enum class ChangesPool(val label: String, val section: ChangesSection? = null) {
   FORMS("Forms", ChangesSection.FORMS),
   CADENCES("Cadences and turnarounds", ChangesSection.CADENCES),
   PATTERNS("Patterns", ChangesSection.PATTERNS),
+  MORE("More", ChangesSection.MORE),
   MINE("My changes"),
 }
 
