@@ -1,6 +1,6 @@
 package com.larakelley.woodshed.domain
 
-/** One `## <version>` section of CHANGELOG.md. */
+/** One `## <version>` section of CHANGELOG.md, which a release dates as `## <version> - <yyyy-mm-dd>`. */
 data class ChangelogRelease(val version: String, val blocks: List<ChangelogBlock>)
 
 /** The Markdown the changelog uses: `###` headings, paragraphs and bullets. Inline `**bold**` and links stay in the text. */
@@ -14,7 +14,7 @@ sealed interface ChangelogBlock {
   data class Bullet(override val text: String) : ChangelogBlock
 }
 
-private val VERSION_HEADING = Regex("""^## (\d+\.\d+\.\d+)\s*$""")
+private val VERSION_HEADING = Regex("""^## (\d+\.\d+\.\d+)(?: - \d{4}-\d{2}-\d{2})?\s*$""")
 
 /** The releases in [markdown], newest first as written. Text before the first version heading is skipped. */
 fun parseChangelog(markdown: String): List<ChangelogRelease> {

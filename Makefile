@@ -5,7 +5,7 @@ GRADLE := ./gradlew
 EMULATOR_GPU ?= swiftshader_indirect
 
 .DEFAULT_GOAL := help
-.PHONY: help build apk e2e-release test www record-screenshots e2e format lint check clean version release-notes bump release
+.PHONY: help build apk e2e-release test www record-screenshots e2e format lint check clean
 
 help: ## List the tasks
 	@awk 'BEGIN { FS = ":.*## " } /^[a-z0-9-]+:.*## / { printf "  %-20s %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
@@ -43,9 +43,9 @@ e2e-release: ## Run the end-to-end tests against the shrunk release build
 format: ## Format Kotlin with ktlint
 	$(GRADLE) spotlessApply
 
-lint: ## Check formatting, run Android lint and check the changelog has the current version
+lint: ## Check formatting, run Android lint and check VERSION agrees with the changelog
 	$(GRADLE) spotlessCheck :app:lintDebug
-	@scripts/release-notes.sh > /dev/null
+	@core/tooling/check-version.sh
 
 check: lint test ## CI's lint and test jobs; commitlint runs in CI only
 
@@ -61,14 +61,6 @@ www: ## Serve the website in www/ at http://localhost:8000 (WWW_PORT=... for ano
 # Releasing
 # ---------
 
-version: ## Print the current version
-	@cat VERSION
-
-release-notes: ## Print the changelog section for VERSION, or V=x.y.z
-	@scripts/release-notes.sh $(V)
-
-bump: ## Print what PART=major|minor|patch would bump the version to
-	@scripts/bump-version.sh $(PART)
-
-release: ## Cut a release from main: PART=major|minor|patch, or current to tag VERSION as it is; DRY_RUN=1 to check
-	@scripts/release.sh $(PART)
+# Woodshed's commits need a scope, so the release commit takes this one.
+RELEASE_SCOPE := release
+include core/tooling/release.mk

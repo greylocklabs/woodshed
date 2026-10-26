@@ -10,7 +10,11 @@ class ChangelogTest {
 
     Notes before the first release are not a release.
 
-    ## 0.10.0
+    ## Unreleased
+
+    - not released yet, so not shown
+
+    ## 0.10.0 - 2026-10-26
 
     ### Added
 
