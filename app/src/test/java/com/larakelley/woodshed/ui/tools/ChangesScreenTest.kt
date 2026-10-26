@@ -25,6 +25,8 @@ import com.larakelley.woodshed.domain.ChangesLibrary
 import com.larakelley.woodshed.domain.Transposition
 import com.larakelley.woodshed.domain.bars
 import com.larakelley.woodshed.domain.numerals
+import com.larakelley.woodshed.ui.AppNavigation
+import com.larakelley.woodshed.ui.Destination
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -83,6 +85,28 @@ class ChangesScreenTest {
     for (chord in listOf("Ebmaj7", "Abmaj7", "Dbmaj7")) compose.onNodeWithText(chord).assertIsDisplayed().assertFits()
     compose.onNodeWithText("Back").performClick()
     compose.onNodeWithTag("changes-dameron").assertIsDisplayed()
+  }
+
+  @Test
+  fun anotherTabOpensChangesInTheKeyItPicked() {
+    val keys = mutableListOf<Pair<String, Int>>()
+    val navigation = AppNavigation()
+    navigation.go(Destination.Changes("form:blues", 5))
+    compose.setContent {
+      ChangesScreen(
+        ChangesState(),
+        MetronomeState(),
+        DroneState(),
+        Transposition.C,
+        ChangesActions(setKey = { id, key ->
+          keys += id to key
+        }),
+        navigation = navigation,
+      )
+    }
+    compose.onNodeWithTag("changes-toggle").assertExists()
+    assertEquals(listOf("form:blues" to 5), keys)
+    assertEquals(null, navigation.pending)
   }
 
   @Test

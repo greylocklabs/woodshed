@@ -301,8 +301,8 @@ private fun PlanReview(plan: List<PlanItem>, actions: SetupActions) {
             Text(item.title, style = MaterialTheme.typography.titleMedium)
             Text(if (item.block is PlanBlock.Tune) "Tune: ${item.detail}" else item.detail, style = MaterialTheme.typography.bodySmall)
             Row {
-              // A solo block has no exercise to change, only to drop.
-              if (item.block !is PlanBlock.Solo) {
+              // A solo or changes block has no exercise to change, only to drop.
+              if (item.block is PlanBlock.Exercise || item.block is PlanBlock.Tune) {
                 TextButton(onClick = { actions.shuffle(i) }, modifier = Modifier.testTag("shuffle-$i")) { Text("Shuffle") }
                 TextButton(onClick = { replacing = i }, modifier = Modifier.testTag("replace-$i")) { Text("Replace") }
               }
@@ -344,6 +344,8 @@ fun SessionScreen(
   bpm: Int = 100,
   onToggleMetronome: () -> Unit = {},
   onSetBpm: (Int) -> Unit = {},
+  /** Opens changes on the Changes tab by route, in a concert key. */
+  onOpenChanges: (String, Int) -> Unit = { _, _ -> },
   /** The note the drone last played, in concert pitch, for blocks that don't choose one. */
   droneLastPitchClass: Int = 0,
   /** What the user reads in, so the drone's note is named as they would write it. */
@@ -443,6 +445,17 @@ fun SessionScreen(
           }
         }
 
+        is StepView.Changes -> {
+          Text("🎹 ${step.title}", style = MaterialTheme.typography.displaySmall, modifier = Modifier.testTag("changes-title"))
+          Text("Key: ${step.key}", style = MaterialTheme.typography.displayMedium, color = MaterialTheme.colorScheme.primary)
+          Text("Play over the changes, then tap Done.", style = MaterialTheme.typography.titleMedium)
+          StickerButton(onClick = {
+            onOpenChanges(step.route, step.concertKey)
+          }, sticker = neutralSticker, modifier = Modifier.height(44.dp).testTag("open-changes")) {
+            Text("🎹 Play them on Changes", style = MaterialTheme.typography.labelLarge)
+          }
+        }
+
         is StepView.Tune -> {
           val card = step.card
           Text(card.title, style = MaterialTheme.typography.displaySmall, modifier = Modifier.testTag("card-title"))
@@ -489,7 +502,7 @@ fun SessionScreen(
       }
     }
     when (step) {
-      is StepView.Exercise ->
+      is StepView.Exercise, is StepView.Changes ->
         StickerButton(onClick = onNext, modifier = Modifier.fillMaxWidth().padding(16.dp).height(64.dp).testTag("step-done")) {
           Text("✅ Done", style = MaterialTheme.typography.titleLarge)
         }

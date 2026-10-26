@@ -10,6 +10,9 @@ sealed interface Destination {
 
   data class Solo(val id: Long) : Destination
 
+  /** Changes on the Changes tab by route, such as "form:blues", in [concertKey] or, when null, the key they keep. */
+  data class Changes(val route: String, val concertKey: Int?) : Destination
+
   /** A main tab by name, such as a tool's, to go back to what it has playing. */
   data class Tab(val name: String) : Destination
 }

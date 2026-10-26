@@ -25,11 +25,13 @@ import com.larakelley.woodshed.domain.PlanExercise
 import com.larakelley.woodshed.domain.Scheduler
 import com.larakelley.woodshed.domain.Sm2Scheduler
 import com.larakelley.woodshed.domain.Transposition
+import com.larakelley.woodshed.domain.changesMinutes
 import com.larakelley.woodshed.domain.concertKeyFor
 import com.larakelley.woodshed.domain.pickExercise
 import com.larakelley.woodshed.domain.planSession
 import com.larakelley.woodshed.domain.soloMinutes
 import com.larakelley.woodshed.domain.usesDrone
+import com.larakelley.woodshed.domain.withChanges
 import com.larakelley.woodshed.domain.withSolo
 import java.time.Instant
 import java.time.ZoneId
@@ -137,7 +139,8 @@ class PracticeService(
 
   /**
    * A session plan; see [planSession]. Exercises that don't suit [instrument] are left out; null keeps them all.
-   * [soloId] takes its share of the time first; null leaves solos out.
+   * [soloId] takes its share of the time first; null leaves solos out. With the Harmony focus, random changes in a
+   * random key take a share too.
    */
   suspend fun plan(minutes: Int, focus: Set<Focus>, tuneIds: List<Long>, instrument: Instrument?, soloId: Long?): List<PlanBlock> {
     val exercises = allExercises().filter { it.archivedAt == null && (instrument == null || instrument.suits(it.families, it.category)) }
@@ -145,8 +148,9 @@ class PracticeService(
     val history = tuneIds.associateWith { id -> db.reviewEvents().forItem(ReviewEventEntity.TUNE, id).mapNotNull { it.exerciseId }.reversed().distinct() }
     val solo = soloId?.let { db.transcriptions().byId(it) }?.takeIf { it.archivedAt == null }
     val forSolo = if (solo == null) 0 else soloMinutes(minutes)
+    val forChanges = if (Focus.HARMONY in focus) changesMinutes(minutes) else 0
     val blocks = planSession(
-      totalMinutes = minutes - forSolo,
+      totalMinutes = minutes - forSolo - forChanges,
       focus = focus,
       tuneIds = tuneIds,
       exercises = exercises.map { PlanExercise(it.id, it.category, it.minutes, it.appliesToTune, it.difficulty) },
@@ -156,7 +160,10 @@ class PracticeService(
     // Each drone exercise gets its note now, so the plan, the session and a restored session all agree on it.
     val droned = exercises.filter { usesDrone(it.description) }.map { it.id }.toSet()
     val withDrones = blocks.map { if (it is PlanBlock.Exercise && it.exerciseId in droned) it.copy(dronePitchClass = random.nextInt(12)) else it }
-    return if (solo != null && forSolo > 0) withSolo(withDrones, PlanBlock.Solo(solo.id, forSolo)) else withDrones
+    // Drawn after the rest, so a plan without them comes out as it did before they were offered.
+    val changes = if (forChanges > 0) rollChanges(myChanges(), ChangesPool.ANY, random) else null
+    val planned = if (changes != null) withChanges(withDrones, PlanBlock.Changes(changes.route, changes.title, random.nextInt(12), forChanges)) else withDrones
+    return if (solo != null && forSolo > 0) withSolo(planned, PlanBlock.Solo(solo.id, forSolo)) else planned
   }
 
   /** The solo being transcribed that is most due, if any. */
@@ -192,6 +199,10 @@ class PracticeService(
   /** A random solo within [constraints]; see [rollSolo]. */
   suspend fun rollExercise(constraints: DiceConstraints, instrument: Instrument?): ExerciseEntity? =
     rollExercise(allExercises(), instrument, constraints, random)
+
+  suspend fun rollChanges(constraints: DiceConstraints): ChangesPick? = rollChanges(myChanges(), constraints.changesPool, random)
+
+  private suspend fun myChanges() = db.myChanges().all().map { it.id to it.name }
 
   suspend fun rollSolo(constraints: DiceConstraints): TranscriptionEntity? =
     rollSolo(db.transcriptions().all(), db.transcriptions().states().associateBy { it.transcriptionId }, constraints.soloPool, random)

@@ -20,6 +20,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.larakelley.woodshed.data.ChangesPool
 import com.larakelley.woodshed.data.DiceConstraints
 import com.larakelley.woodshed.data.KeyChoice
 import com.larakelley.woodshed.data.PracticeService
@@ -32,6 +33,7 @@ import com.larakelley.woodshed.data.clock
 import com.larakelley.woodshed.data.seed.SeedValidator
 import com.larakelley.woodshed.domain.ClickTrack
 import com.larakelley.woodshed.domain.Grade
+import com.larakelley.woodshed.domain.Key
 import com.larakelley.woodshed.domain.KeyMask
 import com.larakelley.woodshed.domain.Transposition
 import com.larakelley.woodshed.domain.delayLabel
@@ -46,6 +48,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlin.random.Random
 
 data class RolledCard(
   val title: String,
@@ -64,6 +67,9 @@ data class RolledCard(
 /** A rolled exercise and what it asks for. */
 data class RolledExercise(val name: String, val detail: String, val instructions: String)
 
+/** Rolled changes; [key] is written for the user's horn, and both keys are null to keep the changes' own. */
+data class RolledChanges(val route: String, val title: String, val description: String, val key: String?, val concertKey: Int?)
+
 /** A rolled solo, with its key for the user's horn. */
 data class RolledSolo(val id: Long, val title: String, val soloist: String, val key: String?, val times: String?)
 
@@ -72,6 +78,7 @@ data class DiceUi(
   val card: RolledCard? = null,
   val solo: RolledSolo? = null,
   val exercise: RolledExercise? = null,
+  val changes: RolledChanges? = null,
   val nothingMatches: Boolean = false,
   val styles: List<String> = emptyList(),
   val exercises: List<String> = emptyList(),
@@ -114,7 +121,7 @@ class DiceViewModel(
     // A result from the other kind of roll would show under the wrong heading.
     if (next.kind != ui.constraints.kind) {
       roll = null
-      ui.copy(constraints = next, card = null, solo = null, exercise = null, nothingMatches = false, graded = null)
+      ui.copy(constraints = next, card = null, solo = null, exercise = null, changes = null, nothingMatches = false, graded = null)
     } else {
       ui.copy(constraints = next)
     }
@@ -124,6 +131,7 @@ class DiceViewModel(
     when (_ui.value.constraints.kind) {
       RollKind.SOLO -> return rollSolo()
       RollKind.EXERCISE -> return rollExercise()
+      RollKind.CHANGES -> return rollChanges()
       RollKind.TUNE -> Unit
     }
     viewModelScope.launch {
@@ -131,7 +139,7 @@ class DiceViewModel(
       roll = r
       rolledAt = now()
       val card = r?.let { present(it) }
-      _ui.update { it.copy(card = card, solo = null, exercise = null, nothingMatches = r == null, graded = null) }
+      _ui.update { it.copy(card = card, solo = null, exercise = null, changes = null, nothingMatches = r == null, graded = null) }
     }
   }
 
@@ -143,7 +151,7 @@ class DiceViewModel(
         val detail = listOfNotNull(it.category, "${it.minutes} min", "difficulty ${it.difficulty}", it.tempoBpm?.let { bpm -> "$bpm bpm" })
         RolledExercise(it.name, detail.joinToString(", "), it.description)
       }
-      _ui.update { it.copy(card = null, solo = null, exercise = exercise, nothingMatches = e == null, graded = null) }
+      _ui.update { it.copy(card = null, solo = null, exercise = exercise, changes = null, nothingMatches = e == null, graded = null) }
     }
   }
 
@@ -155,7 +163,20 @@ class DiceViewModel(
         val times = it.startSeconds?.let { start -> "Solo ${clock(start)}" + (it.endSeconds?.let { end -> " to ${clock(end)}" } ?: "") }
         RolledSolo(it.id, it.title, "${it.soloist}, ${it.instrument.lowercase()}", soloKey(it, repository.transposition.value), times)
       }
-      _ui.update { it.copy(card = null, solo = solo, exercise = null, nothingMatches = s == null, graded = null) }
+      _ui.update { it.copy(card = null, solo = solo, exercise = null, changes = null, nothingMatches = s == null, graded = null) }
+    }
+  }
+
+  private fun rollChanges() {
+    roll = null
+    viewModelScope.launch {
+      val c = practice.rollChanges(_ui.value.constraints)
+      val changes = c?.let {
+        val concert = if (_ui.value.constraints.keyChoice == KeyChoice.USUAL) null else Random.nextInt(12)
+        val written = concert?.let { k -> Key.MAJOR_SPELLING[Math.floorMod(k + repository.transposition.value.offset, 12)] }
+        RolledChanges(it.route, it.title, it.description, written, concert)
+      }
+      _ui.update { it.copy(card = null, solo = null, exercise = null, changes = changes, nothingMatches = c == null, graded = null) }
     }
   }
 
@@ -211,10 +232,13 @@ fun DiceScreen(
   onGrade: (Grade) -> Unit,
   onToggleKeyKnown: () -> Unit,
   onOpenSolo: (Long) -> Unit = {},
+  /** Opens changes on the Changes tab by route, in a concert key or, when null, their own. */
+  onOpenChanges: (String, Int?) -> Unit = { _, _ -> },
 ) {
   val c = ui.constraints
   val solos = c.kind == RollKind.SOLO
   val exercises = c.kind == RollKind.EXERCISE
+  val changes = c.kind == RollKind.CHANGES
   Column(Modifier.fillMaxSize()) {
     Column(
       Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(16.dp),
@@ -233,6 +257,22 @@ fun DiceScreen(
           ) { v -> onConstrain { it.copy(exerciseCategory = v) } }
           DropdownChip("Difficulty", c.exerciseDifficulty?.toString() ?: "Any", (1..5).map { it.toString() to it }, allowAny = true) { d ->
             onConstrain { it.copy(exerciseDifficulty = d) }
+          }
+        }
+      } else if (changes) {
+        FlowRow(Modifier.padding(vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+          DropdownChip("Changes", c.changesPool.label, ChangesPool.entries.map { it.label to it }) { p ->
+            onConstrain {
+              it.copy(
+                changesPool =
+                p ?: ChangesPool.ANY,
+              )
+            }
+          }
+          // A key not yet checked off means nothing for changes, which play in any.
+          val keyChoices = listOf(KeyChoice.USUAL, KeyChoice.ANY)
+          DropdownChip("Key", (c.keyChoice.takeIf { it in keyChoices } ?: KeyChoice.ANY).label, keyChoices.map { it.label to it }) { k ->
+            onConstrain { it.copy(keyChoice = k ?: KeyChoice.USUAL) }
           }
         }
       } else if (solos) {
@@ -268,11 +308,22 @@ fun DiceScreen(
         }
       }
       StickerButton(onClick = onRoll, modifier = Modifier.fillMaxWidth().height(64.dp).testTag("roll")) {
-        Text(if (ui.card == null && ui.solo == null && ui.exercise == null) "🎲 Roll" else "🎲 Roll again", style = MaterialTheme.typography.titleLarge)
+        Text(
+          if (ui.card == null && ui.solo == null && ui.exercise == null &&
+            ui.changes == null
+          ) {
+            "🎲 Roll"
+          } else {
+            "🎲 Roll again"
+          },
+          style = MaterialTheme.typography.titleLarge,
+        )
       }
       if (ui.nothingMatches) {
         if (exercises) {
           EmptyState("💪", "Nothing to roll", "No exercises for your instrument fit these choices. Loosen them.")
+        } else if (changes) {
+          EmptyState("🎹", "Nothing to roll", "You have no changes of your own yet. Write some on the Changes tab, or roll from the others.")
         } else if (solos) {
           EmptyState("🎧", "Nothing to roll", "No solos fit. Pick a wider set, or add solos to your list from the Transcribe tab.")
         } else {
@@ -283,6 +334,14 @@ fun DiceScreen(
         Text(e.name, style = MaterialTheme.typography.displaySmall, modifier = Modifier.testTag("dice-exercise-title"))
         Text(e.detail, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
         Text(e.instructions, style = MaterialTheme.typography.titleMedium)
+      }
+      ui.changes?.takeIf { changes }?.let { ch ->
+        Text(ch.title, style = MaterialTheme.typography.displaySmall, modifier = Modifier.testTag("dice-changes-title"))
+        Text(ch.key?.let { "Key: $it" } ?: "In the key they keep", style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.primary)
+        Text(ch.description, style = MaterialTheme.typography.titleMedium)
+        StickerButton(onClick = { onOpenChanges(ch.route, ch.concertKey) }, modifier = Modifier.fillMaxWidth().height(56.dp).testTag("dice-open-changes")) {
+          Text("🎹 Play them", style = MaterialTheme.typography.titleMedium)
+        }
       }
       ui.solo?.takeIf { solos }?.let { s ->
         Text(s.title, style = MaterialTheme.typography.displaySmall, modifier = Modifier.testTag("dice-solo-title"))

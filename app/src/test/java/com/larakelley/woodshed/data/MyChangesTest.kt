@@ -51,4 +51,10 @@ class MyChangesTest {
     migrations.createDatabase("migrate.db", 14).close()
     migrations.runMigrationsAndValidate("migrate.db", 15, true).close()
   }
+
+  @Test
+  fun schemaFifteenGainsNamesForChangesBlocks() {
+    migrations.createDatabase("migrate.db", 15).close()
+    migrations.runMigrationsAndValidate("migrate.db", 16, true).close()
+  }
 }

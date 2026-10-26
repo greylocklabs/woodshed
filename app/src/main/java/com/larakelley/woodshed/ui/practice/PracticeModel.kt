@@ -177,6 +177,9 @@ sealed interface StepView {
     val buttons: List<Pair<Grade, String>>,
     override val minutes: Int,
   ) : StepView
+
+  /** Changes to play over on the Changes tab, which [route] and [concertKey] open; [key] is written for the horn. */
+  data class Changes(val title: String, val key: String, val route: String, val concertKey: Int, override val minutes: Int) : StepView
 }
 
 data class PracticeUi(
@@ -342,7 +345,7 @@ class PracticeViewModel(
 
       is PlanBlock.Tune -> usable.filter { it.appliesToTune && it.id != block.exerciseId }
 
-      is PlanBlock.Solo -> emptyList()
+      is PlanBlock.Solo, is PlanBlock.Changes -> emptyList()
     }.sortedBy { it.name.lowercase() }.map(::exerciseRow)
   }
 
@@ -362,7 +365,7 @@ class PracticeViewModel(
 
       is PlanBlock.Tune -> block.copy(exerciseId = exerciseId)
 
-      is PlanBlock.Solo, null -> return
+      is PlanBlock.Solo, is PlanBlock.Changes, null -> return
     }
     _ui.update { it.copy(setup = it.setup.copy(plan = plan.toMutableList().also { p -> p[index] = planItem(replaced) })) }
   }
@@ -382,8 +385,15 @@ class PracticeViewModel(
 
   private fun planItem(block: PlanBlock): PlanItem = when (block) {
     is PlanBlock.Exercise -> exercises[block.exerciseId].let { PlanItem(block, it?.name ?: "Exercise", it?.category ?: "", it?.let(::exerciseRow)) }
+
     is PlanBlock.Tune -> exercises[block.exerciseId].let { PlanItem(block, titles[block.tuneId] ?: "Tune", it?.name ?: "", it?.let(::exerciseRow)) }
+
     is PlanBlock.Solo -> solos[block.transcriptionId].let { PlanItem(block, "🎧 ${it?.title ?: "Solo"}", "Transcribe ${it?.soloist ?: ""}".trim()) }
+
+    is PlanBlock.Changes -> {
+      val written = Math.floorMod(block.concertKey + repository.transposition.value.offset, 12)
+      PlanItem(block, "🎹 ${block.title}", "Changes in ${Key.MAJOR_SPELLING[written]}")
+    }
   }
 
   fun start() {

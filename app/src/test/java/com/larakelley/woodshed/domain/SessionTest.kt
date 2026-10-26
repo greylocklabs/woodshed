@@ -114,4 +114,13 @@ class SessionTest {
     // A plan already at length is left alone.
     assertEquals(blocks, fill(blocks, 25, keepFirst = true))
   }
+
+  @Test
+  fun changesGoAfterTheExercisesAndBeforeASoloOrTunes() {
+    val changes = PlanBlock.Changes("form:blues", "Blues", 0, 6)
+    val blocks = listOf(PlanBlock.Exercise(1, 5), PlanBlock.Solo(9, 7), PlanBlock.Tune(3, 4, 7))
+    assertEquals(listOf(blocks[0], changes, blocks[1], blocks[2]), withChanges(blocks, changes))
+    assertEquals(listOf(blocks[0], changes), withChanges(blocks.take(1), changes))
+    assertEquals(listOf(0, 0, 6, 9, 10), listOf(10, 19, 30, 45, 120).map(::changesMinutes))
+  }
 }

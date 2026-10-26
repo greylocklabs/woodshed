@@ -7,6 +7,8 @@ import com.larakelley.woodshed.data.db.TranscriptionStateEntity
 import com.larakelley.woodshed.data.db.TranscriptionStatus
 import com.larakelley.woodshed.data.db.TuneKnowledgeEntity
 import com.larakelley.woodshed.data.db.TuneStateEntity
+import com.larakelley.woodshed.domain.ChangesLibrary
+import com.larakelley.woodshed.domain.ChangesSection
 import com.larakelley.woodshed.domain.Family
 import com.larakelley.woodshed.domain.Instrument
 import com.larakelley.woodshed.domain.Key
@@ -131,5 +133,16 @@ class DiceTest {
     assertEquals(setOf("Long tones", "Overtones"), names(Instrument.ALTO_SAX, DiceConstraints(kind = RollKind.EXERCISE, exerciseCategory = "Tone")))
     assertEquals(setOf("Overtones"), names(Instrument.ALTO_SAX, DiceConstraints(kind = RollKind.EXERCISE, exerciseCategory = "Tone", exerciseDifficulty = 4)))
     assertNull(rollExercise(pool, Instrument.TRUMPET, DiceConstraints(exerciseDifficulty = 5), Random(0)))
+  }
+
+  @Test
+  fun changesComeFromTheChosenPool() {
+    val mine = listOf(7L to "Bridge to F")
+    fun routes(pool: ChangesPool) = (1..200).mapNotNull { rollChanges(mine, pool, Random(it))?.route }.toSet()
+    assertTrue(routes(ChangesPool.BLUES).all { ChangesLibrary.form(it.removePrefix("form:"))?.section == ChangesSection.BLUES })
+    assertTrue(routes(ChangesPool.PATTERNS).all { it.startsWith("pattern:") })
+    assertEquals(setOf("mine:7"), routes(ChangesPool.MINE))
+    assertTrue(routes(ChangesPool.ANY).let { r -> "mine:7" in r && r.any { it.startsWith("form:") } && r.any { it.startsWith("pattern:") } })
+    assertNull(rollChanges(emptyList(), ChangesPool.MINE, Random(1)))
   }
 }

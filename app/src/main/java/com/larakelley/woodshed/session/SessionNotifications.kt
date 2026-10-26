@@ -77,6 +77,7 @@ object SessionNotifications {
     is StepView.Exercise -> step.name
     is StepView.Tune -> "${step.card.title}: ${step.card.exercise}"
     is StepView.Solo -> "Transcribe ${step.title}"
+    is StepView.Changes -> "${step.title} in ${step.key}"
   }
 
   private fun remaining(ms: Long): String {

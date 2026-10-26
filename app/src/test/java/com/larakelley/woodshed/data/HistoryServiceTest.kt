@@ -67,6 +67,14 @@ class HistoryServiceTest {
   }
 
   @Test
+  fun aChangesBlockIsNamedForItsChanges() = runTest {
+    log.start(listOf(PlanBlock.Changes("form:blues", "Blues", 0, 6)), null, at = 1_000)
+    val block = history.sessions().single().blocks.single()
+    assertEquals("🎹 Blues", block.title)
+    assertEquals("Changes", block.detail)
+  }
+
+  @Test
   fun daysAddUpSessionTimeAndReviews() = runTest {
     val longTones = db.exercises().all().first { it.name == "Long tones" }
     val s = log.start(listOf(PlanBlock.Exercise(longTones.id, 5)), null, at = 2 * day + 1_000)
