@@ -23,6 +23,7 @@ import com.larakelley.woodshed.data.db.TuneKnowledgeEntity
 import com.larakelley.woodshed.data.db.TuneStateEntity
 import com.larakelley.woodshed.domain.Comfort
 import com.larakelley.woodshed.domain.Family
+import com.larakelley.woodshed.domain.Instrument
 import com.larakelley.woodshed.domain.KeyMask
 import com.larakelley.woodshed.domain.Lifecycle
 import com.larakelley.woodshed.domain.Tonality
@@ -137,6 +138,8 @@ class BrowseScreenTest {
     compose.onNodeWithText("Db").assertExists()
 
     compose.onNodeWithTag("transposition-picker").performClick()
+    // With every instrument on, each key keeps its examples.
+    compose.onNodeWithText(Transposition.Bb.examples).assertExists()
     compose.onNodeWithText("Bb").performClick()
 
     compose.onNodeWithText("Eb").assertExists()
@@ -265,5 +268,17 @@ class BrowseScreenTest {
     compose.onNodeWithTag("now-playing-drone").performClick()
     compose.onNodeWithText("drone screen").assertExists()
     compose.onNodeWithTag("now-playing-drone").assertDoesNotExist()
+  }
+
+  @Test
+  fun keysNameTheInstrumentsIPlay() {
+    compose.setContent {
+      BrowseScreen(BrowseState(Transposition.C, myInstruments = listOf(Instrument.TENOR_SAX, Instrument.PIANO)), {})
+    }
+    compose.onNodeWithTag("transposition-picker").performClick()
+    compose.onNodeWithText("Concert: piano").assertExists()
+    compose.onNodeWithText("Tenor sax").assertExists()
+    // No instrument of mine reads in Eb, so it keeps its examples.
+    compose.onNodeWithText(Transposition.Eb.examples).assertExists()
   }
 }

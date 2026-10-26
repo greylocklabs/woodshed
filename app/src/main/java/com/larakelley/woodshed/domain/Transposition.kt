@@ -23,6 +23,18 @@ enum class Transposition(val offset: Int, val examples: String) {
   Eb(9, "Alto and bari sax"),
   F(7, "French horn"),
   G(5, "Alto flute"),
+  ;
+
+  /**
+   * What this key says in a picker: the instruments of [mine] that read in it, or [examples] when none do, or when
+   * [mine] is every instrument and would list them all.
+   */
+  fun caption(mine: Collection<Instrument>): String {
+    val reading = Instrument.entries.filter { it in mine && it.transposition == this }
+    if (reading.isEmpty() || mine.size >= Instrument.entries.size) return examples
+    val names = reading.joinToString(", ") { it.inSentence }
+    return if (this == C) "Concert: $names" else names.replaceFirstChar { it.uppercase() }
+  }
 }
 
 /** How the settings list groups instruments. */
@@ -40,7 +52,15 @@ enum class InstrumentGroup(val label: String) {
  * [family] is null where the exercises have no family of their own, so only exercises for everyone apply;
  * [breath] is false for instruments you don't blow or sing, which skip tone, breathing and tonguing work.
  */
-enum class Instrument(val label: String, val group: InstrumentGroup, val transposition: Transposition, val family: Family?, val breath: Boolean = true) {
+enum class Instrument(
+  val label: String,
+  val group: InstrumentGroup,
+  val transposition: Transposition,
+  val family: Family?,
+  val breath: Boolean = true,
+  /** The name partway through a sentence. */
+  val inSentence: String = label.lowercase(),
+) {
   FLUTE("Flute", InstrumentGroup.WOODWINDS, Transposition.C, Family.FLUTE),
   PICCOLO("Piccolo", InstrumentGroup.WOODWINDS, Transposition.C, Family.FLUTE),
   ALTO_FLUTE("Alto flute", InstrumentGroup.WOODWINDS, Transposition.G, Family.FLUTE),
@@ -54,7 +74,7 @@ enum class Instrument(val label: String, val group: InstrumentGroup, val transpo
   CORNET("Cornet", InstrumentGroup.BRASS, Transposition.Bb, Family.BRASS),
   FLUGELHORN("Flugelhorn", InstrumentGroup.BRASS, Transposition.Bb, Family.BRASS),
   TROMBONE("Trombone", InstrumentGroup.BRASS, Transposition.C, Family.BRASS),
-  FRENCH_HORN("French horn", InstrumentGroup.BRASS, Transposition.F, Family.BRASS),
+  FRENCH_HORN("French horn", InstrumentGroup.BRASS, Transposition.F, Family.BRASS, inSentence = "French horn"),
   EUPHONIUM("Euphonium", InstrumentGroup.BRASS, Transposition.C, Family.BRASS),
   TUBA("Tuba", InstrumentGroup.BRASS, Transposition.C, Family.BRASS),
   GUITAR("Guitar", InstrumentGroup.STRINGS, Transposition.C, null, breath = false),
