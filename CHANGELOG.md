@@ -4,6 +4,14 @@ Notable changes per release. Notes collect under `## Unreleased`, which
 `make release` renames to `## <version>`; that section is published as the
 release's GitHub notes, and a release refuses to go out without one.
 
+## Unreleased
+
+### Changed
+
+- **tunes:** the key picker names the instruments you play under each key,
+  such as "Tenor sax, trumpet" under Bb, rather than fixed examples. Keys
+  none of yours read in keep the examples.
+
 ## 0.6.0
 
 ### Added

@@ -191,7 +191,7 @@ fun BrowseScreen(
     modifier = modifier,
     topBar = {
       TopAppBar(title = { AppTitle() }, actions = {
-        TranspositionPicker(state.transposition, onSelectTransposition)
+        TranspositionPicker(state.transposition, state.myInstruments, onSelectTransposition)
         if (settings != null) {
           TextButton(onClick = {
             settingsOpen = true
@@ -510,7 +510,7 @@ private fun ExerciseFilters(state: BrowseState, onFilter: ((ExerciseFilter) -> E
 }
 
 @Composable
-private fun TranspositionPicker(selected: Transposition, onSelect: (Transposition) -> Unit) {
+private fun TranspositionPicker(selected: Transposition, mine: List<Instrument>, onSelect: (Transposition) -> Unit) {
   var open by rememberSaveable { mutableStateOf(false) }
   Box {
     TextButton(onClick = { open = true }, modifier = Modifier.testTag("transposition-picker")) {
@@ -522,7 +522,7 @@ private fun TranspositionPicker(selected: Transposition, onSelect: (Transpositio
           text = {
             Column {
               Text(transposition.name, style = MaterialTheme.typography.titleMedium)
-              Text(transposition.examples, style = MaterialTheme.typography.bodySmall)
+              Text(transposition.caption(mine), style = MaterialTheme.typography.bodySmall)
             }
           },
           onClick = {
