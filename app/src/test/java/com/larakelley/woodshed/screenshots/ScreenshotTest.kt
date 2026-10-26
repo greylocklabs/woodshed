@@ -234,7 +234,6 @@ class ScreenshotTest(private val mode: String) {
     ChangesPlayerScreen(
       "Jazz blues",
       "form:jazz-blues",
-      "Back to changes",
       ChangesState(playing = true, key = 3, bpm = 160, source = "form:jazz-blues", bars = blues, chorus = 1, bar = 5, beat = 2),
       MetronomeState(running = true, feel = Feel.BACKBEAT, beat = 2),
       DroneState(chord = ChordQuality.DOMINANT7),

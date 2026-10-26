@@ -103,9 +103,10 @@ fun StickerButton(
 val neutralSticker: Sticker
   @Composable get() = LocalCallie.current.let { Sticker(it.surfaceAlt, it.text, it.edge) }
 
-/** Callie's back control: a small neutral sticker with a chevron, set apart from the page's own actions. */
+/** Callie's back control: a small neutral sticker with a chevron, set apart from the page's own actions. Short, it
+ * says only "Back"; an editor's says "Cancel". */
 @Composable
-fun BackButton(label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+fun BackButton(onClick: () -> Unit, modifier: Modifier = Modifier, label: String = "Back") {
   StickerButton(onClick = onClick, modifier = modifier.height(40.dp), sticker = neutralSticker, contentPadding = PaddingValues(start = 10.dp, end = 14.dp)) {
     Text("‹", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(end = 6.dp))
     Text(label, style = MaterialTheme.typography.labelLarge)

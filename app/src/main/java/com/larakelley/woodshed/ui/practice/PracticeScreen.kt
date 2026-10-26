@@ -282,11 +282,11 @@ private fun PlanReview(plan: List<PlanItem>, actions: SetupActions) {
   }
   Column(Modifier.fillMaxSize()) {
     Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-      BackButton("Back", actions.discardPlan, Modifier.padding(end = 12.dp))
+      BackButton(actions.discardPlan, Modifier.padding(end = 12.dp))
       Text("${plan.sumOf { it.block.minutes }} min planned", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f).testTag("plan-total"))
     }
     if (plan.isEmpty()) {
-      EmptyState("🤷", "Nothing fits", "Go back and pick tunes, a focus or a longer session.", action = "Back to setup", onAction = actions.discardPlan)
+      EmptyState("🤷", "Nothing fits", "Go back and pick tunes, a focus or a longer session.", action = "Back", onAction = actions.discardPlan)
     }
     LazyColumn(Modifier.weight(1f).fillMaxWidth()) {
       itemsIndexed(plan) { i, item ->

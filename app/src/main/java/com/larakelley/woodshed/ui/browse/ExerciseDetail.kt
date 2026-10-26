@@ -29,7 +29,7 @@ import com.larakelley.woodshed.ui.report.ReportButton
 fun ExerciseDetail(exercise: ExerciseRow, onBack: () -> Unit, modifier: Modifier = Modifier, onEdit: () -> Unit = {}) {
   Column(modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-      BackButton("Back to exercises", onBack)
+      BackButton(onClick = onBack)
       Spacer(Modifier.weight(1f))
       StickerButton(onClick = onEdit, sticker = neutralSticker, modifier = Modifier.height(40.dp).testTag("edit-exercise")) {
         Text("✏️ Edit", style = MaterialTheme.typography.labelLarge)

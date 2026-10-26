@@ -75,6 +75,12 @@ fun voice(quality: ChordQuality, voicing: Voicing): List<Int> {
   }
 }
 
+/** The piano notes [quality] sounds in [voicing] above the MIDI note [rootMidi], such as C3 E3 G3 B3. */
+fun pianoNotes(rootMidi: Int, quality: ChordQuality, voicing: Voicing): List<String> = voice(quality, voicing).map { semitones ->
+  val midi = rootMidi + semitones
+  Key.MAJOR_SPELLING[midi % 12] + (midi / 12 - 1)
+}
+
 /** [quality]'s notes spelled from a root named [root] (such as "Bb"): each by its degree, so Bb7 is Bb D F Ab. */
 fun spell(root: String, quality: ChordQuality): List<String> {
   val letter = LETTERS.indexOf(root[0])

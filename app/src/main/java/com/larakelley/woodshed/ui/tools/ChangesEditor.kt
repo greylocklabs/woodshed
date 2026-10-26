@@ -92,7 +92,7 @@ internal fun ChangesEditor(
   fun name(c: ProgressionChord) = c.name(writtenKey)
 
   Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-    BackButton("Cancel", onCancel)
+    BackButton(onCancel, label = "Cancel")
     Text(if (existing == null) "New changes" else "Edit ${existing.name}", style = MaterialTheme.typography.headlineMedium)
     OutlinedTextField(
       value = name,

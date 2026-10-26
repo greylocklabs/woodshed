@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -29,9 +30,11 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -120,9 +123,11 @@ fun ChangesScreen(
   // "edit:<id>" or "edit:new" while writing changes. Back on the tab while changes play, their screen shows.
   var open by rememberSaveable { mutableStateOf(if (state.playing) routeOf(state.source) else null) }
   fun written(keyId: String) = Math.floorMod(state.keyFor(keyId) + transposition.offset, 12)
+  // The list's scroll outlives what is opened from it.
+  val list = rememberSaveableStateHolder()
   val current = open
   when {
-    current == null -> ChangesList(state, metronome.beatsPerBar, transposition, actions, mine, ::written) { open = it }
+    current == null -> list.SaveableStateProvider("list") { ChangesList(state, metronome.beatsPerBar, transposition, actions, mine, ::written) { open = it } }
 
     current.startsWith("mine:") -> {
       val changes = mine.firstOrNull { it.id == current.removePrefix("mine:").toLongOrNull() }
@@ -138,7 +143,6 @@ fun ChangesScreen(
       ChangesPlayerScreen(
         changes.name,
         keyId,
-        "Back to changes",
         state.copy(bars = bars),
         metronome,
         drone,
@@ -177,7 +181,7 @@ fun ChangesScreen(
       LaunchedEffect(form.id) { actions.load(ChangesSource(id, id, form.name) { form.bars }) }
       // Until the player has it, the form shows from the library.
       val bars = if (state.source == id) state.bars else form.bars
-      ChangesPlayerScreen(form.name, id, "Back to changes", state.copy(bars = bars), metronome, drone, transposition, actions) { open = null }
+      ChangesPlayerScreen(form.name, id, state.copy(bars = bars), metronome, drone, transposition, actions) { open = null }
     }
 
     else -> {
@@ -271,7 +275,6 @@ private fun ChangesRow(title: String, description: String, key: String, tag: Str
 internal fun ChangesPlayerScreen(
   title: String,
   keyId: String,
-  back: String,
   state: ChangesState,
   metronome: MetronomeState,
   drone: DroneState,
@@ -291,7 +294,7 @@ internal fun ChangesPlayerScreen(
   }, verticalArrangement = Arrangement.spacedBy(8.dp)) {
     Spacer(Modifier.height(8.dp))
     Row(verticalAlignment = Alignment.CenterVertically) {
-      BackButton(back, onBack, Modifier.weight(1f, fill = false))
+      BackButton(onClick = onBack, modifier = Modifier.weight(1f, fill = false))
       Spacer(Modifier.weight(1f))
       if (onEdit != null) {
         StickerButton(onClick = onEdit, sticker = neutralSticker, modifier = Modifier.height(40.dp).testTag("changes-edit")) {
@@ -320,7 +323,7 @@ internal fun ChangesPlayerScreen(
       metronome.copy(running = state.playing, beat = if (state.countInBeat >= 0) state.countInBeat else state.beat),
       Modifier.align(Alignment.CenterHorizontally).padding(vertical = 16.dp),
     )
-    BarGrid(bars, playingBar, written)
+    BarGrid(bars, playingBar, written, state.beat, metronome.beatsPerBar)
 
     SectionLabel("Tempo")
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
@@ -371,6 +374,8 @@ internal fun ChangesPlayerScreen(
     PillChoice(DroneRange.entries.map { it.label to it }, drone.range, actions.setRange, tagPrefix = "changes-range")
     SectionLabel("Voicing")
     PillChoice(Voicing.entries.map { it.label to it }, drone.voicing, actions.setVoicing, tagPrefix = "changes-voicing")
+    val shown = now ?: bars.firstOrNull()?.chords?.first()
+    if (shown != null && shown.quality.voiced) VoicingNotes(shown.quality, state.keyFor(keyId) + shown.root, drone.range)
   }
 }
 
@@ -389,9 +394,12 @@ private fun nextLine(state: ChangesState, bars: List<Bar>, beatsPerBar: Int, wri
   return ""
 }
 
-/** The bars four to a row, each with its chords; the bar being played is tinted as a selected chip is. */
+/**
+ * The bars four to a row, a bar of two chords split in halves; the chord being played is tinted as a
+ * selected chip is.
+ */
 @Composable
-private fun BarGrid(bars: List<Bar>, playing: Int, written: Int) {
+private fun BarGrid(bars: List<Bar>, playing: Int, written: Int, beat: Int = -1, beatsPerBar: Int = 4) {
   val callie = LocalCallie.current
   val shape = RoundedCornerShape(6.dp)
   Column(Modifier.testTag("changes-bars"), verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -399,19 +407,25 @@ private fun BarGrid(bars: List<Bar>, playing: Int, written: Int) {
       Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         four.forEachIndexed { i, bar ->
           val index = row * 4 + i
-          val now = index == playing
-          Box(
-            Modifier.weight(1f).height(36.dp).then(
-              if (now) Modifier.background(MaterialTheme.colorScheme.secondaryContainer, shape) else Modifier.border(1.dp, callie.hairline, shape),
-            ),
-            contentAlignment = Alignment.Center,
-          ) {
-            Text(
-              bar.chords.joinToString(" ") { it.name(written) },
-              style = MaterialTheme.typography.labelLarge,
-              color = if (playing >= 0 && index < playing) callie.textFaint else callie.text,
-              maxLines = 1,
-            )
+          val now = if (index == playing) bar.halfOn(beat.coerceAtLeast(0), beatsPerBar) else -1
+          Row(Modifier.weight(1f).height(36.dp).border(1.dp, callie.hairline, shape).clip(shape)) {
+            bar.chords.forEachIndexed { half, chord ->
+              if (half > 0) Box(Modifier.width(1.dp).fillMaxHeight().background(callie.hairline))
+              Box(
+                Modifier.weight(1f).fillMaxHeight().then(
+                  if (half == now) Modifier.background(MaterialTheme.colorScheme.secondaryContainer) else Modifier,
+                ),
+                contentAlignment = Alignment.Center,
+              ) {
+                Text(
+                  chord.name(written),
+                  style = if (bar.chords.size > 1) MaterialTheme.typography.labelSmall else MaterialTheme.typography.labelLarge,
+                  color = if (playing >= 0 && index < playing) callie.textFaint else callie.text,
+                  maxLines = 1,
+                  softWrap = false,
+                )
+              }
+            }
           }
         }
         repeat(4 - four.size) { Spacer(Modifier.weight(1f)) }
@@ -446,7 +460,7 @@ private fun PatternScreen(
   if (running) {
     // Reopened after the app was away, the pattern loads again, in a fresh order if it is random.
     if (state.source?.startsWith("pattern:${preset.id}:") != true) LaunchedEffect(preset.id) { actions.load(source(pattern)) }
-    ChangesPlayerScreen(preset.name, keyId, "Back to the pattern", state, metronome, drone, transposition, actions) { onOpen("pattern:${preset.id}") }
+    ChangesPlayerScreen(preset.name, keyId, state, metronome, drone, transposition, actions) { onOpen("pattern:${preset.id}") }
     return
   }
   val keys = move.keys()
@@ -461,7 +475,7 @@ private fun PatternScreen(
   }, verticalArrangement = Arrangement.spacedBy(8.dp)) {
     Spacer(Modifier.height(8.dp))
     Row(verticalAlignment = Alignment.CenterVertically) {
-      BackButton("Back to changes", onBack, Modifier.weight(1f, fill = false))
+      BackButton(onClick = onBack, modifier = Modifier.weight(1f, fill = false))
       Spacer(Modifier.weight(1f))
       // The pattern as it stands, one time through, becomes changes of one's own to edit further.
       StickerButton(onClick = {

@@ -90,7 +90,7 @@ fun PlaylistsScreen(playlists: List<Playlist>, actions: PlaylistActions, onOpen:
   var naming by rememberSaveable { mutableStateOf(false) }
   Column(modifier.fillMaxSize()) {
     Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-      BackButton("Back to tunes", onBack)
+      BackButton(onClick = onBack)
       Spacer(Modifier.weight(1f))
       StickerButton(onClick = {
         naming = true
@@ -144,7 +144,7 @@ fun PlaylistScreen(
   val callie = LocalCallie.current
   Column(modifier.fillMaxSize()) {
     Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-      BackButton("Playlists", onBack)
+      BackButton(onClick = onBack)
       Spacer(Modifier.weight(1f))
       StickerButton(onClick = { renaming = true }, sticker = neutralSticker, modifier = Modifier.height(40.dp).testTag("rename-playlist")) {
         Text("✏️ Rename", style = MaterialTheme.typography.labelLarge)

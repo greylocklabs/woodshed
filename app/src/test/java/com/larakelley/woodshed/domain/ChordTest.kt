@@ -40,4 +40,12 @@ class ChordTest {
       }
     }
   }
+
+  @Test
+  fun pianoNotesNameEachVoicingsOctaves() {
+    // C3 is MIDI 48.
+    assertEquals(listOf("C3", "E3", "G3", "Bb3"), pianoNotes(48, ChordQuality.DOMINANT7, Voicing.CLOSE))
+    assertEquals(listOf("C3", "E4", "G4", "Bb4"), pianoNotes(48, ChordQuality.DOMINANT7, Voicing.SPREAD))
+    assertEquals(listOf("C3", "E3", "Bb3"), pianoNotes(48, ChordQuality.DOMINANT7, Voicing.SHELL))
+  }
 }

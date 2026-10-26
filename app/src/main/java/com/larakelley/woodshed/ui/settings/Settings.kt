@@ -226,7 +226,7 @@ fun SettingsScreen(ui: SettingsUi, actions: SettingsActions, onBack: () -> Unit,
   var tab by rememberSaveable { mutableStateOf(SettingsTab.GENERAL) }
   Column(modifier.fillMaxSize()) {
     Column(Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp)) {
-      BackButton("Back", onBack, Modifier.testTag("close-settings"))
+      BackButton(onBack, Modifier.testTag("close-settings"))
       Text("Settings", style = MaterialTheme.typography.headlineMedium, modifier = Modifier.padding(top = 8.dp))
     }
     PillChoice(SettingsTab.entries.map { it.label to it }, tab, { tab = it }, Modifier.padding(horizontal = 12.dp, vertical = 12.dp), tagPrefix = "tab")

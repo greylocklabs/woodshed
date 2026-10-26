@@ -48,6 +48,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -204,6 +205,8 @@ fun BrowseScreen(
       }, modifier = Modifier.testTag("open-settings")) { Text("⚙️", style = MaterialTheme.typography.titleLarge) }
     }
   }
+  // Lists' state outlives the screens opened from them, so back finds a list scrolled where it was left.
+  val lists = rememberSaveableStateHolder()
   Scaffold(
     modifier = modifier,
     topBar = { if (!short) TopAppBar(title = { AppTitle() }, actions = { barActions() }) },
@@ -249,20 +252,24 @@ fun BrowseScreen(
     }
     val playlist = state.playlists.firstOrNull { it.id == openPlaylist }
     if (playlist != null) {
-      PlaylistScreen(
-        playlist,
-        state.allTunes.associateBy { it.id },
-        playlistActions,
-        onOpenTune = { openSlug = it },
-        onBack = { openPlaylist = null },
-        modifier = Modifier.padding(padding),
-      )
+      lists.SaveableStateProvider("playlist:${playlist.id}") {
+        PlaylistScreen(
+          playlist,
+          state.allTunes.associateBy { it.id },
+          playlistActions,
+          onOpenTune = { openSlug = it },
+          onBack = { openPlaylist = null },
+          modifier = Modifier.padding(padding),
+        )
+      }
       return@Scaffold
     }
     if (playlistsOpen) {
-      PlaylistsScreen(state.playlists, playlistActions, onOpen = {
-        openPlaylist = it
-      }, onBack = { playlistsOpen = false }, modifier = Modifier.padding(padding))
+      lists.SaveableStateProvider("playlists") {
+        PlaylistsScreen(state.playlists, playlistActions, onOpen = {
+          openPlaylist = it
+        }, onBack = { playlistsOpen = false }, modifier = Modifier.padding(padding))
+      }
       return@Scaffold
     }
     editingExercise?.let { target ->
@@ -318,54 +325,56 @@ fun BrowseScreen(
         if (short) barActions()
       }
       Column(Modifier.weight(1f).padding(bottom = if (playing.isEmpty()) padding.calculateBottomPadding() else 0.dp)) {
-        when (tabs[tab]) {
-          "Practice" -> practiceTab?.invoke()
+        lists.SaveableStateProvider("tab:${tabs[tab]}") {
+          when (tabs[tab]) {
+            "Practice" -> practiceTab?.invoke()
 
-          "History" -> historyTab?.invoke()
+            "History" -> historyTab?.invoke()
 
-          "Random" -> diceTab?.invoke()
+            "Random" -> diceTab?.invoke()
 
-          "Transcribe" -> transcribeTab?.invoke()
+            "Transcribe" -> transcribeTab?.invoke()
 
-          "Metronome" -> metronomeTab?.invoke()
+            "Metronome" -> metronomeTab?.invoke()
 
-          "Drone" -> droneTab?.invoke()
+            "Drone" -> droneTab?.invoke()
 
-          "Changes" -> changesTab?.invoke()
+            "Changes" -> changesTab?.invoke()
 
-          "Tuner" -> tunerTab?.invoke()
+            "Tuner" -> tunerTab?.invoke()
 
-          "Help" -> helpTab?.invoke()
+            "Help" -> helpTab?.invoke()
 
-          "Tunes" -> {
-            TuneFilters(state, onTuneFilter, onAdd = { editing = NEW_TUNE }, onPlaylists = { playlistsOpen = true })
-            if (state.tunes.isEmpty()) {
-              EmptyState(
-                "🔍",
-                "No tunes match",
-                "Nothing fits this search and these filters. Clear them, or add the tune yourself.",
-                action = "Clear search and filters",
-                onAction = { onTuneFilter { TuneFilter(sort = it.sort) } },
-                scrolls = true,
-              )
-            } else {
-              TuneList(state.tunes, alphabetical = state.tuneFilter.sort == TuneSort.TITLE && state.tuneFilter.playlistId == null, onOpen = { openSlug = it })
+            "Tunes" -> {
+              TuneFilters(state, onTuneFilter, onAdd = { editing = NEW_TUNE }, onPlaylists = { playlistsOpen = true })
+              if (state.tunes.isEmpty()) {
+                EmptyState(
+                  "🔍",
+                  "No tunes match",
+                  "Nothing fits this search and these filters. Clear them, or add the tune yourself.",
+                  action = "Clear search and filters",
+                  onAction = { onTuneFilter { TuneFilter(sort = it.sort) } },
+                  scrolls = true,
+                )
+              } else {
+                TuneList(state.tunes, alphabetical = state.tuneFilter.sort == TuneSort.TITLE && state.tuneFilter.playlistId == null, onOpen = { openSlug = it })
+              }
             }
-          }
 
-          else -> {
-            ExerciseFilters(state, onExerciseFilter, onAdd = { editingExercise = NEW_EXERCISE })
-            if (state.exercises.isEmpty()) {
-              EmptyState(
-                "💪",
-                "No exercises match",
-                "Nothing fits this search and these filters.",
-                action = "Clear search and filters",
-                onAction = { onExerciseFilter { ExerciseFilter(instrument = it.instrument, sort = it.sort) } },
-                scrolls = true,
-              )
-            } else {
-              ExerciseList(state.exercises, onOpen = { openExercise = it })
+            else -> {
+              ExerciseFilters(state, onExerciseFilter, onAdd = { editingExercise = NEW_EXERCISE })
+              if (state.exercises.isEmpty()) {
+                EmptyState(
+                  "💪",
+                  "No exercises match",
+                  "Nothing fits this search and these filters.",
+                  action = "Clear search and filters",
+                  onAction = { onExerciseFilter { ExerciseFilter(instrument = it.instrument, sort = it.sort) } },
+                  scrolls = true,
+                )
+              } else {
+                ExerciseList(state.exercises, onOpen = { openExercise = it })
+              }
             }
           }
         }
@@ -606,7 +615,7 @@ private fun TuneDetail(
   var confirmRemove by rememberSaveable { mutableStateOf(false) }
   Column(modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-      BackButton("Back to tunes", onBack, Modifier.weight(1f, fill = false))
+      BackButton(onClick = onBack, modifier = Modifier.weight(1f, fill = false))
       Spacer(Modifier.weight(1f))
       StickerButton(onClick = onEdit, sticker = neutralSticker, modifier = Modifier.height(40.dp).testTag("edit-tune")) {
         Text("✏️ Edit", style = MaterialTheme.typography.labelLarge)
