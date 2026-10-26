@@ -19,6 +19,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicText
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -38,6 +40,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.larakelley.woodshed.audio.ChangesSource
 import com.larakelley.woodshed.audio.ChangesState
 import com.larakelley.woodshed.audio.DroneState
@@ -417,12 +420,12 @@ private fun BarGrid(bars: List<Bar>, playing: Int, written: Int, beat: Int = -1,
                 ),
                 contentAlignment = Alignment.Center,
               ) {
-                Text(
+                // Shrinks to fit, as half a bar on a narrow phone is narrower than a chord's name.
+                BasicText(
                   chord.name(written),
-                  style = if (bar.chords.size > 1) MaterialTheme.typography.labelSmall else MaterialTheme.typography.labelLarge,
-                  color = if (playing >= 0 && index < playing) callie.textFaint else callie.text,
+                  style = MaterialTheme.typography.labelLarge.copy(color = if (playing >= 0 && index < playing) callie.textFaint else callie.text),
                   maxLines = 1,
-                  softWrap = false,
+                  autoSize = TextAutoSize.StepBased(minFontSize = 8.sp, maxFontSize = MaterialTheme.typography.labelLarge.fontSize),
                 )
               }
             }
