@@ -88,7 +88,7 @@ class ChangesScreenTest {
     }
     compose.onNodeWithTag("changes-circle").performScrollTo().performClick()
     compose.onNodeWithText("Bb7").assertExists()
-    compose.onNodeWithTag("pattern-start").performScrollTo().performClick()
+    compose.onNodeWithTag("pattern-start").performClick()
     assertTrue(calls.toString(), calls.size == 2 && calls[0].startsWith("pattern:circle:") && calls[1] == "start")
   }
 

@@ -14,6 +14,11 @@ release's GitHub notes, and a release refuses to go out without one.
 
 ### Changed
 
+- **tools:** Start and Stop on the drone, metronome, tuner and Changes stay
+  at the bottom of the screen, in reach however far you scroll.
+- **app:** runs on a flip phone's outer screen: on a short screen the title
+  bar gives its room to the tab, with the key and ⚙️ at the end of the tabs.
+  The bar for what's playing runs on behind the gesture bar.
 - **tunes:** the key picker names the instruments you play under each key,
   such as "Tenor sax, trumpet" under Bb, rather than fixed examples. Keys
   none of yours read in keep the examples.

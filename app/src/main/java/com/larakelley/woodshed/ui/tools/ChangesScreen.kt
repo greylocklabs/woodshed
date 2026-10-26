@@ -63,6 +63,7 @@ import com.larakelley.woodshed.theme.CallieChip
 import com.larakelley.woodshed.theme.Helper
 import com.larakelley.woodshed.theme.LocalCallie
 import com.larakelley.woodshed.theme.PillChoice
+import com.larakelley.woodshed.theme.PinnedAction
 import com.larakelley.woodshed.theme.SectionLabel
 import com.larakelley.woodshed.theme.StickerButton
 import com.larakelley.woodshed.theme.SwitchRow
@@ -283,7 +284,12 @@ internal fun ChangesPlayerScreen(
   val written = Math.floorMod(state.keyFor(keyId) + transposition.offset, 12)
   val bars = state.bars
   val playingBar = if (state.playing) state.bar else -1
-  Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+  PinnedAction(action = {
+    StickerButton(onClick = actions.toggle, modifier = Modifier.fillMaxWidth().height(60.dp).testTag("changes-toggle")) {
+      Text(if (state.playing) "◼ Stop" else "▶ Start", style = MaterialTheme.typography.titleLarge)
+    }
+  }, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Spacer(Modifier.height(8.dp))
     Row(verticalAlignment = Alignment.CenterVertically) {
       BackButton(back, onBack, Modifier.weight(1f, fill = false))
       Spacer(Modifier.weight(1f))
@@ -315,9 +321,6 @@ internal fun ChangesPlayerScreen(
       Modifier.align(Alignment.CenterHorizontally).padding(vertical = 16.dp),
     )
     BarGrid(bars, playingBar, written)
-    StickerButton(onClick = actions.toggle, modifier = Modifier.fillMaxWidth().padding(top = 8.dp).height(60.dp).testTag("changes-toggle")) {
-      Text(if (state.playing) "◼ Stop" else "▶ Start", style = MaterialTheme.typography.titleLarge)
-    }
 
     SectionLabel("Tempo")
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
@@ -447,7 +450,16 @@ private fun PatternScreen(
     return
   }
   val keys = move.keys()
-  Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+  PinnedAction(action = {
+    StickerButton(onClick = {
+      actions.load(source(pattern))
+      actions.toggle()
+      onOpen("run:${preset.id}")
+    }, modifier = Modifier.fillMaxWidth().height(60.dp).testTag("pattern-start")) {
+      Text("▶ Start", style = MaterialTheme.typography.titleLarge)
+    }
+  }, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Spacer(Modifier.height(8.dp))
     Row(verticalAlignment = Alignment.CenterVertically) {
       BackButton("Back to changes", onBack, Modifier.weight(1f, fill = false))
       Spacer(Modifier.weight(1f))
@@ -496,13 +508,6 @@ private fun PatternScreen(
     SwitchRow("Keep going", state.keepGoing, actions.setKeepGoing, helper = "Start around again after all the keys")
     SectionLabel("The keys, in order")
     BarGrid(keys.map { Bar(listOf(ProgressionChord(it, if (unit == PatternUnit.ONE_CHORD) chord else ChordQuality.MAJOR))) }, -1, written)
-    StickerButton(onClick = {
-      actions.load(source(pattern))
-      actions.toggle()
-      onOpen("run:${preset.id}")
-    }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp).height(60.dp).testTag("pattern-start")) {
-      Text("▶ Start", style = MaterialTheme.typography.titleLarge)
-    }
     Helper("Tempo, click and range are set while it plays.", Modifier.align(Alignment.CenterHorizontally))
   }
 }
