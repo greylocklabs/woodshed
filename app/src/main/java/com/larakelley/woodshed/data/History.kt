@@ -66,6 +66,7 @@ class HistoryService(private val db: WoodshedDatabase) {
           val (title, detail) = when (b.kind) {
             SessionBlockEntity.KIND_EXERCISE -> exercises[b.itemId].let { (it?.name ?: "Exercise") to (it?.category ?: "") }
             SessionBlockEntity.KIND_TUNE -> (tunes[b.itemId] ?: "Tune") to (b.exerciseId?.let { exercises[it]?.name } ?: "")
+            SessionBlockEntity.KIND_CHANGES -> "🎹 ${b.itemName ?: "Changes"}" to "Changes"
             else -> solos[b.itemId].let { (it?.title ?: "Solo") to "Transcribe ${it?.soloist ?: ""}".trim() }
           }
           PastBlock(title, detail, b.plannedMinutes, b.outcome, b.grade, b.elapsedMs)

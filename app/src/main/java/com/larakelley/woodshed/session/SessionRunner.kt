@@ -9,6 +9,7 @@ import com.larakelley.woodshed.data.TranscriptionService
 import com.larakelley.woodshed.data.WoodshedRepository
 import com.larakelley.woodshed.data.db.BlockOutcome
 import com.larakelley.woodshed.domain.Grade
+import com.larakelley.woodshed.domain.Key
 import com.larakelley.woodshed.domain.MediaLink
 import com.larakelley.woodshed.domain.PlanBlock
 import com.larakelley.woodshed.domain.delayLabel
@@ -123,10 +124,10 @@ class SessionRunner(
     show(0)
   }
 
-  /** Finishes an exercise block, or moves past a tune or solo block without grading it. */
+  /** Finishes an exercise or changes block, or moves past a tune or solo block without grading it. */
   fun next() = serially {
     if (!_state.value.running || _state.value.step == null) return@serially
-    record(if (_state.value.step is StepView.Exercise) BlockOutcome.DONE else BlockOutcome.SKIPPED, null)
+    record(if (_state.value.step is StepView.Exercise || _state.value.step is StepView.Changes) BlockOutcome.DONE else BlockOutcome.SKIPPED, null)
     card = null
     solo = null
     show(_state.value.stepIndex + 1)
@@ -251,6 +252,11 @@ class SessionRunner(
         Grade.entries.map { g -> g to delayLabel(now(), preview[g] ?: now()) },
         block.minutes,
       )
+    }
+
+    is PlanBlock.Changes -> {
+      val written = Math.floorMod(block.concertKey + repository.transposition.value.offset, 12)
+      StepView.Changes(block.title, Key.MAJOR_SPELLING[written], block.route, block.concertKey, block.minutes)
     }
   }
 

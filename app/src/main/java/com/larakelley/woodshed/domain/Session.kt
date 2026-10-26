@@ -42,6 +42,11 @@ sealed interface PlanBlock {
   @Serializable
   @SerialName("solo")
   data class Solo(val transcriptionId: Long, override val minutes: Int) : PlanBlock
+
+  /** Changes to play over in [concertKey], opened on the Changes tab by [route], such as "form:blues". */
+  @Serializable
+  @SerialName("changes")
+  data class Changes(val route: String, val title: String, val concertKey: Int, override val minutes: Int) : PlanBlock
 }
 
 const val MIN_BLOCK_MINUTES = 3
@@ -59,6 +64,15 @@ fun soloMinutes(total: Int): Int = if (total < 15) 0 else (total / 4).coerceIn(5
 fun withSolo(blocks: List<PlanBlock>, solo: PlanBlock.Solo): List<PlanBlock> {
   val at = blocks.indexOfFirst { it is PlanBlock.Tune }.let { if (it < 0) blocks.size else it }
   return blocks.take(at) + solo + blocks.drop(at)
+}
+
+/** A fifth of a Harmony session for changes, from 5 to 10 minutes; none in sessions under 20. */
+fun changesMinutes(total: Int): Int = if (total < 20) 0 else (total / 5).coerceIn(5, 10)
+
+/** Puts the changes block after the exercises, before any solo or tunes. */
+fun withChanges(blocks: List<PlanBlock>, changes: PlanBlock.Changes): List<PlanBlock> {
+  val at = blocks.indexOfFirst { it is PlanBlock.Tune || it is PlanBlock.Solo }.let { if (it < 0) blocks.size else it }
+  return blocks.take(at) + changes + blocks.drop(at)
 }
 
 /** Five minutes of warm-up per half hour, at least three. */
@@ -142,6 +156,7 @@ fun fill(blocks: List<PlanBlock>, totalMinutes: Int, keepFirst: Boolean): List<P
       is PlanBlock.Exercise -> b.copy(minutes = b.minutes + 1)
       is PlanBlock.Tune -> b.copy(minutes = b.minutes + 1)
       is PlanBlock.Solo -> b.copy(minutes = b.minutes + 1)
+      is PlanBlock.Changes -> b.copy(minutes = b.minutes + 1)
     }
     left--
     i++

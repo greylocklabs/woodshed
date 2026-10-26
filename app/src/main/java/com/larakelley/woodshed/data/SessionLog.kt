@@ -18,6 +18,7 @@ class SessionLog(private val db: WoodshedDatabase) {
           is PlanBlock.Exercise -> SessionBlockEntity(id, i, SessionBlockEntity.KIND_EXERCISE, b.exerciseId, plannedMinutes = b.minutes)
           is PlanBlock.Tune -> SessionBlockEntity(id, i, SessionBlockEntity.KIND_TUNE, b.tuneId, b.exerciseId, b.minutes)
           is PlanBlock.Solo -> SessionBlockEntity(id, i, SessionBlockEntity.KIND_SOLO, b.transcriptionId, plannedMinutes = b.minutes)
+          is PlanBlock.Changes -> SessionBlockEntity(id, i, SessionBlockEntity.KIND_CHANGES, 0, plannedMinutes = b.minutes, itemName = b.title)
         }
       },
     )

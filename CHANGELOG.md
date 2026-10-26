@@ -11,6 +11,11 @@ release's GitHub notes, and a release refuses to go out without one.
 - **settings:** start fresh from ⚙️ Settings › Backup: clear your practice
   history, tune progress, solo progress, your own material or your settings,
   or everything, and keep the rest. It asks first, and offers to save a backup.
+- **practice:** a Harmony session plays changes too: a blues, form, cadence,
+  pattern or changes of your own, in a random key, after the exercises.
+  Play them on the 🎹 Changes tab, then tap Done.
+- **random:** roll 🎹 Changes, from any or one section of the Changes tab or
+  your own, in their usual key or any. Play them opens them on the Changes tab.
 
 ### Changed
 

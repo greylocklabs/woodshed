@@ -167,7 +167,7 @@ fun BrowseScreen(
     tabOrder,
   )
   val tab = tabs.indexOf(tabName).coerceAtLeast(0)
-  // Another tab asked to show a tune or a solo: close whatever is open here and switch to it.
+  // Another tab asked to show a tune, a solo or changes: close whatever is open here and switch to it.
   LaunchedEffect(navigation.pending) {
     val to = navigation.pending ?: return@LaunchedEffect
     settingsOpen = false
@@ -186,6 +186,8 @@ fun BrowseScreen(
 
       // The Transcribe tab takes the request once it is showing.
       is Destination.Solo -> if ("Transcribe" in tabs) tabName = "Transcribe" else navigation.take()
+
+      is Destination.Changes -> if ("Changes" in tabs) tabName = "Changes" else navigation.take()
 
       is Destination.Tab -> {
         navigation.take()

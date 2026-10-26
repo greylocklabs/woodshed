@@ -74,6 +74,8 @@ import com.larakelley.woodshed.theme.SectionLabel
 import com.larakelley.woodshed.theme.StickerButton
 import com.larakelley.woodshed.theme.SwitchRow
 import com.larakelley.woodshed.theme.neutralSticker
+import com.larakelley.woodshed.ui.AppNavigation
+import com.larakelley.woodshed.ui.Destination
 import com.larakelley.woodshed.ui.browse.DropdownChip
 import kotlin.random.Random
 
@@ -121,11 +123,18 @@ fun ChangesScreen(
   transposition: Transposition,
   actions: ChangesActions,
   mine: List<MyChanges> = emptyList(),
+  navigation: AppNavigation? = null,
 ) {
   // "form:<id>", "pattern:<id>" or "mine:<id>" while one is open, "run:<id>" while a pattern plays, and
   // "edit:<id>" or "edit:new" while writing changes. Back on the tab while changes play, their screen shows.
   var open by rememberSaveable { mutableStateOf(if (state.playing) routeOf(state.source) else null) }
   fun written(keyId: String) = Math.floorMod(state.keyFor(keyId) + transposition.offset, 12)
+  LaunchedEffect(navigation?.pending) {
+    val to = navigation?.pending as? Destination.Changes ?: return@LaunchedEffect
+    navigation.take()
+    to.concertKey?.let { actions.setKey(to.route, it) }
+    open = to.route
+  }
   // The list's scroll outlives what is opened from it.
   val list = rememberSaveableStateHolder()
   val current = open

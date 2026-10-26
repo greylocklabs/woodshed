@@ -169,6 +169,7 @@ class MainActivity : ComponentActivity() {
                     },
                     onStopDrone = app.drone::stop,
                     onPrevious = practice::previous,
+                    onOpenChanges = { route, key -> navigation.go(Destination.Changes(route, key)) },
                     onFinish = {
                       practice.stop()
                       maybeAskForReview()
@@ -269,6 +270,7 @@ class MainActivity : ComponentActivity() {
                     delete = { id -> lifecycleScope.launch { app.myChanges.delete(id) } },
                   ),
                   myChanges,
+                  navigation,
                 )
               },
               historyTab = {
@@ -305,7 +307,15 @@ class MainActivity : ComponentActivity() {
                 )
               },
               diceTab = {
-                DiceScreen(diceUi, dice::constrain, dice::roll, dice::grade, dice::toggleKeyKnown, onOpenSolo = { navigation.go(Destination.Solo(it)) })
+                DiceScreen(
+                  diceUi,
+                  dice::constrain,
+                  dice::roll,
+                  dice::grade,
+                  dice::toggleKeyKnown,
+                  onOpenSolo = { navigation.go(Destination.Solo(it)) },
+                  onOpenChanges = { route, key -> navigation.go(Destination.Changes(route, key)) },
+                )
               },
             )
           }

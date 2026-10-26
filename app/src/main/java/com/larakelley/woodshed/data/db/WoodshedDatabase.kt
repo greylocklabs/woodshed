@@ -330,8 +330,8 @@ class Converters {
     TranscriptionEntity::class, TranscriptionStateEntity::class, SessionEntity::class, SessionBlockEntity::class,
     MyChangesEntity::class,
   ],
-  version = 15,
-  autoMigrations = [AutoMigration(from = 14, to = 15)],
+  version = 16,
+  autoMigrations = [AutoMigration(from = 14, to = 15), AutoMigration(from = 15, to = 16)],
 )
 @TypeConverters(Converters::class)
 abstract class WoodshedDatabase : RoomDatabase() {

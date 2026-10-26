@@ -231,7 +231,7 @@ enum class BlockOutcome { DONE, SKIPPED, GRADED }
 data class SessionBlockEntity(
   val sessionId: Long,
   val position: Int,
-  /** [KIND_EXERCISE], [KIND_TUNE] or [KIND_SOLO]; [itemId] is the exercise, tune or solo it names. */
+  /** [KIND_EXERCISE], [KIND_TUNE], [KIND_SOLO] or [KIND_CHANGES]; [itemId] is the exercise, tune or solo it names. */
   val kind: String,
   val itemId: Long,
   /** The exercise a tune block was worked through, or null. */
@@ -243,11 +243,14 @@ data class SessionBlockEntity(
   /** Time spent on the block, pauses left out. */
   val elapsedMs: Long = 0,
   val finishedAt: Long? = null,
+  /** A changes block's changes, by name, as the built-in ones have no row for [itemId] to name. */
+  val itemName: String? = null,
 ) {
   companion object {
     const val KIND_EXERCISE = "exercise"
     const val KIND_TUNE = "tune"
     const val KIND_SOLO = "solo"
+    const val KIND_CHANGES = "changes"
   }
 }
 

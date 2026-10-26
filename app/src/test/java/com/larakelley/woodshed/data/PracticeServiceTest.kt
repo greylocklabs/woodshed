@@ -73,6 +73,20 @@ class PracticeServiceTest {
   }
 
   @Test
+  fun harmonySessionsPlayChangesBeforeTheTunes() = runTest {
+    val tunes = listOf(id("solar"))
+    val plan = practice.plan(45, setOf(Focus.HARMONY), tunes, Instrument.ALTO_SAX, null)
+    val changes = plan.filterIsInstance<PlanBlock.Changes>().single()
+    assertEquals(9, changes.minutes)
+    assertTrue(changes.concertKey in 0..11)
+    assertTrue(plan.indexOf(changes) < plan.indexOfFirst { it is PlanBlock.Tune })
+    assertEquals(45, plan.sumOf { it.minutes })
+    assertTrue(practice.plan(45, setOf(Focus.TONE), tunes, Instrument.ALTO_SAX, null).none { it is PlanBlock.Changes })
+    // Too short a session leaves them out.
+    assertTrue(practice.plan(15, setOf(Focus.HARMONY), tunes, Instrument.ALTO_SAX, null).none { it is PlanBlock.Changes })
+  }
+
+  @Test
   fun planGivesEachDroneExerciseANoteAndOthersNone() = runTest {
     val exercises = db.exercises().all().associateBy { it.id }
     val blocks = (1..10).flatMap { practice.plan(60, setOf(Focus.TONE), emptyList(), Instrument.ALTO_SAX, null) }.filterIsInstance<PlanBlock.Exercise>()
@@ -106,7 +120,7 @@ class PracticeServiceTest {
       val plan = service.plan(120, Focus.entries.toSet(), emptyList(), Instrument.FLUTE)
       val families = plan.filterIsInstance<PlanBlock.Exercise>().map { byId.getValue(it.exerciseId).families }
       assertTrue(families.all { it.isEmpty() || Family.FLUTE in it })
-      assertTrue(plan.none { byId.getValue((it as PlanBlock.Exercise).exerciseId).name == "Mouthpiece pitch bends" })
+      assertTrue(plan.filterIsInstance<PlanBlock.Exercise>().none { byId.getValue(it.exerciseId).name == "Mouthpiece pitch bends" })
     }
   }
 

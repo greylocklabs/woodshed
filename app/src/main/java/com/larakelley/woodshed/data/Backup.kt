@@ -254,9 +254,9 @@ data class BackupSession(
 @Serializable
 data class BackupSessionBlock(
   val position: Int,
-  /** [SessionBlockEntity.KIND_EXERCISE], [SessionBlockEntity.KIND_TUNE] or [SessionBlockEntity.KIND_SOLO]. */
+  /** [SessionBlockEntity.KIND_EXERCISE], [SessionBlockEntity.KIND_TUNE], [SessionBlockEntity.KIND_SOLO] or [SessionBlockEntity.KIND_CHANGES]. */
   val kind: String,
-  /** The exercise's name, or the tune's or solo's slug. */
+  /** The exercise's or changes' name, or the tune's or solo's slug. */
   val item: String,
   /** A tune block's exercise, by name. */
   val exercise: String? = null,
@@ -379,6 +379,7 @@ class BackupService(private val db: WoodshedDatabase, private val repository: Wo
           val item = when (b.kind) {
             SessionBlockEntity.KIND_EXERCISE -> exercises[b.itemId]
             SessionBlockEntity.KIND_TUNE -> slugs[b.itemId]
+            SessionBlockEntity.KIND_CHANGES -> b.itemName
             else -> solos[b.itemId]
           } ?: return@mapNotNull null
           BackupSessionBlock(b.position, b.kind, item, b.exerciseId?.let { exercises[it] }, b.plannedMinutes, b.outcome, b.grade, b.elapsedMs, b.finishedAt)
@@ -400,9 +401,17 @@ class BackupService(private val db: WoodshedDatabase, private val repository: Wo
             SessionBlockEntity.KIND_EXERCISE -> exercises[b.item]
             SessionBlockEntity.KIND_TUNE -> tunes[b.item]
             SessionBlockEntity.KIND_SOLO -> solos[b.item]
+            SessionBlockEntity.KIND_CHANGES -> 0
             else -> null
           } ?: return@mapNotNull null
-          SessionBlockEntity(id, b.position, b.kind, item, b.exercise?.let { exercises[it] }, b.plannedMinutes, b.outcome, b.grade, b.elapsedMs, b.finishedAt)
+          val name = b.item.takeIf { b.kind == SessionBlockEntity.KIND_CHANGES }
+          SessionBlockEntity(
+            id, b.position, b.kind, item,
+            b.exercise?.let {
+              exercises[it]
+            },
+            b.plannedMinutes, b.outcome, b.grade, b.elapsedMs, b.finishedAt, name,
+          )
         },
       )
     }

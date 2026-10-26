@@ -60,6 +60,28 @@ class PracticeScreenTest {
   }
 
   @Test
+  fun changesStepOpensThemAndIsDoneWithoutAGrade() {
+    val opened = mutableListOf<Pair<String, Int>>()
+    var next = 0
+    compose.mainClock.autoAdvance = false
+    compose.setContent {
+      SessionScreen(
+        PracticeUi(running = true, step = StepView.Changes("Blues", "G", "form:blues", 5, 6), stepCount = 3),
+        onGrade = {},
+        onNext = { next++ },
+        onStop = {},
+        onOpenChanges = { route, key -> opened += route to key },
+      )
+    }
+    compose.mainClock.advanceTimeByFrame()
+    compose.onNodeWithText("Key: G").assertExists()
+    compose.onNodeWithTag("open-changes").performClick()
+    assertEquals(listOf("form:blues" to 5), opened)
+    compose.onNodeWithTag("step-done").performClick()
+    assertEquals(1, next)
+  }
+
+  @Test
   fun tuneStepShowsTheCardAndReportsTheGrade() {
     val graded = mutableListOf<Grade>()
     session(PracticeUi(running = true, step = tuneStep, stepCount = 3), onGrade = { graded += it })

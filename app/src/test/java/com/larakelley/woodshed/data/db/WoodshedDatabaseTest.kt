@@ -29,7 +29,7 @@ class WoodshedDatabaseTest {
     val db = WoodshedDatabase.create(context)
     try {
       assertTrue(db.standards().all().isEmpty())
-      assertEquals(15, db.openHelper.readableDatabase.version)
+      assertEquals(16, db.openHelper.readableDatabase.version)
     } finally {
       db.close()
     }

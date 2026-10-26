@@ -8,6 +8,8 @@ import com.larakelley.woodshed.data.db.TranscriptionStatus
 import com.larakelley.woodshed.data.db.TuneKnowledgeEntity
 import com.larakelley.woodshed.data.db.TuneStateEntity
 import com.larakelley.woodshed.data.db.homeKey
+import com.larakelley.woodshed.domain.ChangesLibrary
+import com.larakelley.woodshed.domain.ChangesSection
 import com.larakelley.woodshed.domain.Instrument
 import com.larakelley.woodshed.domain.Key
 import com.larakelley.woodshed.domain.KeyMask
@@ -23,11 +25,39 @@ enum class TunePool(val label: String) {
   ANY("Any tune"),
 }
 
-/** What the dice roll: a tune to play over, an exercise, or a solo to transcribe. */
+/** What the dice roll: a tune to play over, an exercise, a solo to transcribe, or changes to play over. */
 enum class RollKind(val label: String) {
   TUNE("🎵 Tune"),
   EXERCISE("💪 Exercise"),
   SOLO("🎧 Solo"),
+  CHANGES("🎹 Changes"),
+}
+
+/** Which changes the dice draw from: a section of the Changes tab, the user's own, or any. */
+enum class ChangesPool(val label: String, val section: ChangesSection? = null) {
+  ANY("Any changes"),
+  BLUES("Blues", ChangesSection.BLUES),
+  FORMS("Forms", ChangesSection.FORMS),
+  CADENCES("Cadences and turnarounds", ChangesSection.CADENCES),
+  PATTERNS("Patterns", ChangesSection.PATTERNS),
+  MINE("My changes"),
+}
+
+/** Changes to play: [route] opens them on the Changes tab, as "form:blues" does. */
+data class ChangesPick(val route: String, val title: String, val description: String)
+
+/** Draws changes from [pool], the built-in ones or [mine] (by id and name), or null when none qualifies. */
+fun rollChanges(mine: List<Pair<Long, String>>, pool: ChangesPool, random: Random): ChangesPick? {
+  val forms = ChangesLibrary.forms.filter {
+    pool == ChangesPool.ANY || it.section == pool.section
+  }.map { ChangesPick("form:${it.id}", it.name, it.description) }
+  val patterns = ChangesLibrary.patterns.takeIf { pool == ChangesPool.ANY || pool == ChangesPool.PATTERNS }.orEmpty().map {
+    ChangesPick("pattern:${it.id}", it.name, it.description)
+  }
+  val own = mine.takeIf {
+    pool == ChangesPool.ANY || pool == ChangesPool.MINE
+  }.orEmpty().map { (id, name) -> ChangesPick("mine:$id", name, "Changes of your own") }
+  return (forms + patterns + own).randomOrNull(random)
 }
 
 /** Which solos the dice draw from. */
@@ -60,6 +90,8 @@ data class DiceConstraints(
   val exerciseCategory: String? = null,
   /** For an exercise roll: a difficulty from 1 to 5, or null for any. */
   val exerciseDifficulty: Int? = null,
+  /** For a changes roll: where the changes come from. */
+  val changesPool: ChangesPool = ChangesPool.ANY,
 )
 
 data class Roll(
