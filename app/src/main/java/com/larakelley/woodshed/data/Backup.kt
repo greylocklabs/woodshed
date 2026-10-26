@@ -607,6 +607,52 @@ class BackupService(private val db: WoodshedDatabase, private val repository: Wo
     repository.applyBackupSettings(backup.settings)
     return result
   }
+
+  /**
+   * Clears [parts], as restoring this phone's own backup without them would, so what stays is left as it was and
+   * nothing is left pointing at what went. The bundled tunes, exercises and solos always stay.
+   */
+  suspend fun reset(parts: Set<ResetPart>) {
+    val now = json.decodeFromString(Backup.serializer(), export())
+    var kept = now
+    if (ResetPart.HISTORY in parts) kept = kept.copy(sessions = emptyList())
+    if (ResetPart.TUNE_PROGRESS in parts) {
+      kept = kept.copy(tunes = emptyList(), knowledge = emptyList(), reviews = kept.reviews.filterNot { it.kind == BackupReview.KIND_TUNE })
+    }
+    if (ResetPart.SOLO_PROGRESS in parts) {
+      kept = kept.copy(soloProgress = emptyList(), reviews = kept.reviews.filterNot { it.kind == BackupReview.KIND_SOLO })
+    }
+    if (ResetPart.MATERIAL in parts) {
+      // The user's own tunes and solos take their progress and grades with them.
+      val ownTunes = now.myTunes.map { it.slug }.toSet()
+      val ownSolos = now.mySolos.map { it.slug }.toSet()
+      kept = kept.copy(
+        myTunes = emptyList(), edits = emptyList(), myExercises = emptyList(), exerciseEdits = emptyList(), mySolos = emptyList(),
+        media = emptyList(), playlists = emptyList(), myChanges = emptyList(),
+        tunes = kept.tunes.filterNot { it.slug in ownTunes },
+        knowledge = kept.knowledge.filterNot { it.slug in ownTunes },
+        soloProgress = kept.soloProgress.filterNot { it.slug in ownSolos },
+        reviews = kept.reviews.filterNot { it.slug in if (it.kind == BackupReview.KIND_TUNE) ownTunes else ownSolos },
+      )
+    }
+    restore(json.encodeToString(Backup.serializer(), kept))
+    if (ResetPart.SETTINGS in parts) repository.resetSettings()
+  }
+}
+
+/** What a reset can clear, each on its own or together. */
+enum class ResetPart(val label: String, val description: String) {
+  HISTORY("Practice history", "Past sessions, and the calendar and stats built from them"),
+  TUNE_PROGRESS(
+    "Tune progress",
+    "Learning and repertoire, scheduling, grades, comfort and known keys, so every tune goes back to the library",
+  ),
+  SOLO_PROGRESS("Solo progress", "Transcription status, notes and scheduling"),
+  MATERIAL(
+    "My material",
+    "Tunes, exercises and solos you added, your edits to the bundled ones, recordings, playlists and your own changes",
+  ),
+  SETTINGS("Settings", "Instruments, key, theme, tab order and session defaults"),
 }
 
 private fun String.splitFields(): List<String> = split(',').filter { it.isNotEmpty() }

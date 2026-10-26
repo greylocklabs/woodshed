@@ -6,6 +6,12 @@ release's GitHub notes, and a release refuses to go out without one.
 
 ## Unreleased
 
+### Added
+
+- **settings:** start fresh from ⚙️ Settings › Backup: clear your practice
+  history, tune progress, solo progress, your own material or your settings,
+  or everything, and keep the rest. It asks first, and offers to save a backup.
+
 ### Changed
 
 - **tunes:** the key picker names the instruments you play under each key,

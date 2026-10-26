@@ -295,6 +295,7 @@ class MainActivity : ComponentActivity() {
                     moveTab = settings::moveTab,
                     resetTabs = settings::resetTabs,
                     setTabOrder = settings::setTabOrder,
+                    reset = settings::reset,
                   ),
                   onBack = {
                     settings.clearMessage()

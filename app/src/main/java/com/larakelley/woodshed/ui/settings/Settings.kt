@@ -55,6 +55,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.larakelley.woodshed.data.BackupException
 import com.larakelley.woodshed.data.BackupService
+import com.larakelley.woodshed.data.ResetPart
 import com.larakelley.woodshed.data.ThemeMode
 import com.larakelley.woodshed.data.WoodshedRepository
 import com.larakelley.woodshed.domain.Instrument
@@ -169,6 +170,19 @@ class SettingsViewModel(
     }
   }
 
+  /** Clears [parts] of the user's data, leaving the rest; see [BackupService.reset]. */
+  fun reset(parts: Set<ResetPart>) {
+    if (parts.isEmpty()) return
+    viewModelScope.launch {
+      message.value = try {
+        backups.reset(parts)
+        "Cleared ${ResetPart.entries.filter { it in parts }.joinToString(", ") { it.label.lowercase() }}."
+      } catch (e: Exception) {
+        "Could not clear it: ${e.message ?: e}"
+      }
+    }
+  }
+
   fun clearMessage() = message.update { null }
 }
 
@@ -180,6 +194,7 @@ data class SettingsActions(
   val setThemeMode: (ThemeMode) -> Unit = {},
   val export: (Uri, ContentResolver) -> Unit = { _, _ -> },
   val restore: (Uri, ContentResolver) -> Unit = { _, _ -> },
+  val reset: (Set<ResetPart>) -> Unit = {},
   val moveTab: (String, Int) -> Unit = { _, _ -> },
   val resetTabs: () -> Unit = {},
   val setTabOrder: (List<String>) -> Unit = {},
@@ -285,6 +300,11 @@ private fun BackupTab(ui: SettingsUi, actions: SettingsActions) {
   }
   val openFile = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> uri?.let { actions.restore(it, resolver) } }
   var confirmRestore by rememberSaveable { mutableStateOf(false) }
+  // Kept by name, so the choice survives a rotation.
+  var chosen by rememberSaveable { mutableStateOf(emptyList<String>()) }
+  val parts = ResetPart.entries.filter { it.name in chosen }.toSet()
+  var confirmReset by rememberSaveable { mutableStateOf(false) }
+  val callie = LocalCallie.current
 
   Padded {
     SectionLabel("Backup file")
@@ -311,6 +331,58 @@ private fun BackupTab(ui: SettingsUi, actions: SettingsActions) {
     ui.message?.let { Text(it, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 8.dp).testTag("backup-message")) }
     SectionLabel("Automatic")
     Helper("Android also backs Woodshed up to your Google account with the rest of the phone, when device backup is on.")
+    SectionLabel("Start fresh")
+    Helper("Clear some of your data, or all of it, and keep the rest. The bundled tunes, exercises and solos always stay.")
+  }
+  SwitchRow(
+    label = "Everything",
+    checked = parts.size == ResetPart.entries.size,
+    onChange = { all -> chosen = if (all) ResetPart.entries.map { it.name } else emptyList() },
+    horizontalPadding = 16.dp,
+    modifier = Modifier.testTag("reset-everything"),
+  )
+  ResetPart.entries.forEach { part ->
+    SwitchRow(
+      label = part.label,
+      checked = part in parts,
+      onChange = { on -> chosen = if (on) chosen + part.name else chosen - part.name },
+      helper = part.description,
+      horizontalPadding = 16.dp,
+      modifier = Modifier.testTag("reset-${part.name.lowercase()}"),
+    )
+  }
+  Padded {
+    if (ResetPart.MATERIAL in parts && !parts.containsAll(setOf(ResetPart.TUNE_PROGRESS, ResetPart.SOLO_PROGRESS))) {
+      Helper("Your own tunes and solos take their progress and grades with them.", Modifier.testTag("reset-knock-on"))
+    }
+    TextButton(
+      onClick = { confirmReset = true },
+      enabled = parts.isNotEmpty(),
+      modifier = Modifier.padding(top = 4.dp).testTag("reset"),
+    ) { Text("Clear what's chosen", color = if (parts.isNotEmpty()) callie.danger else callie.textFaint) }
+  }
+
+  if (confirmReset) {
+    AlertDialog(
+      onDismissRequest = { confirmReset = false },
+      title = { Text("Clear ${ResetPart.entries.filter { it in parts }.joinToString(", ") { it.label.lowercase() }}?") },
+      text = { Text("This can't be undone. Save a backup first to keep a copy you can restore.") },
+      confirmButton = {
+        TextButton(onClick = {
+          confirmReset = false
+          actions.reset(parts)
+          chosen = emptyList()
+        }, modifier = Modifier.testTag("confirm-reset")) { Text("Clear", color = callie.danger) }
+      },
+      dismissButton = {
+        Row {
+          TextButton(onClick = { saveFile.launch("woodshed-backup-${LocalDate.now()}.json") }, modifier = Modifier.testTag("reset-backup-first")) {
+            Text("Save a backup first")
+          }
+          TextButton(onClick = { confirmReset = false }) { Text("Cancel") }
+        }
+      },
+    )
   }
 
   if (confirmRestore) {

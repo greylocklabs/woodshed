@@ -15,6 +15,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTouchInput
+import com.larakelley.woodshed.data.ResetPart
 import com.larakelley.woodshed.data.ThemeMode
 import com.larakelley.woodshed.domain.Instrument
 import com.larakelley.woodshed.ui.browse.DEFAULT_TABS
@@ -112,6 +113,27 @@ class SettingsScreenTest {
     compose.onNodeWithText("Restore from a backup?").assertExists()
     compose.onNodeWithText("Cancel").performClick()
     compose.onNodeWithText("Restore from a backup?").assertDoesNotExist()
+  }
+
+  @Test
+  fun backupTabClearsOnlyWhatIsChosenAfterAsking() {
+    val cleared = mutableListOf<Set<ResetPart>>()
+    compose.setContent { SettingsScreen(SettingsUi(), SettingsActions(reset = { cleared += it }), onBack = {}) }
+    compose.onNodeWithTag("tab-backup").performClick()
+    compose.onNodeWithTag("reset").performScrollTo().assertIsNotEnabled()
+    compose.onNodeWithTag("reset-history").performScrollTo().performClick()
+    compose.onNodeWithTag("reset-material").performScrollTo().performClick()
+    // Clearing the user's own material says what goes with it.
+    compose.onNodeWithTag("reset-knock-on").assertExists()
+    compose.onNodeWithTag("reset").performScrollTo().performClick()
+    compose.onNodeWithText("Clear practice history, my material?").assertExists()
+    compose.onNodeWithTag("confirm-reset").performClick()
+    assertEquals(listOf(setOf(ResetPart.HISTORY, ResetPart.MATERIAL)), cleared)
+    // Everything turns every part on.
+    compose.onNodeWithTag("reset-everything").performScrollTo().performClick()
+    compose.onNodeWithTag("reset").performScrollTo().performClick()
+    compose.onNodeWithTag("confirm-reset").performClick()
+    assertEquals(ResetPart.entries.toSet(), cleared.last())
   }
 
   @Test

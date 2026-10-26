@@ -65,6 +65,66 @@ class BackupTest {
     assertEquals(listOf("Stella bridge" to bars("IIm7b5 | V7b9 | Im7 | Im7")), library.all.first().map { it.name to it.bars })
   }
 
+  /** Some of everything a reset can clear: history, progress on a seeded and an own tune, material and settings. */
+  private suspend fun practiceSome(): String {
+    val own = TuneLibrary(db).add(TuneDraft(title = "My tune", keyName = "F"))
+    for (slug in listOf("solar", own)) practice.startLearning(id(slug))
+    practice.setComfort(id("solar"), Comfort.SHAKY)
+    val tuneExercise = db.exercises().all().first { it.appliesToTune }
+    practice.grade(practice.cardForBlock(PlanBlock.Tune(id(own), tuneExercise.id, 10), Transposition.Bb)!!, Grade.GOOD)
+    val log = SessionLog(db)
+    log.end(log.start(listOf(PlanBlock.Tune(id("solar"), tuneExercise.id, 10)), "ALTO_SAX", at = 1_000), at = 2_000, completed = true)
+    val playlists = PlaylistService(db)
+    playlists.add(playlists.create("Gig"), id("solar"))
+    MyChangesLibrary(db).save(null, "Vamp", bars("I | IV"))
+    repository.setInstrument(Instrument.ALTO_SAX)
+    repository.setThemeMode(ThemeMode.DARK)
+    return own
+  }
+
+  @Test
+  fun aResetClearsOnlyWhatIsChosen() = runTest {
+    practiceSome()
+    backups.reset(setOf(ResetPart.HISTORY, ResetPart.SETTINGS))
+    assertTrue(db.sessions().all().isEmpty())
+    assertEquals(null, repository.instrument.value)
+    assertEquals(ThemeMode.SYSTEM, repository.themeMode.value)
+    assertEquals(Transposition.C, repository.transposition.value)
+    // Progress, material and the user's own tune stay.
+    assertEquals(2, db.tuneStates().all().size)
+    assertEquals(1, db.playlists().all().size)
+    assertEquals(1, db.myChanges().all().size)
+    assertTrue(db.standards().userCreated().all { it.archivedAt == null })
+  }
+
+  @Test
+  fun ownMaterialTakesItsProgressWithIt() = runTest {
+    val own = practiceSome()
+    backups.reset(setOf(ResetPart.MATERIAL))
+    assertTrue(db.standards().userCreated().all { it.archivedAt != null })
+    assertTrue(db.playlists().all().isEmpty())
+    assertTrue(db.myChanges().all().isEmpty())
+    // The own tune's progress and grades went with it; the seeded tune's stayed, and so did history.
+    assertEquals(listOf(id("solar")), db.tuneStates().all().map { it.standardId })
+    assertTrue(db.reviewEvents().all().none { it.itemId == id(own) })
+    assertEquals(1, db.sessions().all().size)
+    assertEquals(Instrument.ALTO_SAX, repository.instrument.value)
+  }
+
+  @Test
+  fun everythingLeavesTheBundledLibrary() = runTest {
+    val seeded = db.standards().all().count { !it.userCreated }
+    practiceSome()
+    backups.reset(ResetPart.entries.toSet())
+    assertTrue(db.tuneStates().all().isEmpty())
+    assertTrue(db.tuneKnowledge().all().isEmpty())
+    assertTrue(db.reviewEvents().all().isEmpty())
+    assertTrue(db.sessions().all().isEmpty())
+    assertTrue(db.playlists().all().isEmpty())
+    assertEquals(seeded, db.standards().all().count { !it.userCreated && it.archivedAt == null })
+    assertEquals(null, repository.instrument.value)
+  }
+
   @Test
   fun exportThenRestoreBringsEverythingBack() = runTest {
     practice.startLearning(id("solar"))

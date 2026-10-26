@@ -137,6 +137,24 @@ class WoodshedRepository(
     _themeMode.value = mode
   }
 
+  /** Puts the settings a backup carries back to a fresh install's: no instrument chosen, concert key and the rest. */
+  fun resetSettings() {
+    prefs.edit {
+      remove(INSTRUMENT)
+      remove(MY_INSTRUMENTS)
+      remove(TRANSPOSITION)
+      remove(THEME_MODE)
+      remove(TAB_ORDER)
+      remove(SESSION_MINUTES)
+      remove(SESSION_FOCUS)
+    }
+    _instrument.value = null
+    _myInstruments.value = DEFAULT_INSTRUMENTS
+    _transposition.value = Transposition.C
+    _themeMode.value = ThemeMode.SYSTEM
+    _tabOrder.value = emptyList()
+  }
+
   fun markBackedUp(at: Long) {
     prefs.edit { putLong(LAST_BACKUP_AT, at) }
     _lastBackupAt.value = at
