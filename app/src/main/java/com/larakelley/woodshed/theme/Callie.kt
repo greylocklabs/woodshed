@@ -1,11 +1,15 @@
 package com.larakelley.woodshed.theme
 
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -14,6 +18,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
@@ -159,5 +164,30 @@ fun EmptyState(
         Text(action, style = MaterialTheme.typography.labelLarge)
       }
     }
+  }
+}
+
+/**
+ * A tool's screen: its controls scroll, and [action], its start or stop button, stays at the bottom in reach,
+ * however far down the controls are scrolled.
+ */
+@Composable
+fun PinnedAction(
+  action: @Composable () -> Unit,
+  modifier: Modifier = Modifier,
+  scroll: ScrollState = rememberScrollState(),
+  horizontalAlignment: Alignment.Horizontal = Alignment.Start,
+  verticalArrangement: Arrangement.Vertical = Arrangement.Top,
+  content: @Composable ColumnScope.() -> Unit,
+) {
+  Column(modifier.fillMaxSize()) {
+    Column(
+      Modifier.weight(1f).verticalScroll(scroll).padding(horizontal = 16.dp).padding(bottom = 16.dp),
+      verticalArrangement = verticalArrangement,
+      horizontalAlignment = horizontalAlignment,
+      content = content,
+    )
+    HorizontalDivider()
+    Box(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp)) { action() }
   }
 }

@@ -32,6 +32,7 @@ import com.larakelley.woodshed.theme.CallieChip
 import com.larakelley.woodshed.theme.Helper
 import com.larakelley.woodshed.theme.LocalCallie
 import com.larakelley.woodshed.theme.PillChoice
+import com.larakelley.woodshed.theme.PinnedAction
 import com.larakelley.woodshed.theme.SectionLabel
 import com.larakelley.woodshed.theme.StickerButton
 
@@ -54,7 +55,11 @@ private fun noteName(pitchClass: Int) = Key(pitchClass, minor = false).displayNa
 fun DroneScreen(state: DroneState, transposition: Transposition, a4: Int, actions: DroneActions) {
   val callie = LocalCallie.current
   val written = Math.floorMod(state.pitchClass + transposition.offset, 12)
-  Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp).padding(bottom = 24.dp)) {
+  PinnedAction(action = {
+    StickerButton(onClick = actions.toggle, modifier = Modifier.fillMaxWidth().height(60.dp).testTag("drone-toggle")) {
+      Text(if (state.playing) "◼ Stop" else "▶ Start drone", style = MaterialTheme.typography.titleLarge)
+    }
+  }) {
     Spacer(Modifier.height(24.dp))
     val name = noteName(written)
     Text(
@@ -70,10 +75,6 @@ fun DroneScreen(state: DroneState, transposition: Transposition, a4: Int, action
       color = callie.textMuted,
       modifier = Modifier.align(Alignment.CenterHorizontally),
     )
-    Spacer(Modifier.height(16.dp))
-    StickerButton(onClick = actions.toggle, modifier = Modifier.fillMaxWidth().height(60.dp).testTag("drone-toggle")) {
-      Text(if (state.playing) "◼ Stop" else "▶ Start drone", style = MaterialTheme.typography.titleLarge)
-    }
 
     SectionLabel("Note")
     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {

@@ -281,4 +281,24 @@ class BrowseScreenTest {
     // No instrument of mine reads in Eb, so it keeps its examples.
     compose.onNodeWithText(Transposition.Eb.examples).assertExists()
   }
+
+  @Test
+  @Config(qualifiers = "w360dp-h400dp")
+  fun aFlipPhonesOuterScreenGivesTheTitleBarsRoomToTheTab() {
+    var opened = false
+    compose.setContent {
+      BrowseScreen(BrowseState(Transposition.C), {}, settings = { _, _ -> opened = true }, tunerTab = { Text("tuner screen") })
+    }
+    // No title bar, but its key picker and settings are still at hand.
+    compose.onNodeWithText("Woodshed").assertDoesNotExist()
+    compose.onNodeWithTag("transposition-picker").assertExists()
+    compose.onNodeWithTag("open-settings").performClick()
+    compose.runOnIdle { assertTrue(opened) }
+  }
+
+  @Test
+  fun aTallScreenKeepsTheTitleBar() {
+    compose.setContent { BrowseScreen(BrowseState(Transposition.C), {}) }
+    compose.onNodeWithText("Woodshed").assertExists()
+  }
 }

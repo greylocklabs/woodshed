@@ -46,6 +46,7 @@ import com.larakelley.woodshed.domain.Transposition
 import com.larakelley.woodshed.theme.Helper
 import com.larakelley.woodshed.theme.LocalCallie
 import com.larakelley.woodshed.theme.PRESS_SPRING
+import com.larakelley.woodshed.theme.PinnedAction
 import com.larakelley.woodshed.theme.SectionLabel
 import com.larakelley.woodshed.theme.StickerButton
 import com.larakelley.woodshed.theme.neutralSticker
@@ -80,10 +81,11 @@ fun TunerScreen(state: TunerState, transposition: Transposition, actions: TunerA
   val reading = state.reading
   val written = reading?.writtenFor(transposition)
 
-  Column(
-    Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp).padding(bottom = 24.dp),
-    horizontalAlignment = Alignment.CenterHorizontally,
-  ) {
+  PinnedAction(action = {
+    StickerButton(onClick = { if (state.listening) actions.stop() else listen() }, modifier = Modifier.fillMaxWidth().height(60.dp).testTag("tuner-toggle")) {
+      Text(if (state.listening) "◼ Stop" else "🎤 Listen", style = MaterialTheme.typography.titleLarge)
+    }
+  }, horizontalAlignment = Alignment.CenterHorizontally) {
     Spacer(Modifier.height(24.dp))
     Text(written?.let(::noteText) ?: buildAnnotatedString { append("–") }, style = MaterialTheme.typography.displayLarge, modifier = Modifier.testTag("note"))
     Text(
@@ -106,10 +108,6 @@ fun TunerScreen(state: TunerState, transposition: Transposition, actions: TunerA
       style = MaterialTheme.typography.titleLarge,
       modifier = Modifier.testTag("tuning"),
     )
-    Spacer(Modifier.height(16.dp))
-    StickerButton(onClick = { if (state.listening) actions.stop() else listen() }, modifier = Modifier.fillMaxWidth().height(60.dp).testTag("tuner-toggle")) {
-      Text(if (state.listening) "◼ Stop" else "🎤 Listen", style = MaterialTheme.typography.titleLarge)
-    }
     when {
       denied -> Text(
         "The tuner needs the microphone. Allow it for Woodshed in your phone's settings, then tap Listen.",

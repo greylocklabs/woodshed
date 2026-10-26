@@ -42,6 +42,7 @@ import com.larakelley.woodshed.theme.CallieChip
 import com.larakelley.woodshed.theme.LocalCallie
 import com.larakelley.woodshed.theme.PRESS_SPRING
 import com.larakelley.woodshed.theme.PillChoice
+import com.larakelley.woodshed.theme.PinnedAction
 import com.larakelley.woodshed.theme.SectionLabel
 import com.larakelley.woodshed.theme.StickerButton
 import com.larakelley.woodshed.theme.SwitchRow
@@ -63,7 +64,11 @@ internal val METERS = listOf(2, 3, 4, 5, 6, 7)
 fun MetronomeScreen(state: MetronomeState, actions: MetronomeActions) {
   val callie = LocalCallie.current
   val taps = remember { TapTempo() }
-  Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp).padding(bottom = 24.dp)) {
+  PinnedAction(action = {
+    StickerButton(onClick = actions.toggle, modifier = Modifier.fillMaxWidth().height(60.dp).testTag("metronome-toggle")) {
+      Text(if (state.running) "◼ Stop" else "▶ Start", style = MaterialTheme.typography.titleLarge)
+    }
+  }) {
     Spacer(Modifier.height(16.dp))
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
       RoundSticker("-") { actions.setBpm(state.bpm - 1) }
@@ -74,9 +79,6 @@ fun MetronomeScreen(state: MetronomeState, actions: MetronomeActions) {
       RoundSticker("+") { actions.setBpm(state.bpm + 1) }
     }
     BeatDots(state, Modifier.align(Alignment.CenterHorizontally).padding(vertical = 16.dp))
-    StickerButton(onClick = actions.toggle, modifier = Modifier.fillMaxWidth().height(60.dp).testTag("metronome-toggle")) {
-      Text(if (state.running) "◼ Stop" else "▶ Start", style = MaterialTheme.typography.titleLarge)
-    }
     Slider(
       value = state.bpm.toFloat(),
       onValueChange = { actions.setBpm(it.toInt()) },

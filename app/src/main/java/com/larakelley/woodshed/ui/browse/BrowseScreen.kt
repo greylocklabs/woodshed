@@ -2,6 +2,7 @@ package com.larakelley.woodshed.ui.browse
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -11,6 +12,8 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -48,6 +51,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -187,18 +193,20 @@ fun BrowseScreen(
     }
   }
 
+  // On a short screen, such as a flip phone's outer one, the title bar gives its room to the tab's content and its
+  // controls move to the end of the tab row.
+  val short = with(LocalDensity.current) { LocalWindowInfo.current.containerSize.height.toDp() } < SHORT_SCREEN_DP.dp
+  val barActions: @Composable () -> Unit = {
+    TranspositionPicker(state.transposition, state.myInstruments, onSelectTransposition)
+    if (settings != null) {
+      TextButton(onClick = {
+        settingsOpen = true
+      }, modifier = Modifier.testTag("open-settings")) { Text("⚙️", style = MaterialTheme.typography.titleLarge) }
+    }
+  }
   Scaffold(
     modifier = modifier,
-    topBar = {
-      TopAppBar(title = { AppTitle() }, actions = {
-        TranspositionPicker(state.transposition, state.myInstruments, onSelectTransposition)
-        if (settings != null) {
-          TextButton(onClick = {
-            settingsOpen = true
-          }, modifier = Modifier.testTag("open-settings")) { Text("⚙️", style = MaterialTheme.typography.titleLarge) }
-        }
-      })
-    },
+    topBar = { if (!short) TopAppBar(title = { AppTitle() }, actions = { barActions() }) },
   ) { padding ->
     if (settingsOpen && settings != null) {
       settings({ settingsOpen = false }, Modifier.padding(padding))
@@ -289,18 +297,27 @@ fun BrowseScreen(
       ExerciseDetail(exercise, onBack = { openExercise = null }, onEdit = { editingExercise = exercise.id }, modifier = Modifier.padding(padding))
       return@Scaffold
     }
-    Column(Modifier.padding(padding).fillMaxSize()) {
+    val playing = nowPlaying.filter { tabs[tab] !in it.hiddenOn }
+    val direction = LocalLayoutDirection.current
+    // The bottom inset goes under the playing bars, so their background runs on behind the gesture bar.
+    Column(
+      Modifier.padding(start = padding.calculateStartPadding(direction), top = padding.calculateTopPadding(), end = padding.calculateEndPadding(direction))
+        .fillMaxSize(),
+    ) {
       state.seedError?.let {
         Text("Could not load the bundled data: $it", color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(16.dp))
       }
-      PrimaryScrollableTabRow(selectedTabIndex = tab, edgePadding = 8.dp) {
-        tabs.forEachIndexed { i, label ->
-          Tab(selected = tab == i, onClick = {
-            tabName = label
-          }, text = { Text("${TAB_EMOJI[label].orEmpty()} $label".trim()) }, modifier = Modifier.testTag("tab-$label"))
+      Row(verticalAlignment = Alignment.CenterVertically) {
+        PrimaryScrollableTabRow(selectedTabIndex = tab, edgePadding = 8.dp, modifier = Modifier.weight(1f)) {
+          tabs.forEachIndexed { i, label ->
+            Tab(selected = tab == i, onClick = {
+              tabName = label
+            }, text = { Text("${TAB_EMOJI[label].orEmpty()} $label".trim()) }, modifier = Modifier.testTag("tab-$label"))
+          }
         }
+        if (short) barActions()
       }
-      Column(Modifier.weight(1f)) {
+      Column(Modifier.weight(1f).padding(bottom = if (playing.isEmpty()) padding.calculateBottomPadding() else 0.dp)) {
         when (tabs[tab]) {
           "Practice" -> practiceTab?.invoke()
 
@@ -353,10 +370,17 @@ fun BrowseScreen(
           }
         }
       }
-      nowPlaying.filter { tabs[tab] !in it.hiddenOn }.forEach { it.bar() }
+      if (playing.isNotEmpty()) {
+        Column(Modifier.background(LocalCallie.current.surface).padding(bottom = padding.calculateBottomPadding())) {
+          playing.forEach { it.bar() }
+        }
+      }
     }
   }
 }
+
+/** Shorter than this, in dp, a screen drops the title bar, as a flip phone's outer screen is. */
+private const val SHORT_SCREEN_DP = 440
 
 /** Solos to transcribe on this tune; each opens in the Transcribe tab. */
 @Composable
