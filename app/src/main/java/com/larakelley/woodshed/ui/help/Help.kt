@@ -42,13 +42,13 @@ val HELP_TOPICS = listOf(
     "Planning a session",
     listOf(
       "Pick what you're playing, how long, any focus areas, the tunes to work on, and a solo to transcribe. Tunes due for review start ticked.",
-      "Woodshed plans a warm-up, exercises for your focus, the solo and your tunes, filling the time you chose. Before you start, each block can be **shuffled** for another exercise, **replaced** with one you pick, or **dropped**; dropping a block shares its minutes among the rest.",
+      "Woodshed plans a warm-up, exercises for your focus, the solo and your tunes, filling the time you chose. A **🎹 Harmony** focus adds changes to play over, in a random key. Before you start, each block can be **shuffled** for another exercise, **replaced** with one you pick, or **dropped**; dropping a block shares its minutes among the rest.",
     ),
   ),
   HelpTopic(
     "During a session",
     listOf(
-      "Each block has a timer. Blocks don't move on by themselves: tap **✅ Done** when you finish an exercise, or grade a tune or solo. **‹ Back** returns to the previous block if you tapped too soon.",
+      "Each block has a timer. Blocks don't move on by themselves: tap **✅ Done** when you finish an exercise or changes, or grade a tune or solo. A changes block opens them on the **🎹 Changes** tab, in its key. **‹ Back** returns to the previous block if you tapped too soon.",
       "The metronome and drone can be started, stopped and retimed along the bottom of every block. Drone exercises name the note to play against.",
       "A session keeps running with the screen off or another app open, with a notification showing the block and its time left. **End** stops it early; blocks you finished stay logged.",
     ),
@@ -65,7 +65,7 @@ val HELP_TOPICS = listOf(
     "Keys and your instrument",
     listOf(
       "Tunes are stored in concert pitch and shown written for your instrument: an alto player sees a concert F tune in D. Reading in C, keys show as they are.",
-      "Change what you're playing in **⚙️ Settings**, or when you plan a session.",
+      "Change what you're playing in **⚙️ Settings**, or when you plan a session. The key picker at the top names the instruments you play under each key.",
     ),
   ),
   HelpTopic(
@@ -78,8 +78,10 @@ val HELP_TOPICS = listOf(
   HelpTopic(
     "Random, and the tools",
     listOf(
-      "**🎲 Random** rolls a tune with an exercise and a key, an exercise, or a solo, within limits you set, for when you'd rather not plan.",
-      "The **⏱️ Metronome** has tap tempo, jazz tempo presets and clicks on 2 and 4. The **🔊 Drone** sounds a note or a chord named for your instrument. **🎹 Changes** plays blues, forms, turnarounds and key-to-key patterns on the drone's sound, in time with a click. The **🎯 Tuner** reads your pitch in your instrument's key.",
+      "**🎲 Random** rolls a tune with an exercise and a key, an exercise, a solo, or changes, within limits you set, for when you'd rather not plan.",
+      "The **⏱️ Metronome** has tap tempo, jazz tempo presets and clicks on 2 and 4. The **🔊 Drone** sounds a note or a chord named for your instrument, voiced close, spread or as a shell; under the voicings are the piano notes each one plays. The **🎯 Tuner** reads your pitch in your instrument's key.",
+      "**🎹 Changes** plays blues, forms, turnarounds and key-to-key patterns on the drone's sound, in time with a click. Each keeps its own key, and **+ New changes** writes your own in Roman numerals.",
+      "Start and Stop stay at the bottom of each tool. While one plays, a bar along the bottom of the other tabs shows it and stops it.",
     ),
   ),
   HelpTopic(
@@ -92,6 +94,7 @@ val HELP_TOPICS = listOf(
     "Your data",
     listOf(
       "Everything stays on your phone. Save a backup file from **⚙️ Settings › Backup** to Google Drive, Dropbox or a folder, and restore it on any device.",
+      "To start fresh, **⚙️ Settings › Backup** can clear your history, your progress, your own material or your settings, or all of it. It asks first, and offers to save a backup.",
       "Woodshed has no account, ads or analytics. It goes online only to play a video you tap and to send a problem report you choose to send. " +
         "Installed from Google Play, it may now and then ask Play to show its rating prompt after a session; it sends nothing for that.",
     ),
