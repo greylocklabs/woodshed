@@ -36,7 +36,7 @@ jobs:
           echo "VERSION=${version}" >> "$GITHUB_ENV"
 
       - name: Release notes
-        run: scripts/release-notes.sh "$VERSION" > release-notes.md
+        run: core/tooling/release-notes.sh "$VERSION" > release-notes.md
 
       - name: Setup Java
         uses: actions/setup-java@v6

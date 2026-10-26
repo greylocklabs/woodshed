@@ -7,7 +7,7 @@ plugins {
   alias(libs.plugins.roborazzi)
 }
 
-// The version lives in VERSION at the repo root; `make release` bumps it. Play's version code is derived from it,
+// The version lives in VERSION at the repo root; `make release patch` and the like bump it. Play's version code is derived from it,
 // so it always rises with the version: 1.2.3 becomes 10203.
 val appVersion = rootProject.file("VERSION").readText().trim()
 

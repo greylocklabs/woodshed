@@ -36,8 +36,8 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
 
-      - name: Changelog has the current version
-        run: scripts/release-notes.sh > /dev/null
+      - name: VERSION agrees with the changelog
+        run: core/tooling/check-version.sh
 
       - name: Kotlin formatting
         run: ./gradlew spotlessCheck

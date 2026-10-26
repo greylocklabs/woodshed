@@ -135,10 +135,10 @@ greylocklabs-reports GitHub App.
 The version lives in `VERSION`, and Play's version code is derived from it. To release:
 
 1. Make sure the notes for the release are under `## Unreleased` in `CHANGELOG.md` on main.
-2. On an up-to-date main, run `make release PART=patch` (or `minor`, `major`). It bumps `VERSION`, renames
-   `## Unreleased` to `## <version>`, runs `make check`, commits, tags `v<version>` and pushes; when `make check`
-   fails, it leaves both files as they were. `make release PART=current` tags the version already in `VERSION`,
-   and `DRY_RUN=1` checks everything without changing anything.
+2. On an up-to-date main, run `make release patch` (or `minor`, `major`, or `VERSION=1.2.3`). Core's release
+   script bumps `VERSION`, dates `## Unreleased` as `## <version> - <date>`, runs `make check`, commits, tags
+   `v<version>` and pushes. When `make check` fails or the push is refused, it puts both files back as they were.
+   `make release-dry patch` shows what it would do without changing anything.
 3. The tag starts the release workflow. It publishes a GitHub release with that changelog section as its notes
    and the app attached, signed with the release key so each release installs over the last. It then uploads
    the bundle to Play's internal testing track, with the section as plain text for its notes

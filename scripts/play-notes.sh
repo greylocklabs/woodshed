@@ -5,7 +5,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-scripts/release-notes.sh "${1:-}" | python3 -c '
+core/tooling/release-notes.sh "${1:-$(tr -d '[:space:]' < VERSION)}" | python3 -c '
 import re, sys
 lines = []
 for line in sys.stdin.read().splitlines():
