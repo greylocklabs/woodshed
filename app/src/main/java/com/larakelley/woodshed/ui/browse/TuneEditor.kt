@@ -55,7 +55,7 @@ fun TuneEditor(tune: TuneRow?, onSave: (TuneDraft) -> Unit, onDelete: () -> Unit
   val callie = LocalCallie.current
 
   Column(modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-    BackButton("Cancel", onBack)
+    BackButton(onBack, label = "Cancel")
     Text(if (tune == null) "Add a tune" else "Edit ${tune.title}", style = MaterialTheme.typography.headlineMedium)
     if (tune != null && !tune.userCreated) {
       Helper("Your changes are kept beside the original, so updates to the tune list never overwrite them. You can reset to the original any time.")

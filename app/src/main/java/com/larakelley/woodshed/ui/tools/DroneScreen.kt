@@ -27,6 +27,7 @@ import com.larakelley.woodshed.domain.DroneRange
 import com.larakelley.woodshed.domain.Key
 import com.larakelley.woodshed.domain.Transposition
 import com.larakelley.woodshed.domain.Voicing
+import com.larakelley.woodshed.domain.pianoNotes
 import com.larakelley.woodshed.domain.spell
 import com.larakelley.woodshed.theme.CallieChip
 import com.larakelley.woodshed.theme.Helper
@@ -94,7 +95,7 @@ fun DroneScreen(state: DroneState, transposition: Transposition, a4: Int, action
     if (state.chord.voiced) {
       SectionLabel("Voicing")
       PillChoice(Voicing.entries.map { it.label to it }, state.voicing, actions.setVoicing, tagPrefix = "drone-voicing")
-      Helper("Close keeps the notes together; spread opens them out; shell plays the root, 3rd and 7th.")
+      VoicingNotes(state.chord, state.pitchClass, state.range)
     }
     SectionLabel("Volume")
     Slider(
@@ -127,4 +128,14 @@ internal fun ChordChips(selected: ChordQuality?, onSelect: (ChordQuality) -> Uni
       }
     }
   }
+}
+
+/** Each voicing's piano notes for [quality] on the concert [pitchClass], so the choices can be told apart. */
+@Composable
+internal fun VoicingNotes(quality: ChordQuality, pitchClass: Int, range: DroneRange) {
+  val root = range.rootMidi(pitchClass)
+  Helper(
+    "On a piano:\n" + Voicing.entries.joinToString("\n") { "${it.label}: ${pianoNotes(root, quality, it).joinToString(" ")}" },
+    Modifier.testTag("voicing-notes"),
+  )
 }

@@ -28,6 +28,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -140,6 +141,8 @@ private const val NEW_SOLO = -1L
 fun TranscribeScreen(ui: TranscribeUi, actions: SoloActions, navigation: AppNavigation? = null) {
   var open by rememberSaveable { mutableStateOf<Long?>(null) }
   var editing by rememberSaveable { mutableStateOf<Long?>(null) }
+  // The list's scroll outlives a solo opened from it.
+  val list = rememberSaveableStateHolder()
   LaunchedEffect(navigation?.pending) {
     val to = navigation?.pending as? Destination.Solo ?: return@LaunchedEffect
     navigation.take()
@@ -171,46 +174,52 @@ fun TranscribeScreen(ui: TranscribeUi, actions: SoloActions, navigation: AppNavi
     SoloDetail(row, ui.transposition, actions, onBack = { open = null }, onEdit = { editing = row.solo.id }, onOpenTune = onOpenTune)
     return
   }
-  Column(Modifier.fillMaxSize()) {
-    Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-      Text("Solos to learn by ear", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
-      StickerButton(onClick = {
-        editing = NEW_SOLO
-      }, modifier = Modifier.height(40.dp).testTag("add-solo"), contentPadding = PaddingValues(horizontal = 14.dp)) {
-        Text("+ Add a solo", style = MaterialTheme.typography.labelLarge)
-      }
-    }
-    if (ui.rows.isEmpty()) {
-      EmptyState(
-        "🎧",
-        "No solos yet",
-        "Add a solo you want to learn by ear: the tune, who plays it, and a link to the recording.",
-        action = "Add a solo",
-        onAction = { editing = NEW_SOLO },
-        scrolls = true,
-      )
-      return@Column
-    }
-    LazyColumn(Modifier.fillMaxSize()) {
-      soloGroups(ui.rows).forEach { (label, rows) ->
-        item(key = "group-$label") {
-          Text(
-            label,
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(start = 16.dp, top = 12.dp, bottom = 4.dp),
-          )
+  list.SaveableStateProvider("list") {
+    Column(Modifier.fillMaxSize()) {
+      Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+        Text("Solos to learn by ear", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+        StickerButton(onClick = {
+          editing = NEW_SOLO
+        }, modifier = Modifier.height(40.dp).testTag("add-solo"), contentPadding = PaddingValues(horizontal = 14.dp)) {
+          Text("+ Add a solo", style = MaterialTheme.typography.labelLarge)
         }
-        rows.forEach { r ->
-          item(key = r.solo.id) {
-            Column(Modifier.fillMaxWidth().clickable { open = r.solo.id }.padding(horizontal = 16.dp, vertical = 10.dp).testTag("solo-${r.solo.slug}")) {
-              Text(r.solo.title, style = MaterialTheme.typography.titleMedium)
-              Text(
-                listOfNotNull("${r.solo.soloist}, ${r.solo.instrument.lowercase()}", r.solo.context, r.solo.recorded?.let(::recordedLabel)).joinToString(" · "),
-                style = MaterialTheme.typography.bodySmall,
-              )
+      }
+      if (ui.rows.isEmpty()) {
+        EmptyState(
+          "🎧",
+          "No solos yet",
+          "Add a solo you want to learn by ear: the tune, who plays it, and a link to the recording.",
+          action = "Add a solo",
+          onAction = { editing = NEW_SOLO },
+          scrolls = true,
+        )
+        return@Column
+      }
+      LazyColumn(Modifier.fillMaxSize()) {
+        soloGroups(ui.rows).forEach { (label, rows) ->
+          item(key = "group-$label") {
+            Text(
+              label,
+              style = MaterialTheme.typography.labelLarge,
+              color = MaterialTheme.colorScheme.primary,
+              modifier = Modifier.padding(start = 16.dp, top = 12.dp, bottom = 4.dp),
+            )
+          }
+          rows.forEach { r ->
+            item(key = r.solo.id) {
+              Column(Modifier.fillMaxWidth().clickable { open = r.solo.id }.padding(horizontal = 16.dp, vertical = 10.dp).testTag("solo-${r.solo.slug}")) {
+                Text(r.solo.title, style = MaterialTheme.typography.titleMedium)
+                Text(
+                  listOfNotNull(
+                    "${r.solo.soloist}, ${r.solo.instrument.lowercase()}",
+                    r.solo.context,
+                    r.solo.recorded?.let(::recordedLabel),
+                  ).joinToString(" · "),
+                  style = MaterialTheme.typography.bodySmall,
+                )
+              }
+              HorizontalDivider()
             }
-            HorizontalDivider()
           }
         }
       }
@@ -236,7 +245,7 @@ private fun SoloDetail(
   var notes by remember(id) { mutableStateOf(row.state?.notes.orEmpty()) }
   Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-      BackButton("Solos", onBack)
+      BackButton(onClick = onBack)
       Spacer(Modifier.weight(1f))
       if (solo.userCreated) {
         StickerButton(onClick = onEdit, sticker = neutralSticker, modifier = Modifier.height(40.dp).testTag("edit-solo")) {
@@ -361,7 +370,7 @@ private fun SoloEditor(solo: TranscriptionEntity?, onSave: (TranscriptionDraft) 
   val callie = LocalCallie.current
   val problems = draft.problems()
   Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-    BackButton("Cancel", onBack)
+    BackButton(onBack, label = "Cancel")
     Text(if (solo == null) "Add a solo" else "Edit solo", style = MaterialTheme.typography.headlineMedium)
     Field("Tune", draft.title, "solo-title") { draft = draft.copy(title = it) }
     Field("Soloist", draft.soloist, "solo-soloist") { draft = draft.copy(soloist = it) }

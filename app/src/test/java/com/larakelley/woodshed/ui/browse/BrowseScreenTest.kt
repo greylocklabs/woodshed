@@ -9,12 +9,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.assertTextEquals
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextInput
 import com.larakelley.woodshed.data.db.ExerciseEntity
 import com.larakelley.woodshed.data.db.StandardEntity
@@ -170,8 +174,23 @@ class BrowseScreenTest {
     compose.onNodeWithTag("exercise-instruments").assertExists()
     compose.onNodeWithText("Brass").assertExists()
     compose.onNodeWithText("72 bpm").assertExists()
-    compose.onNodeWithText("Back to exercises").performClick()
+    compose.onNodeWithText("Back").performClick()
     compose.onNodeWithText("Long tones").assertExists()
+  }
+
+  @Test
+  fun backFindsTheListWhereItWasLeft() {
+    val many = (1..60).map { StandardEntity(it.toLong(), "tune-$it", "Tune %02d".format(it), null, null, 32, "4/4", "AABA", "Swing", "C", null, null) }
+    compose.setContent {
+      val rows = tuneRows(many, Transposition.C)
+      BrowseScreen(BrowseState(Transposition.C, rows, rows.size, exerciseRows(exercises), exercises.size, allTunes = rows), onSelectTransposition = {})
+    }
+    compose.onNodeWithTag("tab-Tunes").performClick()
+    compose.onNodeWithTag("tune-list").performScrollToNode(hasText("Tune 50"))
+    compose.onNodeWithText("Tune 50").performClick()
+    compose.onNodeWithText("Back").performClick()
+    compose.onNodeWithText("Tune 50").assertIsDisplayed()
+    compose.onNodeWithText("Tune 01").assertIsNotDisplayed()
   }
 
   @Test

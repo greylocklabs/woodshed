@@ -5,6 +5,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
@@ -59,6 +60,19 @@ class ChangesScreenTest {
     // Written G on a Bb horn is concert F.
     assertEquals(listOf("form:blues" to 5), keys)
     compose.onNodeWithText("12 bars").assertExists()
+  }
+
+  @Test
+  fun aSplitBarShowsBothChordsAndBackKeepsTheListWhereItWas() {
+    compose.setContent {
+      ChangesScreen(ChangesState(), MetronomeState(), DroneState(), Transposition.C, ChangesActions())
+    }
+    compose.onNodeWithTag("changes-dameron").performScrollTo().performClick()
+    compose.onNodeWithText("Tadd Dameron turnaround").assertExists()
+    compose.onNodeWithText("Ebmaj7").assertExists()
+    compose.onNodeWithText("Dbmaj7").assertExists()
+    compose.onNodeWithText("Back").performClick()
+    compose.onNodeWithTag("changes-dameron").assertIsDisplayed()
   }
 
   @Test
@@ -131,7 +145,7 @@ class ChangesScreenTest {
     }
     // Back on the tab while it plays, the player shows; back from it, the list shows what plays.
     compose.onNodeWithTag("changes-chord").assertTextEquals("F7")
-    compose.onNodeWithText("Back to changes").performClick()
+    compose.onNodeWithText("Back").performClick()
     compose.onNodeWithText("F7, bar 5 of 12").assertExists()
     compose.onNodeWithTag("now-playing-stop", useUnmergedTree = true).performClick()
     assertTrue(stopped)

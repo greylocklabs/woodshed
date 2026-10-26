@@ -15,7 +15,10 @@ data class Bar(val chords: List<ProgressionChord>) {
   }
 
   /** The chord sounding on [beat] (from 0) of a bar [beatsPerBar] long; a split bar's first chord takes the larger half. */
-  fun chordOn(beat: Int, beatsPerBar: Int): ProgressionChord = if (chords.size == 1 || beat < (beatsPerBar + 1) / 2) chords[0] else chords[1]
+  fun chordOn(beat: Int, beatsPerBar: Int): ProgressionChord = chords[halfOn(beat, beatsPerBar)]
+
+  /** The index in [chords] of [chordOn]. */
+  fun halfOn(beat: Int, beatsPerBar: Int): Int = if (chords.size == 1 || beat < (beatsPerBar + 1) / 2) 0 else 1
 }
 
 /** How the Changes tab groups what it offers. */
@@ -242,7 +245,7 @@ object ChangesLibrary {
     Form("one-six-two-five", "I-vi-ii-V", "The common turnaround", ChangesSection.CADENCES, bars("Imaj7 VIm7 | IIm7 V7")),
     Form("three-six-two-five", "iii-VI-ii-V", "Starting on iii", ChangesSection.CADENCES, bars("IIIm7 VI7 | IIm7 V7")),
     Form("tritone-turnaround", "Tritone-sub turnaround", "I, bIII7, ii, bII7", ChangesSection.CADENCES, bars("Imaj7 bIII7 | IIm7 bII7")),
-    Form("dameron", "Dameron turnaround", "I, bIII, bVI, bII, as in Lady Bird", ChangesSection.CADENCES, bars("Imaj7 bIIImaj7 | bVImaj7 bIImaj7")),
+    Form("dameron", "Tadd Dameron turnaround", "I, bIII, bVI, bII, as in Lady Bird", ChangesSection.CADENCES, bars("Imaj7 bIIImaj7 | bVImaj7 bIImaj7")),
     Form("dominant-cycle", "Cycle of dominants", "III7, VI7, II7, V7 to I", ChangesSection.CADENCES, bars("III7 | VI7 | II7 | V7 | I6 | I6")),
     Form(
       "tritone-dominants",

@@ -22,6 +22,17 @@ release's GitHub notes, and a release refuses to go out without one.
 - **tunes:** the key picker names the instruments you play under each key,
   such as "Tenor sax, trumpet" under Bb, rather than fixed examples. Keys
   none of yours read in keep the examples.
+- **drone:** under the voicings, the piano notes each one plays for the
+  chord, such as C3 E4 G4 Bb4 for a spread C7. Changes shows them for the
+  chord playing.
+- **app:** every back button just says Back, and going back finds a list
+  scrolled where you left it.
+
+### Fixed
+
+- **changes:** a bar of two chords shows both, each in its half, with the
+  one playing tinted. Before, the second could be cut off.
+- **changes:** the Dameron turnaround is named the Tadd Dameron turnaround.
 
 ## 0.6.0
 

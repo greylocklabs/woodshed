@@ -66,7 +66,7 @@ fun ExerciseEditor(
   val callie = LocalCallie.current
 
   Column(modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-    BackButton("Cancel", onBack)
+    BackButton(onBack, label = "Cancel")
     Text(if (exercise == null) "Add an exercise" else "Edit ${exercise.name}", style = MaterialTheme.typography.headlineMedium)
     if (exercise != null && !exercise.userCreated) {
       Helper("Your changes are kept beside the original, so updates never overwrite them. You can reset to the original any time.")
