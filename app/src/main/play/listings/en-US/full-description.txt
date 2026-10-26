@@ -17,11 +17,14 @@ Keep a list of solos to learn. Each one plays from just before it starts, at hal
 WRITTEN FOR YOUR INSTRUMENT
 Choose from 26 instruments. Keys, the tuner and the drone are named for its transposition, and exercises are picked to suit it.
 
+CHANGES
+Blues, standard forms, cadences, turnarounds and key-to-key patterns, or changes you write yourself, played in time in any key, with the chord now and next. A harmony session plays some too.
+
 METRONOME, TUNER AND DRONE
-A sample-accurate metronome with tap tempo, jazz tempo presets and clicks on 2 and 4; a tuner; and a drone with an optional fifth. The metronome and drone keep playing during a session.
+A sample-accurate metronome with tap tempo, jazz tempo presets and clicks on 2 and 4; a tuner; and a drone that plays a note or a chord, voiced close, spread or as a shell. The metronome and drone keep playing during a session.
 
 AND MORE
-Roll a random tune, exercise and key when you would rather not plan. Make playlists for a gig or a lesson. Attach recordings to any tune, with YouTube and Vimeo playing in place.
+Roll a random tune, exercise and key, a solo, or changes when you would rather not plan. Make playlists for a gig or a lesson. Attach recordings to any tune, with YouTube and Vimeo playing in place.
 
 YOUR DATA STAYS YOURS
 Everything lives on your phone. Back it up to a file wherever you like and restore it on another phone. Woodshed goes online only to play a video you tap and to send a problem report you choose to send.

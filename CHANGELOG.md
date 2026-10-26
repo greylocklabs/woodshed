@@ -32,6 +32,8 @@ release's GitHub notes, and a release refuses to go out without one.
   chord playing.
 - **app:** every back button just says Back, and going back finds a list
   scrolled where you left it.
+- **help:** the Help tab covers changes, chord drones, the bar for what's
+  playing and starting fresh.
 
 ### Fixed
 

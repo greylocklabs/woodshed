@@ -90,7 +90,7 @@ class ScreenshotTest(private val mode: String) {
     fun modes() = listOf(arrayOf("light"), arrayOf("dark"), arrayOf("play"))
 
     /** The Play listing's screenshots, in the order the store shows them. */
-    private val PLAY_ORDER = listOf("session-setup", "plan-review", "session-step", "solos", "drone", "tuner", "metronome")
+    private val PLAY_ORDER = listOf("session-setup", "plan-review", "session-step", "solos", "changes-playing", "drone", "tuner", "metronome")
   }
 
   private fun capture(name: String, content: @Composable () -> Unit) {
