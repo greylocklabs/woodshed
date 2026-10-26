@@ -5,6 +5,7 @@ import android.content.Context
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import com.larakelley.woodshed.data.db.BlockOutcome
+import com.larakelley.woodshed.data.db.ReviewEventEntity
 import com.larakelley.woodshed.data.db.WoodshedDatabase
 import com.larakelley.woodshed.data.seed.Seed
 import com.larakelley.woodshed.data.seed.SeedImporter
@@ -109,6 +110,51 @@ class BackupTest {
     assertTrue(db.reviewEvents().all().none { it.itemId == id(own) })
     assertEquals(1, db.sessions().all().size)
     assertEquals(Instrument.ALTO_SAX, repository.instrument.value)
+  }
+
+  /** A bundled solo and an own one, each started and graded, with a seeded tune learnt and graded too; returns their ids. */
+  private suspend fun solosAndATune(): Pair<Long, Long> {
+    val read = { name: String -> context.assets.open(name).bufferedReader().use { it.readText() } }
+    SeedImporter(db).import(Seed.parse(read("standards.json"), read("exercises.json"), read("transcriptions.json")))
+    val solos = TranscriptionService(db)
+    val bundled = db.transcriptions().bySlug("singin-in-the-rain-patrick-bartley")!!.id
+    val own = solos.add(TranscriptionDraft(title = "Solar", soloist = "Me", instrument = "Alto sax", url = "https://youtu.be/dQw4w9WgXcQ"))
+    for (id in listOf(bundled, own)) {
+      solos.start(id)
+      solos.grade(id, Grade.GOOD)
+    }
+    practice.startLearning(id("solar"))
+    val tuneExercise = db.exercises().all().first { it.appliesToTune }
+    practice.grade(practice.cardForBlock(PlanBlock.Tune(id("solar"), tuneExercise.id, 10), Transposition.Bb)!!, Grade.GOOD)
+    return bundled to own
+  }
+
+  @Test
+  fun eachKindOfProgressClearsAlone() = runTest {
+    solosAndATune()
+    backups.reset(setOf(ResetPart.TUNE_PROGRESS))
+    assertTrue(db.tuneStates().all().isEmpty())
+    assertTrue(db.reviewEvents().all().none { it.itemKind == ReviewEventEntity.TUNE })
+    assertEquals(2, db.transcriptions().states().size)
+    assertEquals(2, db.reviewEvents().all().count { it.itemKind == ReviewEventEntity.TRANSCRIPTION })
+
+    solosAndATune()
+    backups.reset(setOf(ResetPart.SOLO_PROGRESS))
+    assertTrue(db.transcriptions().states().isEmpty())
+    assertTrue(db.reviewEvents().all().none { it.itemKind == ReviewEventEntity.TRANSCRIPTION })
+    assertEquals(listOf(id("solar")), db.tuneStates().all().map { it.standardId })
+    assertTrue(db.reviewEvents().all().any { it.itemKind == ReviewEventEntity.TUNE })
+  }
+
+  @Test
+  fun ownMaterialTakesItsSolosProgressWithIt() = runTest {
+    val (bundled, own) = solosAndATune()
+    backups.reset(setOf(ResetPart.MATERIAL))
+    assertTrue(db.transcriptions().all().filter { it.userCreated }.all { it.archivedAt != null })
+    assertEquals(listOf(bundled), db.transcriptions().states().map { it.transcriptionId })
+    val solos = db.reviewEvents().all().filter { it.itemKind == ReviewEventEntity.TRANSCRIPTION }.map { it.itemId }
+    assertEquals(listOf(bundled), solos)
+    assertTrue(own !in solos)
   }
 
   @Test
