@@ -91,4 +91,13 @@ class ChangesTest {
     assertEquals(every, bars(numerals(every)))
     assertEquals("IIm7 V7 | Imaj7 | #IVdim7", numerals(bars("IIm7 V7 | Imaj7 | bVdim7")))
   }
+
+  @Test
+  fun aSplitBarsSecondChordTakesTheSecondHalf() {
+    val split = bars("I IV").single()
+    assertEquals(listOf(0, 0, 1, 1), (0..3).map { split.halfOn(it, 4) })
+    // In 3/4 the first chord takes the larger part.
+    assertEquals(listOf(0, 0, 1), (0..2).map { split.halfOn(it, 3) })
+    assertEquals(listOf(0, 0, 0, 0), (0..3).map { bars("I").single().halfOn(it, 4) })
+  }
 }

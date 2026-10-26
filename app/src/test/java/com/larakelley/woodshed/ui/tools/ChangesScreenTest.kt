@@ -5,6 +5,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -13,6 +15,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.text.TextLayoutResult
 import com.larakelley.woodshed.audio.ChangesSource
 import com.larakelley.woodshed.audio.ChangesState
 import com.larakelley.woodshed.audio.DroneState
@@ -23,6 +26,7 @@ import com.larakelley.woodshed.domain.Transposition
 import com.larakelley.woodshed.domain.bars
 import com.larakelley.woodshed.domain.numerals
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -34,6 +38,12 @@ import org.robolectric.annotation.Config
 @Config(application = Application::class)
 class ChangesScreenTest {
   @get:Rule val compose = createComposeRule()
+
+  private fun SemanticsNodeInteraction.assertFits() {
+    val layouts = mutableListOf<TextLayoutResult>()
+    fetchSemanticsNode().config[SemanticsActions.GetTextLayoutResult].action?.invoke(layouts)
+    assertFalse(layouts.single().hasVisualOverflow)
+  }
 
   @Test
   fun aFormLoadsAndPlaysInTheHornsKey() {
@@ -69,8 +79,8 @@ class ChangesScreenTest {
     }
     compose.onNodeWithTag("changes-dameron").performScrollTo().performClick()
     compose.onNodeWithText("Tadd Dameron turnaround").assertExists()
-    compose.onNodeWithText("Ebmaj7").assertExists()
-    compose.onNodeWithText("Dbmaj7").assertExists()
+    // Both chords of a split bar show whole, not cut off by their half of it.
+    for (chord in listOf("Ebmaj7", "Abmaj7", "Dbmaj7")) compose.onNodeWithText(chord).assertIsDisplayed().assertFits()
     compose.onNodeWithText("Back").performClick()
     compose.onNodeWithTag("changes-dameron").assertIsDisplayed()
   }
