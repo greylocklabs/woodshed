@@ -19,10 +19,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.larakelley.woodshed.domain.ReportSubject
-import com.larakelley.woodshed.theme.BackButton
-import com.larakelley.woodshed.theme.StickerButton
-import com.larakelley.woodshed.theme.neutralSticker
 import com.larakelley.woodshed.ui.report.ReportButton
+import org.greylocklabs.ui.BackButton
+import org.greylocklabs.ui.StickerButton
+import org.greylocklabs.ui.neutralSticker
 
 /** Full page for one exercise, opened from the Exercises tab. */
 @Composable

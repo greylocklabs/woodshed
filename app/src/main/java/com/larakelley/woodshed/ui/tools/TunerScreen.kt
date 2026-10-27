@@ -43,13 +43,14 @@ import androidx.core.content.ContextCompat
 import com.larakelley.woodshed.audio.TunerState
 import com.larakelley.woodshed.domain.NoteReading
 import com.larakelley.woodshed.domain.Transposition
-import com.larakelley.woodshed.theme.Helper
-import com.larakelley.woodshed.theme.LocalCallie
-import com.larakelley.woodshed.theme.PRESS_SPRING
-import com.larakelley.woodshed.theme.PinnedAction
-import com.larakelley.woodshed.theme.SectionLabel
-import com.larakelley.woodshed.theme.StickerButton
-import com.larakelley.woodshed.theme.neutralSticker
+import com.larakelley.woodshed.theme.Grades
+import org.greylocklabs.ui.Helper
+import org.greylocklabs.ui.LocalColors
+import org.greylocklabs.ui.PRESS_SPRING
+import org.greylocklabs.ui.PinnedAction
+import org.greylocklabs.ui.SectionLabel
+import org.greylocklabs.ui.StickerButton
+import org.greylocklabs.ui.neutralSticker
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.cos
@@ -63,7 +64,7 @@ const val IN_TUNE_CENTS = 5
 /** Names what the microphone hears, written for [transposition], on a needle from 50 cents flat to 50 sharp. */
 @Composable
 fun TunerScreen(state: TunerState, transposition: Transposition, actions: TunerActions) {
-  val callie = LocalCallie.current
+  val callie = LocalColors
   val context = LocalContext.current
   var denied by rememberSaveable { mutableStateOf(false) }
   val askMic = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
@@ -145,7 +146,7 @@ private fun noteText(n: NoteReading) = buildAnnotatedString {
 /** A half dial from -50 to +50 cents; the band around zero turns mint when the needle sits in it. */
 @Composable
 private fun Gauge(cents: Int?, modifier: Modifier = Modifier) {
-  val callie = LocalCallie.current
+  val callie = LocalColors
   val angle by animateFloatAsState((cents ?: 0).coerceIn(-50, 50) / 50f * 70f, PRESS_SPRING, label = "needle")
   val inTune = cents != null && abs(cents) <= IN_TUNE_CENTS
   Canvas(modifier.testTag("gauge")) {
@@ -163,7 +164,7 @@ private fun Gauge(cents: Int?, modifier: Modifier = Modifier) {
       style = Stroke(14.dp.toPx(), cap = StrokeCap.Round),
     )
     drawArc(
-      if (inTune) callie.easy.fill else callie.border,
+      if (inTune) Grades.easy.fill else callie.border,
       startAngle = 270f - 7f,
       sweepAngle = 14f,
       useCenter = false,
@@ -180,7 +181,7 @@ private fun Gauge(cents: Int?, modifier: Modifier = Modifier) {
     if (cents != null) {
       val a = (angle - 90f) * PI.toFloat() / 180f
       val tip = Offset(center.x + cos(a) * (radius - 18.dp.toPx()), center.y + sin(a) * (radius - 18.dp.toPx()))
-      drawLine(if (inTune) callie.easy.edge else callie.accent, center, tip, strokeWidth = 5.dp.toPx(), cap = StrokeCap.Round)
+      drawLine(if (inTune) Grades.easy.edge else callie.accent, center, tip, strokeWidth = 5.dp.toPx(), cap = StrokeCap.Round)
     }
     drawCircle(callie.text, radius = 7.dp.toPx(), center = center)
   }

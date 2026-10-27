@@ -29,13 +29,13 @@ import com.larakelley.woodshed.domain.Transposition
 import com.larakelley.woodshed.domain.Voicing
 import com.larakelley.woodshed.domain.pianoNotes
 import com.larakelley.woodshed.domain.spell
-import com.larakelley.woodshed.theme.CallieChip
-import com.larakelley.woodshed.theme.Helper
-import com.larakelley.woodshed.theme.LocalCallie
-import com.larakelley.woodshed.theme.PillChoice
-import com.larakelley.woodshed.theme.PinnedAction
-import com.larakelley.woodshed.theme.SectionLabel
-import com.larakelley.woodshed.theme.StickerButton
+import org.greylocklabs.ui.GreylockChip
+import org.greylocklabs.ui.Helper
+import org.greylocklabs.ui.LocalColors
+import org.greylocklabs.ui.PillChoice
+import org.greylocklabs.ui.PinnedAction
+import org.greylocklabs.ui.SectionLabel
+import org.greylocklabs.ui.StickerButton
 
 data class DroneActions(
   val toggle: () -> Unit = {},
@@ -54,7 +54,7 @@ private fun noteName(pitchClass: Int) = Key(pitchClass, minor = false).displayNa
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun DroneScreen(state: DroneState, transposition: Transposition, a4: Int, actions: DroneActions) {
-  val callie = LocalCallie.current
+  val callie = LocalColors
   val written = Math.floorMod(state.pitchClass + transposition.offset, 12)
   PinnedAction(action = {
     StickerButton(onClick = actions.toggle, modifier = Modifier.fillMaxWidth().height(60.dp).testTag("drone-toggle")) {
@@ -80,7 +80,7 @@ fun DroneScreen(state: DroneState, transposition: Transposition, a4: Int, action
     SectionLabel("Note")
     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
       (0..11).forEach { w ->
-        CallieChip(
+        GreylockChip(
           selected = w == written,
           onClick = { actions.setPitchClass(w - transposition.offset) },
           label = { Text(noteName(w)) },
@@ -119,7 +119,7 @@ internal fun ChordChips(selected: ChordQuality?, onSelect: (ChordQuality) -> Uni
     group.label?.let { Helper(it, Modifier.padding(top = 8.dp)) }
     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
       ChordQuality.entries.filter { it.group == group }.forEach { chord ->
-        CallieChip(
+        GreylockChip(
           selected = chord == selected,
           onClick = { onSelect(chord) },
           label = { Text(chord.label) },

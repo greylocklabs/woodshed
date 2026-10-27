@@ -63,14 +63,6 @@ import com.larakelley.woodshed.domain.InstrumentGroup
 import com.larakelley.woodshed.domain.ReportSubject
 import com.larakelley.woodshed.domain.Transposition
 import com.larakelley.woodshed.theme.AppIcons
-import com.larakelley.woodshed.theme.BackButton
-import com.larakelley.woodshed.theme.Helper
-import com.larakelley.woodshed.theme.LocalCallie
-import com.larakelley.woodshed.theme.PillChoice
-import com.larakelley.woodshed.theme.SectionLabel
-import com.larakelley.woodshed.theme.StickerButton
-import com.larakelley.woodshed.theme.SwitchRow
-import com.larakelley.woodshed.theme.neutralSticker
 import com.larakelley.woodshed.ui.browse.DEFAULT_TABS
 import com.larakelley.woodshed.ui.browse.DropdownChip
 import com.larakelley.woodshed.ui.browse.TAB_EMOJI
@@ -86,6 +78,14 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.greylocklabs.ui.BackButton
+import org.greylocklabs.ui.Helper
+import org.greylocklabs.ui.LocalColors
+import org.greylocklabs.ui.PillChoice
+import org.greylocklabs.ui.SectionLabel
+import org.greylocklabs.ui.StickerButton
+import org.greylocklabs.ui.SwitchRow
+import org.greylocklabs.ui.neutralSticker
 import java.text.DateFormat
 import java.time.LocalDate
 import java.util.Date
@@ -304,7 +304,7 @@ private fun BackupTab(ui: SettingsUi, actions: SettingsActions) {
   var chosen by rememberSaveable { mutableStateOf(emptyList<String>()) }
   val parts = ResetPart.entries.filter { it.name in chosen }.toSet()
   var confirmReset by rememberSaveable { mutableStateOf(false) }
-  val callie = LocalCallie.current
+  val callie = LocalColors
 
   Padded {
     SectionLabel("Backup file")
@@ -406,7 +406,7 @@ private fun BackupTab(ui: SettingsUi, actions: SettingsActions) {
 @Composable
 private fun AboutTab(ui: SettingsUi) {
   val uris = LocalUriHandler.current
-  val accent = LocalCallie.current.accent
+  val accent = LocalColors.accent
   Padded {
     SectionLabel("Woodshed ${ui.version}")
     Text(
@@ -481,7 +481,7 @@ private val TAB_ROW_HEIGHT = 52.dp
  */
 @Composable
 private fun TabOrderList(order: List<String>, onMove: (String, Int) -> Unit, onSet: (List<String>) -> Unit) {
-  val callie = LocalCallie.current
+  val callie = LocalColors
   val rowPx = with(LocalDensity.current) { TAB_ROW_HEIGHT.toPx() }
   var items by remember(order) { mutableStateOf(order) }
   var dragging by remember { mutableStateOf<String?>(null) }

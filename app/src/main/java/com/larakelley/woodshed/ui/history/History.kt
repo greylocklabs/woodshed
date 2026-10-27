@@ -45,15 +45,15 @@ import com.larakelley.woodshed.data.PracticeDay
 import com.larakelley.woodshed.data.PracticeStats
 import com.larakelley.woodshed.data.db.BlockOutcome
 import com.larakelley.woodshed.domain.Key
-import com.larakelley.woodshed.theme.EmptyState
-import com.larakelley.woodshed.theme.LocalCallie
-import com.larakelley.woodshed.theme.PillChoice
-import com.larakelley.woodshed.theme.SectionLabel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import org.greylocklabs.ui.EmptyState
+import org.greylocklabs.ui.LocalColors
+import org.greylocklabs.ui.PillChoice
+import org.greylocklabs.ui.SectionLabel
 import java.time.DayOfWeek
 import java.time.Instant
 import java.time.LocalDate
@@ -179,7 +179,7 @@ private fun SessionList(sessions: List<PastSession>, zone: ZoneId, onDelete: (Lo
 
 @Composable
 private fun SessionRow(s: PastSession, zone: ZoneId, onDelete: (Long) -> Unit) {
-  val callie = LocalCallie.current
+  val callie = LocalColors
   var open by rememberSaveable(s.id) { mutableStateOf(false) }
   var confirmDelete by rememberSaveable(s.id) { mutableStateOf(false) }
   if (confirmDelete) {
@@ -233,7 +233,7 @@ private fun SessionRow(s: PastSession, zone: ZoneId, onDelete: (Long) -> Unit) {
 
 @Composable
 private fun CalendarView(ui: HistoryUi, actions: HistoryActions, zone: ZoneId) {
-  val callie = LocalCallie.current
+  val callie = LocalColors
   val month = ui.month
   LazyColumn(Modifier.fillMaxSize().testTag("calendar")) {
     item {
@@ -313,7 +313,7 @@ fun monthWeeks(month: YearMonth): List<List<LocalDate?>> {
 
 @Composable
 private fun DayCell(day: LocalDate, practice: PracticeDay?, selected: Boolean, onClick: () -> Unit) {
-  val callie = LocalCallie.current
+  val callie = LocalColors
   // A full hour in sessions fills the circle; reviews alone show as a light one.
   val strength = practice?.let { 0.25f + 0.75f * (it.practicedMs / 3_600_000f).coerceIn(0f, 1f) }
   Box(
@@ -331,7 +331,7 @@ private fun DayCell(day: LocalDate, practice: PracticeDay?, selected: Boolean, o
 
 @Composable
 private fun StatsView(stats: PracticeStats) {
-  val callie = LocalCallie.current
+  val callie = LocalColors
   LazyColumn(Modifier.fillMaxSize().testTag("stats"), contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp)) {
     item {
       Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -369,7 +369,7 @@ private fun StatsView(stats: PracticeStats) {
 
 @Composable
 private fun StatTile(label: String, value: String, modifier: Modifier, tag: String) {
-  val callie = LocalCallie.current
+  val callie = LocalColors
   Column(modifier.background(callie.surfaceAlt, RoundedCornerShape(16.dp)).padding(16.dp).testTag(tag)) {
     Text(value, style = MaterialTheme.typography.headlineSmall)
     Text(label, style = MaterialTheme.typography.bodyMedium, color = callie.textMuted)
@@ -382,7 +382,7 @@ private fun StatTile(label: String, value: String, modifier: Modifier, tag: Stri
  */
 @Composable
 private fun KeyBars(reps: List<Int>) {
-  val callie = LocalCallie.current
+  val callie = LocalColors
   val most = reps.max().coerceAtLeast(1)
   Column(Modifier.testTag("key-bars"), verticalArrangement = Arrangement.spacedBy(2.dp)) {
     reps.forEachIndexed { pc, n ->

@@ -16,8 +16,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
-import com.larakelley.woodshed.theme.LocalCallie
-import com.larakelley.woodshed.theme.StickerButton
+import org.greylocklabs.ui.LocalColors
+import org.greylocklabs.ui.StickerButton
 
 /**
  * Something left sounding, shown along the bottom of screens other than its own so it can always be stopped.
@@ -25,7 +25,7 @@ import com.larakelley.woodshed.theme.StickerButton
  */
 @Composable
 fun PlayingBar(title: String, detail: String, tag: String, onOpen: () -> Unit, onStop: () -> Unit, modifier: Modifier = Modifier) {
-  val callie = LocalCallie.current
+  val callie = LocalColors
   Column(modifier.fillMaxWidth().background(callie.surface)) {
     HorizontalDivider()
     Row(

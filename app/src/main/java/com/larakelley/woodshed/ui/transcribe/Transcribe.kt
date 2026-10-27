@@ -51,14 +51,6 @@ import com.larakelley.woodshed.domain.MediaLink
 import com.larakelley.woodshed.domain.ReportSubject
 import com.larakelley.woodshed.domain.Tonality
 import com.larakelley.woodshed.domain.Transposition
-import com.larakelley.woodshed.theme.BackButton
-import com.larakelley.woodshed.theme.EmptyState
-import com.larakelley.woodshed.theme.Helper
-import com.larakelley.woodshed.theme.LocalCallie
-import com.larakelley.woodshed.theme.PillChoice
-import com.larakelley.woodshed.theme.SectionLabel
-import com.larakelley.woodshed.theme.StickerButton
-import com.larakelley.woodshed.theme.neutralSticker
 import com.larakelley.woodshed.ui.AppNavigation
 import com.larakelley.woodshed.ui.Destination
 import com.larakelley.woodshed.ui.jsonSaver
@@ -69,6 +61,14 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import org.greylocklabs.ui.BackButton
+import org.greylocklabs.ui.EmptyState
+import org.greylocklabs.ui.Helper
+import org.greylocklabs.ui.LocalColors
+import org.greylocklabs.ui.PillChoice
+import org.greylocklabs.ui.SectionLabel
+import org.greylocklabs.ui.StickerButton
+import org.greylocklabs.ui.neutralSticker
 
 /** A solo with the user's progress on it, as the tab lists it. */
 data class SoloRow(val solo: TranscriptionEntity, val state: TranscriptionStateEntity?) {
@@ -241,7 +241,7 @@ private fun SoloDetail(
   val id = solo.id
   val link = remember(solo.url) { MediaLink.parse(solo.url) }
   val uris = LocalUriHandler.current
-  val callie = LocalCallie.current
+  val callie = LocalColors
   var notes by remember(id) { mutableStateOf(row.state?.notes.orEmpty()) }
   Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -367,7 +367,7 @@ private fun SoloEditor(solo: TranscriptionEntity?, onSave: (TranscriptionDraft) 
   var draft by rememberSaveable(solo?.id, stateSaver = jsonSaver()) { mutableStateOf(solo?.let(TranscriptionDraft::of) ?: TranscriptionDraft()) }
   var tried by remember { mutableStateOf(false) }
   var confirm by rememberSaveable { mutableStateOf(false) }
-  val callie = LocalCallie.current
+  val callie = LocalColors
   val problems = draft.problems()
   Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
     BackButton(onBack, label = "Cancel")

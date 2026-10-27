@@ -85,8 +85,9 @@ ship under the SIL Open Font License (`licenses/`).
 
 Needs a JDK and the Android SDK (`android sdk` or Android Studio); Gradle fetches
 the rest, including a Java 21 toolchain. Clone with `git clone --recurse-submodules`:
-the colors come from the Callie themes in the `core/` submodule, shared with the other
-Greylock Labs apps, and the build turns them into Kotlin.
+the theme, fonts and shared components come from the Compose library in the `core/`
+submodule, `core/android`, which builds the Callie themes into Kotlin for every Greylock
+Labs app.
 
 ```
 make build               # app/build/outputs/apk/debug/app-debug.apk
