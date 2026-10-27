@@ -21,6 +21,8 @@ ktlint = "1.8.0"
 roborazzi = "1.76.0"
 
 [libraries]
+# Built from the core submodule, which settings.gradle.kts includes, so it has no version of its own.
+greylock-ui = { module = "org.greylocklabs:ui" }
 play-review-ktx = { module = "com.google.android.play:review-ktx", version.ref = "playReview" }
 androidx-test-espresso-core = { module = "androidx.test.espresso:espresso-core", version.ref = "espresso" }
 androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "androidxCore" }

@@ -34,10 +34,10 @@ import com.larakelley.woodshed.data.HttpReportSender
 import com.larakelley.woodshed.data.ReportSender
 import com.larakelley.woodshed.domain.Report
 import com.larakelley.woodshed.domain.ReportSubject
-import com.larakelley.woodshed.theme.Helper
-import com.larakelley.woodshed.theme.LocalCallie
 import com.larakelley.woodshed.ui.jsonSaver
 import kotlinx.coroutines.launch
+import org.greylocklabs.ui.Helper
+import org.greylocklabs.ui.LocalColors
 
 /** The installed version, shown in reports. Provided once at the top of the app. */
 val LocalAppVersion = compositionLocalOf { "" }
@@ -53,7 +53,7 @@ fun ReportButton(
   label: String = "🚩 Report a problem",
 ) {
   var open by rememberSaveable { mutableStateOf(false) }
-  TextButton(onClick = { open = true }, modifier = modifier.testTag("report")) { Text(label, color = LocalCallie.current.textMuted) }
+  TextButton(onClick = { open = true }, modifier = modifier.testTag("report")) { Text(label, color = LocalColors.textMuted) }
   if (open) ReportDialog(subject, item, id, details, onDismiss = { open = false })
 }
 
@@ -118,7 +118,7 @@ fun ReportDialog(subject: ReportSubject, item: String?, id: String?, details: Li
           supportingText = { if (note.length > Report.MAX_NOTE * 3 / 4) Text("${note.length} / ${Report.MAX_NOTE}") },
           modifier = Modifier.fillMaxWidth().padding(top = 8.dp).testTag("report-note"),
         )
-        failure?.let { Text(it, color = LocalCallie.current.danger, modifier = Modifier.padding(top = 8.dp).testTag("report-failed")) }
+        failure?.let { Text(it, color = LocalColors.danger, modifier = Modifier.padding(top = 8.dp).testTag("report-failed")) }
         Helper(
           "Sending files a public GitHub issue with what you chose and wrote, the item's details, and the app and Android versions. " +
             "No account is needed, and nothing about you is included.",

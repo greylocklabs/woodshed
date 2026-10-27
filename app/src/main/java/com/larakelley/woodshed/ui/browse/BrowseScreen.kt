@@ -73,17 +73,17 @@ import com.larakelley.woodshed.domain.Tonality
 import com.larakelley.woodshed.domain.Transposition
 import com.larakelley.woodshed.domain.delayLabel
 import com.larakelley.woodshed.domain.titleSortKey
-import com.larakelley.woodshed.theme.BackButton
-import com.larakelley.woodshed.theme.CallieChip
-import com.larakelley.woodshed.theme.EmptyState
-import com.larakelley.woodshed.theme.LocalCallie
-import com.larakelley.woodshed.theme.SectionLabel
-import com.larakelley.woodshed.theme.StickerButton
-import com.larakelley.woodshed.theme.neutralSticker
 import com.larakelley.woodshed.ui.AppNavigation
 import com.larakelley.woodshed.ui.Destination
 import com.larakelley.woodshed.ui.SoloLink
 import com.larakelley.woodshed.ui.report.ReportButton
+import org.greylocklabs.ui.BackButton
+import org.greylocklabs.ui.EmptyState
+import org.greylocklabs.ui.GreylockChip
+import org.greylocklabs.ui.LocalColors
+import org.greylocklabs.ui.SectionLabel
+import org.greylocklabs.ui.StickerButton
+import org.greylocklabs.ui.neutralSticker
 
 /** "Add to playlist", or which playlists the tune is in, opening the picker. */
 @Composable
@@ -382,7 +382,7 @@ fun BrowseScreen(
         }
       }
       if (playing.isNotEmpty()) {
-        Column(Modifier.background(LocalCallie.current.surface).padding(bottom = padding.calculateBottomPadding())) {
+        Column(Modifier.background(LocalColors.surface).padding(bottom = padding.calculateBottomPadding())) {
           playing.forEach { it.bar() }
         }
       }
@@ -407,9 +407,9 @@ private fun TuneSolos(solos: List<SoloLink>, onOpen: (Long) -> Unit) {
     ) {
       Column(Modifier.weight(1f)) {
         Text(s.soloist, style = MaterialTheme.typography.titleMedium)
-        if (s.detail.isNotEmpty()) Text(s.detail, style = MaterialTheme.typography.bodySmall, color = LocalCallie.current.textMuted)
+        if (s.detail.isNotEmpty()) Text(s.detail, style = MaterialTheme.typography.bodySmall, color = LocalColors.textMuted)
       }
-      Text("›", style = MaterialTheme.typography.titleLarge, color = LocalCallie.current.textMuted)
+      Text("›", style = MaterialTheme.typography.titleLarge, color = LocalColors.textMuted)
     }
   }
 }
@@ -435,7 +435,7 @@ fun <T> DropdownChip(
 ) {
   var open by rememberSaveable { mutableStateOf(false) }
   Box {
-    CallieChip(selected = open, onClick = { open = true }, label = { Text("$name: $current") }, modifier = Modifier.testTag("chip-$name"))
+    GreylockChip(selected = open, onClick = { open = true }, label = { Text("$name: $current") }, modifier = Modifier.testTag("chip-$name"))
     DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
       if (allowAny) {
         DropdownMenuItem(text = { Text(anyLabel) }, onClick = {
@@ -698,7 +698,7 @@ private fun TuneDetail(
     val comfort = tune.knowledge?.comfort
     FlowRow(Modifier.padding(vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
       Comfort.entries.forEach { level ->
-        CallieChip(
+        GreylockChip(
           selected = comfort == level,
           onClick = { actions.setComfort(id, if (comfort == level) null else level) },
           label = { Text(level.label) },
@@ -757,7 +757,7 @@ private fun KnownKeys(tune: TuneRow, onToggle: (Int) -> Unit) {
     Key.CIRCLE_OF_FOURTHS.forEach { written ->
       val concert = Math.floorMod(written - transposition.offset, 12)
       val label = Key(written, minor).displayName.removeSuffix(" minor") + if (minor) "m" else ""
-      CallieChip(selected = KeyMask.contains(mask, concert), onClick = {
+      GreylockChip(selected = KeyMask.contains(mask, concert), onClick = {
         onToggle(concert)
       }, label = { Text(label) }, modifier = Modifier.testTag("key-$concert"))
     }

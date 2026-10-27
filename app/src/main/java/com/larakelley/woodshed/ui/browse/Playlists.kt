@@ -34,11 +34,11 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import com.larakelley.woodshed.data.Playlist
-import com.larakelley.woodshed.theme.BackButton
-import com.larakelley.woodshed.theme.EmptyState
-import com.larakelley.woodshed.theme.LocalCallie
-import com.larakelley.woodshed.theme.StickerButton
-import com.larakelley.woodshed.theme.neutralSticker
+import org.greylocklabs.ui.BackButton
+import org.greylocklabs.ui.EmptyState
+import org.greylocklabs.ui.LocalColors
+import org.greylocklabs.ui.StickerButton
+import org.greylocklabs.ui.neutralSticker
 
 /** Ticks the playlists a tune is in; ticking or unticking adds or removes it straight away. */
 @Composable
@@ -113,7 +113,7 @@ fun PlaylistsScreen(playlists: List<Playlist>, actions: PlaylistActions, onOpen:
       itemsIndexed(playlists, key = { _, p -> p.id }) { _, p ->
         Row(Modifier.fillMaxWidth().clickable { onOpen(p.id) }.padding(16.dp).testTag("playlist-${p.name}"), verticalAlignment = Alignment.CenterVertically) {
           Text("📋 ${p.name}", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
-          Text(if (p.tuneIds.size == 1) "1 tune" else "${p.tuneIds.size} tunes", color = LocalCallie.current.textMuted)
+          Text(if (p.tuneIds.size == 1) "1 tune" else "${p.tuneIds.size} tunes", color = LocalColors.textMuted)
         }
         HorizontalDivider()
       }
@@ -141,7 +141,7 @@ fun PlaylistScreen(
   var renaming by rememberSaveable { mutableStateOf(false) }
   var confirmDelete by rememberSaveable { mutableStateOf(false) }
   val rows = playlist.tuneIds.mapNotNull { tunes[it] }
-  val callie = LocalCallie.current
+  val callie = LocalColors
   Column(modifier.fillMaxSize()) {
     Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
       BackButton(onClick = onBack)

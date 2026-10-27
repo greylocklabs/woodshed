@@ -30,8 +30,8 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.larakelley.woodshed.theme.LocalCallie
 import kotlinx.coroutines.launch
+import org.greylocklabs.ui.LocalColors
 
 /** "#" for titles that start with a digit or symbol, then A to Z. */
 val ALPHABET = listOf('#') + ('A'..'Z')
@@ -58,7 +58,7 @@ fun letterIndexAt(y: Float, height: Float): Int = (Math.round(y / height * (ALPH
  */
 @Composable
 fun AlphabetStrip(listState: LazyListState, sortKeys: List<String>, modifier: Modifier = Modifier) {
-  val callie = LocalCallie.current
+  val callie = LocalColors
   val scope = rememberCoroutineScope()
   var active by remember { mutableStateOf<Char?>(null) }
   var stripHeight by remember { mutableIntStateOf(1) }

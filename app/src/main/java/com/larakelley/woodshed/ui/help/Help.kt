@@ -23,8 +23,8 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
-import com.larakelley.woodshed.theme.LocalCallie
 import com.larakelley.woodshed.ui.inlineMarkdown
+import org.greylocklabs.ui.LocalColors
 
 /** One topic in the help: a question as its title, and short paragraphs that answer it. */
 data class HelpTopic(val title: String, val paragraphs: List<String>)
@@ -126,7 +126,7 @@ fun HelpScreen(topics: List<HelpTopic> = HELP_TOPICS) {
 
 @Composable
 private fun Topic(topic: HelpTopic) {
-  val callie = LocalCallie.current
+  val callie = LocalColors
   var open by rememberSaveable(topic.title) { mutableStateOf(false) }
   Column(Modifier.fillMaxWidth()) {
     Row(

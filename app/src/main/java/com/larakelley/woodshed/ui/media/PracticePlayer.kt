@@ -29,10 +29,10 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.larakelley.woodshed.data.clock
-import com.larakelley.woodshed.theme.Helper
-import com.larakelley.woodshed.theme.PillChoice
-import com.larakelley.woodshed.theme.StickerButton
-import com.larakelley.woodshed.theme.neutralSticker
+import org.greylocklabs.ui.Helper
+import org.greylocklabs.ui.PillChoice
+import org.greylocklabs.ui.StickerButton
+import org.greylocklabs.ui.neutralSticker
 
 /** The page an embedded player is served from. YouTube refuses embeds that arrive with no referring page. */
 const val PLAYER_ORIGIN = "https://larakelley.com/"

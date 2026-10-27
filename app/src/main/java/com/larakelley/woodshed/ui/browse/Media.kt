@@ -28,12 +28,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.larakelley.woodshed.data.db.TuneMediaEntity
 import com.larakelley.woodshed.domain.MediaLink
-import com.larakelley.woodshed.theme.Helper
-import com.larakelley.woodshed.theme.LocalCallie
-import com.larakelley.woodshed.theme.SectionLabel
-import com.larakelley.woodshed.theme.StickerButton
-import com.larakelley.woodshed.theme.neutralSticker
 import com.larakelley.woodshed.ui.media.rememberPlayerView
+import org.greylocklabs.ui.Helper
+import org.greylocklabs.ui.LocalColors
+import org.greylocklabs.ui.SectionLabel
+import org.greylocklabs.ui.StickerButton
+import org.greylocklabs.ui.neutralSticker
 
 /** What the tune page's listening section can do. */
 data class MediaActions(
@@ -64,7 +64,7 @@ fun MediaSection(tuneId: Long, media: List<TuneMediaEntity>, actions: MediaActio
 private fun MediaItem(m: TuneMediaEntity, onRemove: () -> Unit) {
   val link = remember(m.url) { MediaLink.parse(m.url) }
   val uris = LocalUriHandler.current
-  val callie = LocalCallie.current
+  val callie = LocalColors
   var playing by rememberSaveable(m.id) { mutableStateOf(false) }
   var confirmRemove by rememberSaveable(m.id) { mutableStateOf(false) }
   Column(Modifier.fillMaxWidth().padding(vertical = 4.dp).testTag("media-${m.id}"), verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -133,7 +133,7 @@ private fun AddMediaDialog(onDismiss: () -> Unit, onAdd: (String, String?, (Bool
           title = it
         }, label = { Text("Name (optional)") }, singleLine = true, modifier = Modifier.fillMaxWidth().testTag("media-title"))
         when {
-          error -> Text("That doesn't look like a web address.", color = LocalCallie.current.danger)
+          error -> Text("That doesn't look like a web address.", color = LocalColors.danger)
           parsed != null -> Helper(if (parsed.kind.inline) "${parsed.kind.label}: plays here." else "${parsed.kind.label}: opens outside the app.")
           else -> Spacer(Modifier.height(0.dp))
         }

@@ -60,17 +60,17 @@ import com.larakelley.woodshed.domain.Instrument
 import com.larakelley.woodshed.domain.Key
 import com.larakelley.woodshed.domain.PlanBlock
 import com.larakelley.woodshed.domain.Transposition
-import com.larakelley.woodshed.theme.BackButton
-import com.larakelley.woodshed.theme.CallieChip
-import com.larakelley.woodshed.theme.EmptyState
-import com.larakelley.woodshed.theme.LocalCallie
-import com.larakelley.woodshed.theme.StickerButton
-import com.larakelley.woodshed.theme.neutralSticker
 import com.larakelley.woodshed.ui.browse.DropdownChip
 import com.larakelley.woodshed.ui.browse.ExerciseFacts
 import com.larakelley.woodshed.ui.browse.ExerciseRow
 import com.larakelley.woodshed.ui.media.PracticePlayer
 import kotlinx.coroutines.delay
+import org.greylocklabs.ui.BackButton
+import org.greylocklabs.ui.EmptyState
+import org.greylocklabs.ui.GreylockChip
+import org.greylocklabs.ui.LocalColors
+import org.greylocklabs.ui.StickerButton
+import org.greylocklabs.ui.neutralSticker
 
 /** What the setup and plan screens can do. */
 data class SetupActions(
@@ -127,7 +127,7 @@ private fun SessionSetup(ui: PracticeUi, actions: SetupActions) {
         } else {
           FlowRow(Modifier.padding(vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             setup.instruments.forEach { i ->
-              CallieChip(
+              GreylockChip(
                 selected = setup.instrument == i,
                 onClick = { actions.setInstrument(i) },
                 label = { Text(i.label) },
@@ -140,7 +140,9 @@ private fun SessionSetup(ui: PracticeUi, actions: SetupActions) {
         Text("How long?", style = MaterialTheme.typography.titleMedium)
         FlowRow(Modifier.padding(vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
           LENGTHS.forEach { m ->
-            CallieChip(selected = setup.minutes == m, onClick = { actions.setMinutes(m) }, label = { Text("$m min") }, modifier = Modifier.testTag("length-$m"))
+            GreylockChip(selected = setup.minutes == m, onClick = {
+              actions.setMinutes(m)
+            }, label = { Text("$m min") }, modifier = Modifier.testTag("length-$m"))
           }
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -153,7 +155,7 @@ private fun SessionSetup(ui: PracticeUi, actions: SetupActions) {
         Text("Leave all off for a mix", style = MaterialTheme.typography.bodySmall)
         FlowRow(Modifier.padding(vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
           Focus.entries.forEach { f ->
-            CallieChip(selected = f in setup.focus, onClick = {
+            GreylockChip(selected = f in setup.focus, onClick = {
               actions.toggleFocus(f)
             }, label = { Text("${f.emoji} ${f.label}") }, modifier = Modifier.testTag("focus-${f.name.lowercase()}"))
           }
@@ -163,11 +165,11 @@ private fun SessionSetup(ui: PracticeUi, actions: SetupActions) {
           Text("Solo to transcribe", style = MaterialTheme.typography.titleMedium)
           Text("Takes a quarter of the session, 5 to 15 minutes. Sessions under 15 minutes leave it out.", style = MaterialTheme.typography.bodySmall)
           FlowRow(Modifier.padding(vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            CallieChip(selected = setup.soloId == null, onClick = {
+            GreylockChip(selected = setup.soloId == null, onClick = {
               actions.pickSolo(null)
             }, label = { Text("None") }, modifier = Modifier.testTag("solo-none"))
             setup.solos.forEach { s ->
-              CallieChip(
+              GreylockChip(
                 selected = setup.soloId == s.id,
                 onClick = { actions.pickSolo(s.id) },
                 label = { Text("${if (s.active) "🎧" else "💭"} ${s.title} (${s.soloist})") },
@@ -220,7 +222,7 @@ private fun SessionSetup(ui: PracticeUi, actions: SetupActions) {
     if (setup.instrument == null) {
       Text(
         "Pick what you're playing to start",
-        color = LocalCallie.current.textMuted,
+        color = LocalColors.textMuted,
         modifier = Modifier.padding(horizontal = 16.dp, vertical = 24.dp).testTag("needs-instrument"),
       )
     } else {

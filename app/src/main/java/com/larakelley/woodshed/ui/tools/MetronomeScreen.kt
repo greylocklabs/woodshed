@@ -38,15 +38,15 @@ import com.larakelley.woodshed.domain.ClickTrack
 import com.larakelley.woodshed.domain.Feel
 import com.larakelley.woodshed.domain.TapTempo
 import com.larakelley.woodshed.domain.TempoPreset
-import com.larakelley.woodshed.theme.CallieChip
-import com.larakelley.woodshed.theme.LocalCallie
-import com.larakelley.woodshed.theme.PRESS_SPRING
-import com.larakelley.woodshed.theme.PillChoice
-import com.larakelley.woodshed.theme.PinnedAction
-import com.larakelley.woodshed.theme.SectionLabel
-import com.larakelley.woodshed.theme.StickerButton
-import com.larakelley.woodshed.theme.SwitchRow
-import com.larakelley.woodshed.theme.neutralSticker
+import org.greylocklabs.ui.GreylockChip
+import org.greylocklabs.ui.LocalColors
+import org.greylocklabs.ui.PRESS_SPRING
+import org.greylocklabs.ui.PillChoice
+import org.greylocklabs.ui.PinnedAction
+import org.greylocklabs.ui.SectionLabel
+import org.greylocklabs.ui.StickerButton
+import org.greylocklabs.ui.SwitchRow
+import org.greylocklabs.ui.neutralSticker
 
 /** What the metronome tab can change; the metronome itself lives in the app, so it keeps time across tabs. */
 data class MetronomeActions(
@@ -62,7 +62,7 @@ internal val METERS = listOf(2, 3, 4, 5, 6, 7)
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun MetronomeScreen(state: MetronomeState, actions: MetronomeActions) {
-  val callie = LocalCallie.current
+  val callie = LocalColors
   val taps = remember { TapTempo() }
   PinnedAction(action = {
     StickerButton(onClick = actions.toggle, modifier = Modifier.fillMaxWidth().height(60.dp).testTag("metronome-toggle")) {
@@ -103,7 +103,7 @@ fun MetronomeScreen(state: MetronomeState, actions: MetronomeActions) {
     SectionLabel("Common tempos")
     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
       TempoPreset.entries.forEach { p ->
-        CallieChip(
+        GreylockChip(
           selected = state.bpm == p.bpm,
           onClick = {
             actions.setBpm(p.bpm)
@@ -120,7 +120,7 @@ fun MetronomeScreen(state: MetronomeState, actions: MetronomeActions) {
 /** One dot per beat: the sounding beat swells in pink, beats that stay silent are hollow. */
 @Composable
 internal fun BeatDots(state: MetronomeState, modifier: Modifier = Modifier) {
-  val callie = LocalCallie.current
+  val callie = LocalColors
   Row(modifier, horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
     repeat(state.beatsPerBar) { i ->
       val now = state.running && state.beat == i

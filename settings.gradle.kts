@@ -31,3 +31,6 @@ plugins {
 
 rootProject.name = "Woodshed"
 include(":app")
+
+// The suite's Compose theme and components, built from the core submodule as org.greylocklabs:ui.
+includeBuild("core/android")

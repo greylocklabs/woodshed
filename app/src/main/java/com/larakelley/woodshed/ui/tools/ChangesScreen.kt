@@ -64,19 +64,19 @@ import com.larakelley.woodshed.domain.TempoPreset
 import com.larakelley.woodshed.domain.Transposition
 import com.larakelley.woodshed.domain.Voicing
 import com.larakelley.woodshed.domain.numerals
-import com.larakelley.woodshed.theme.BackButton
-import com.larakelley.woodshed.theme.CallieChip
-import com.larakelley.woodshed.theme.Helper
-import com.larakelley.woodshed.theme.LocalCallie
-import com.larakelley.woodshed.theme.PillChoice
-import com.larakelley.woodshed.theme.PinnedAction
-import com.larakelley.woodshed.theme.SectionLabel
-import com.larakelley.woodshed.theme.StickerButton
-import com.larakelley.woodshed.theme.SwitchRow
-import com.larakelley.woodshed.theme.neutralSticker
 import com.larakelley.woodshed.ui.AppNavigation
 import com.larakelley.woodshed.ui.Destination
 import com.larakelley.woodshed.ui.browse.DropdownChip
+import org.greylocklabs.ui.BackButton
+import org.greylocklabs.ui.GreylockChip
+import org.greylocklabs.ui.Helper
+import org.greylocklabs.ui.LocalColors
+import org.greylocklabs.ui.PillChoice
+import org.greylocklabs.ui.PinnedAction
+import org.greylocklabs.ui.SectionLabel
+import org.greylocklabs.ui.StickerButton
+import org.greylocklabs.ui.SwitchRow
+import org.greylocklabs.ui.neutralSticker
 import kotlin.random.Random
 
 /** What the Changes tab can change; beats per bar, accent and feel are the metronome's, range and voicing the drone's. */
@@ -295,7 +295,7 @@ internal fun ChangesPlayerScreen(
   onEdit: (() -> Unit)? = null,
   onBack: () -> Unit,
 ) {
-  val callie = LocalCallie.current
+  val callie = LocalColors
   val written = Math.floorMod(state.keyFor(keyId) + transposition.offset, 12)
   val bars = state.bars
   val playingBar = if (state.playing) state.bar else -1
@@ -356,7 +356,7 @@ internal fun ChangesPlayerScreen(
     SectionLabel("Common tempos")
     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
       TempoPreset.entries.forEach { p ->
-        CallieChip(
+        GreylockChip(
           selected = state.bpm == p.bpm,
           onClick = {
             actions.setBpm(p.bpm)
@@ -412,7 +412,7 @@ private fun nextLine(state: ChangesState, bars: List<Bar>, beatsPerBar: Int, wri
  */
 @Composable
 private fun BarGrid(bars: List<Bar>, playing: Int, written: Int, beat: Int = -1, beatsPerBar: Int = 4) {
-  val callie = LocalCallie.current
+  val callie = LocalColors
   val shape = RoundedCornerShape(6.dp)
   Column(Modifier.testTag("changes-bars"), verticalArrangement = Arrangement.spacedBy(6.dp)) {
     bars.chunked(4).forEachIndexed { row, four ->
@@ -512,11 +512,11 @@ private fun PatternScreen(
         val shown = if (allChords) ChordQuality.entries.filter { it.group != ChordGroup.SIMPLE } else COMMON_CHORDS
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
           shown.forEach { q ->
-            CallieChip(selected = q == chord, onClick = {
+            GreylockChip(selected = q == chord, onClick = {
               chord = q
             }, label = { Text(q.label) }, modifier = Modifier.testTag("pattern-chord-${q.name.lowercase()}"))
           }
-          if (!allChords) CallieChip(selected = false, onClick = { allChords = true }, label = { Text("More chords") })
+          if (!allChords) GreylockChip(selected = false, onClick = { allChords = true }, label = { Text("More chords") })
         }
       }
 
@@ -553,6 +553,6 @@ private fun KeyLine(keyId: String, state: ChangesState, transposition: Transposi
   Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
     DropdownChip("Key", noteName(written), (0..11).map { noteName(it) to it }) { it?.let { w -> actions.setKey(keyId, w - transposition.offset) } }
     val parts = listOfNotNull(if (transposition == Transposition.C) null else "Concert ${noteName(concert)}", extra)
-    if (parts.isNotEmpty()) Text(parts.joinToString(". "), style = MaterialTheme.typography.bodyMedium, color = LocalCallie.current.textMuted)
+    if (parts.isNotEmpty()) Text(parts.joinToString(". "), style = MaterialTheme.typography.bodyMedium, color = LocalColors.textMuted)
   }
 }

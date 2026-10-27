@@ -31,15 +31,15 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.larakelley.woodshed.data.ExerciseDraft
 import com.larakelley.woodshed.domain.Family
-import com.larakelley.woodshed.theme.BackButton
-import com.larakelley.woodshed.theme.CallieChip
-import com.larakelley.woodshed.theme.Helper
-import com.larakelley.woodshed.theme.LocalCallie
-import com.larakelley.woodshed.theme.PillChoice
-import com.larakelley.woodshed.theme.SectionLabel
-import com.larakelley.woodshed.theme.StickerButton
-import com.larakelley.woodshed.theme.SwitchRow
 import com.larakelley.woodshed.ui.jsonSaver
+import org.greylocklabs.ui.BackButton
+import org.greylocklabs.ui.GreylockChip
+import org.greylocklabs.ui.Helper
+import org.greylocklabs.ui.LocalColors
+import org.greylocklabs.ui.PillChoice
+import org.greylocklabs.ui.SectionLabel
+import org.greylocklabs.ui.StickerButton
+import org.greylocklabs.ui.SwitchRow
 
 /**
  * Adds an exercise, or edits one: in place for the user's own, as edits laid over the original for seeded ones.
@@ -63,7 +63,7 @@ fun ExerciseEditor(
   var confirm by rememberSaveable { mutableStateOf<String?>(null) }
   val others = takenNames - setOfNotNull(exercise?.name?.lowercase())
   val problems = draft.problems { it.lowercase() in others }
-  val callie = LocalCallie.current
+  val callie = LocalColors
 
   Column(modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
     BackButton(onBack, label = "Cancel")
@@ -119,9 +119,9 @@ fun ExerciseEditor(
     PillChoice((1..5).map { "$it" to it }, draft.difficulty, { draft = draft.copy(difficulty = it) }, tagPrefix = "exercise-difficulty")
     SectionLabel("For")
     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-      CallieChip(selected = draft.families.isEmpty(), onClick = { draft = draft.copy(families = emptySet()) }, label = { Text("All instruments") })
+      GreylockChip(selected = draft.families.isEmpty(), onClick = { draft = draft.copy(families = emptySet()) }, label = { Text("All instruments") })
       Family.entries.forEach { f ->
-        CallieChip(
+        GreylockChip(
           selected = f in draft.families,
           onClick = { draft = draft.copy(families = if (f in draft.families) draft.families - f else draft.families + f) },
           label = { Text(f.seedName) },

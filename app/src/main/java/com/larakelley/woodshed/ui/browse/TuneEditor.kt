@@ -31,13 +31,13 @@ import com.larakelley.woodshed.data.TuneDraft
 import com.larakelley.woodshed.data.seed.SeedValidator
 import com.larakelley.woodshed.domain.Key
 import com.larakelley.woodshed.domain.Tonality
-import com.larakelley.woodshed.theme.BackButton
-import com.larakelley.woodshed.theme.Helper
-import com.larakelley.woodshed.theme.LocalCallie
-import com.larakelley.woodshed.theme.PillChoice
-import com.larakelley.woodshed.theme.SectionLabel
-import com.larakelley.woodshed.theme.StickerButton
 import com.larakelley.woodshed.ui.jsonSaver
+import org.greylocklabs.ui.BackButton
+import org.greylocklabs.ui.Helper
+import org.greylocklabs.ui.LocalColors
+import org.greylocklabs.ui.PillChoice
+import org.greylocklabs.ui.SectionLabel
+import org.greylocklabs.ui.StickerButton
 
 private val METERS = listOf("4/4", "3/4", "2/4", "5/4", "6/4", "6/8", "12/8")
 
@@ -52,7 +52,7 @@ fun TuneEditor(tune: TuneRow?, onSave: (TuneDraft) -> Unit, onDelete: () -> Unit
   var tried by remember { mutableStateOf(false) }
   var confirm by rememberSaveable { mutableStateOf<String?>(null) }
   val problems = draft.problems()
-  val callie = LocalCallie.current
+  val callie = LocalColors
 
   Column(modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
     BackButton(onBack, label = "Cancel")

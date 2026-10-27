@@ -25,14 +25,14 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.larakelley.woodshed.domain.ChangelogBlock
 import com.larakelley.woodshed.domain.ChangelogRelease
-import com.larakelley.woodshed.theme.LocalCallie
 import com.larakelley.woodshed.ui.settings.CHANGELOG
+import org.greylocklabs.ui.LocalColors
 
 /** Shown once after an update: the changelog sections since the version last opened, newest first. */
 @Composable
 fun WhatsNewDialog(releases: List<ChangelogRelease>, onDismiss: () -> Unit) {
   val uris = LocalUriHandler.current
-  val accent = LocalCallie.current.accent
+  val accent = LocalColors.accent
   AlertDialog(
     onDismissRequest = onDismiss,
     title = { Text(if (releases.size == 1) "What's new in ${releases.single().version}" else "What's new") },

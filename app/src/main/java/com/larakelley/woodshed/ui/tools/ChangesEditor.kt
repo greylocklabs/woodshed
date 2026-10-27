@@ -44,14 +44,14 @@ import com.larakelley.woodshed.domain.Key
 import com.larakelley.woodshed.domain.ProgressionChord
 import com.larakelley.woodshed.domain.bars
 import com.larakelley.woodshed.domain.numerals
-import com.larakelley.woodshed.theme.BackButton
-import com.larakelley.woodshed.theme.CallieChip
-import com.larakelley.woodshed.theme.Helper
-import com.larakelley.woodshed.theme.LocalCallie
-import com.larakelley.woodshed.theme.PillChoice
-import com.larakelley.woodshed.theme.SectionLabel
-import com.larakelley.woodshed.theme.StickerButton
-import com.larakelley.woodshed.theme.neutralSticker
+import org.greylocklabs.ui.BackButton
+import org.greylocklabs.ui.GreylockChip
+import org.greylocklabs.ui.Helper
+import org.greylocklabs.ui.LocalColors
+import org.greylocklabs.ui.PillChoice
+import org.greylocklabs.ui.SectionLabel
+import org.greylocklabs.ui.StickerButton
+import org.greylocklabs.ui.neutralSticker
 
 /** Writes changes of one's own: bars of one or two chords each, named in [writtenKey] and kept relative to it. */
 @OptIn(ExperimentalLayoutApi::class)
@@ -63,7 +63,7 @@ internal fun ChangesEditor(
   onCancel: () -> Unit,
   onDelete: (() -> Unit)? = null,
 ) {
-  val callie = LocalCallie.current
+  val callie = LocalColors
   var name by rememberSaveable { mutableStateOf(existing?.name ?: "") }
   // Kept as numerals so it survives being saved and restored with the screen.
   var written by rememberSaveable { mutableStateOf(numerals(existing?.bars ?: bars("I | I | I | I"))) }
@@ -142,8 +142,8 @@ internal fun ChangesEditor(
     // The chords already in these changes come first, since changes mostly reuse a few.
     val used = bars.flatMap { it.chords }.distinct()
     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-      used.forEach { c -> CallieChip(selected = c == chord, onClick = { setChord(c) }, label = { Text(name(c)) }) }
-      CallieChip(selected = moreChords, onClick = {
+      used.forEach { c -> GreylockChip(selected = c == chord, onClick = { setChord(c) }, label = { Text(name(c)) }) }
+      GreylockChip(selected = moreChords, onClick = {
         moreChords = !moreChords
       }, label = { Text("More chords") }, modifier = Modifier.testTag("changes-more-chords"))
     }
@@ -151,7 +151,7 @@ internal fun ChangesEditor(
       Helper("Root", Modifier.padding(top = 8.dp))
       FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
         (0..11).forEach { root ->
-          CallieChip(
+          GreylockChip(
             selected = root == chord.root,
             onClick = { setChord(chord.copy(root = root)) },
             label = { Text(Key.MAJOR_SPELLING[Math.floorMod(writtenKey + root, 12)]) },
