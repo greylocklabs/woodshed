@@ -18,7 +18,7 @@ robolectric = "4.17"
 serializationJson = "1.11.0"
 spotless = "8.10.4"
 ktlint = "1.8.0"
-roborazzi = "1.76.0"
+roborazzi = "1.77.0"
 
 [libraries]
 # Built from the core submodule, which settings.gradle.kts includes, so it has no version of its own.
