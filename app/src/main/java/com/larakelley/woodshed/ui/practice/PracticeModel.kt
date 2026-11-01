@@ -252,7 +252,7 @@ class PracticeViewModel(
       val lists = repository.playlists.first()
       val chosen = lists.firstOrNull { it.id == _ui.value.setup.playlistId }
       val own = sessionTunes(standards, repository.tuneStates.first(), now())
-      // Playlist tunes not yet in practice join the list so they can be ticked; practising them starts them learning.
+      // Playlist tunes not yet in practice join the list so they can be ticked; practicing them starts them learning.
       val byId = standards.associateBy { it.id }
       val extra = chosen?.tuneIds.orEmpty().filter { id ->
         own.none { it.id == id }

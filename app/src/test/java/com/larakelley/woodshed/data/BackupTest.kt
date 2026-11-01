@@ -116,7 +116,7 @@ class BackupTest {
     assertEquals(Instrument.ALTO_SAX, repository.instrument.value)
   }
 
-  /** A bundled solo and an own one, each started and graded, with a seeded tune learnt and graded too; returns their ids. */
+  /** A bundled solo and an own one, each started and graded, with a seeded tune learned and graded too; returns their ids. */
   private suspend fun solosAndATune(): Pair<Long, Long> {
     val read = { name: String -> context.assets.open(name).bufferedReader().use { it.readText() } }
     SeedImporter(db).import(Seed.parse(read("standards.json"), read("exercises.json"), read("transcriptions.json")))

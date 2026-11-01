@@ -162,7 +162,7 @@ class TranscriptionService(
     dao.upsertState(before.withCardState(after).copy(lastReviewedAt = t))
   }
 
-  /** What each grade would schedule, for labelling the buttons. */
+  /** What each grade would schedule, for labeling the buttons. */
   suspend fun preview(id: Long): Map<Grade, Long?> {
     val state = dao.state(id) ?: return emptyMap()
     return Grade.entries.associateWith { scheduler.next(state.cardState, it, now()).dueAt }

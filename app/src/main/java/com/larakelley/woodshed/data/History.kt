@@ -89,7 +89,7 @@ class HistoryService(private val db: WoodshedDatabase) {
     }
   }
 
-  /** Totals, streaks and spreads over everything practised, as of [today] in [zone]. */
+  /** Totals, streaks and spreads over everything practiced, as of [today] in [zone]. */
   suspend fun stats(sessions: List<PastSession>, zone: ZoneId, today: LocalDate): PracticeStats {
     val events = db.reviewEvents().all()
     val days = days(sessions, zone).keys

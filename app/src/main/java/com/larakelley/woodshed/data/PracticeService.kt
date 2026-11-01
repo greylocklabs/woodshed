@@ -213,7 +213,7 @@ class PracticeService(
     return Card(roll.tune, state, roll.exercise, roll.concertKey, transposition, shownAt)
   }
 
-  /** What each grade would schedule, for labelling the buttons. */
+  /** What each grade would schedule, for labeling the buttons. */
   fun preview(card: Card): Map<Grade, CardState> = Grade.entries.associateWith { scheduler.next(card.state.cardState, it, now()) }
 
   suspend fun grade(card: Card, grade: Grade) = db.withTransaction {

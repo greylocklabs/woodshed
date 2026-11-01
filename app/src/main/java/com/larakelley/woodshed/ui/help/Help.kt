@@ -34,9 +34,9 @@ val HELP_TOPICS = listOf(
     "Getting started",
     listOf(
       "Choose the instruments you play in **⚙️ Settings › Instruments**. Keys are then written for your instrument, and exercises are kept to ones that suit it.",
-      "Find tunes in the **🎵 Tunes** tab. Open one and tap **🌱 Start learning now** to practise it, or **💭 Add to wishlist** to save it for later.",
+      "Find tunes in the **🎵 Tunes** tab. Open one and tap **🌱 Start learning now** to practice it, or **💭 Add to wishlist** to save it for later.",
       "Then plan a session from the **🎷 Practice** tab.",
-      "To be nudged, turn on the practice reminder in **⚙️ Settings › General**. It comes at your time on the days you choose, and not on a day you've already practised.",
+      "To be nudged, turn on the practice reminder in **⚙️ Settings › General**. It comes at your time on the days you choose, and not on a day you've already practiced.",
     ),
   ),
   HelpTopic(
@@ -88,7 +88,7 @@ val HELP_TOPICS = listOf(
   HelpTopic(
     "History and stats",
     listOf(
-      "The **📜 History** tab lists your sessions and what you did in each. The calendar marks the days you practised, and **Stats** shows your time, streaks, most practised tunes and keys.",
+      "The **📜 History** tab lists your sessions and what you did in each. The calendar marks the days you practiced, and **Stats** shows your time, streaks, most practiced tunes and keys.",
     ),
   ),
   HelpTopic(

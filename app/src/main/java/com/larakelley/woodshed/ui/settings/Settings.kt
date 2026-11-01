@@ -241,7 +241,7 @@ const val TERMS = "https://woodshedapp.org/terms.html"
 const val CHANGELOG = "$SOURCE/blob/main/CHANGELOG.md"
 const val PLAY_LISTING = "https://play.google.com/store/apps/details?id=com.larakelley.woodshed"
 
-/** Laid out like Callie's settings: a back sticker and title, pill tabs, then labelled sections. */
+/** Laid out like Callie's settings: a back sticker and title, pill tabs, then labeled sections. */
 @Composable
 fun SettingsScreen(ui: SettingsUi, actions: SettingsActions, onBack: () -> Unit, modifier: Modifier = Modifier) {
   BackHandler(onBack = onBack)
@@ -300,7 +300,7 @@ private fun ReminderSection(reminder: ReminderSchedule, set: (ReminderSchedule) 
 
   Padded { SectionLabel("Practice reminder") }
   SwitchRow(
-    label = "Remind me to practise",
+    label = "Remind me to practice",
     checked = reminder.enabled,
     onChange = { on ->
       set(reminder.copy(enabled = on))
@@ -308,7 +308,7 @@ private fun ReminderSection(reminder: ReminderSchedule, set: (ReminderSchedule) 
         askPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
       }
     },
-    helper = "Not on days you've already practised",
+    helper = "Not on days you've already practiced",
     horizontalPadding = 16.dp,
     modifier = Modifier.testTag("reminder"),
   )

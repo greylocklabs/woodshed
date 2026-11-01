@@ -10,7 +10,7 @@ release's GitHub notes, and a release refuses to go out without one.
 
 - **settings:** a practice reminder, in ⚙️ Settings › General: a notification
   at the time and on the days you choose, which stays quiet on days you've
-  already practised. From it, start a session, ask again in an hour, or skip
+  already practiced. From it, start a session, ask again in an hour, or skip
   today.
 
 ## 0.6.2 - 2026-11-01
@@ -100,8 +100,8 @@ release's GitHub notes, and a release refuses to go out without one.
 
 - **practice:** a History tab of past sessions and a calendar of practice
   days. Sessions are recorded from this version on, and can be deleted.
-- **practice:** Stats: time practised, streaks, repertoire, the most
-  practised tunes and reps per key.
+- **practice:** Stats: time practiced, streaks, repertoire, the most
+  practiced tunes and reps per key.
 - **app:** a Help tab.
 - **app:** an occasional prompt to rate Woodshed on Google Play after a
   session, and a Review button in About.

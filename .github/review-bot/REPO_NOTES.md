@@ -28,9 +28,9 @@ screenshot test suite (including any Room migration tests), and commitlint.
   identity anywhere. Network or intent changes that could leak data deserve scrutiny.
 - **Audio threads.** The metronome and tuner run on their own threads and publish through
   `StateFlow`; races, leaked threads or a microphone left on after leaving the Tuner tab are bugs.
-- **Device-only behaviour.** File pickers, permissions and audio are not exercised by Robolectric.
+- **Device-only behavior.** File pickers, permissions and audio are not exercised by Robolectric.
 
 ## Style
 
 Authored prose (comments, docs, UI text) uses plain ASCII punctuation. Comments justify a
-non-obvious constraint in a sentence or two and describe current behaviour.
+non-obvious constraint in a sentence or two and describe current behavior.

@@ -294,7 +294,7 @@ class BackupService(private val db: WoodshedDatabase, private val repository: Wo
   private val json = Json {
     prettyPrint = true
     ignoreUnknownKeys = true
-    // The format and version markers are defaults, and a backup is not recognisable without them.
+    // The format and version markers are defaults, and a backup is not recognizable without them.
     encodeDefaults = true
   }
 
