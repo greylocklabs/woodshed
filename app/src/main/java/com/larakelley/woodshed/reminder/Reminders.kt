@@ -41,19 +41,33 @@ class Reminders(
     )
   }
 
-  /** Sets the alarm for the next reminder, or clears it when the reminder is off. */
+  /**
+   * Sets the alarm for the next reminder, or clears it when the reminder is off. An alarm that has not gone off yet
+   * stays when it is sooner: a snooze, or a reminder already due, as the alarm can come late.
+   */
   fun reschedule() {
-    val next = nextReminder(schedule(), ZonedDateTime.ofInstant(Instant.ofEpochMilli(now()), zone()))
+    val next = nextReminder(schedule(), ZonedDateTime.ofInstant(Instant.ofEpochMilli(now()), zone()))?.toInstant()?.toEpochMilli()
     if (next == null) {
       alarms.cancel(alarm())
+      prefs.edit {
+        remove(DUE_AT)
+        remove(SNOOZED)
+      }
       NotificationManagerCompat.from(context).cancel(NOTIFICATION_ID)
-    } else {
-      at(next.toInstant().toEpochMilli())
+      return
     }
+    val due = prefs.getLong(DUE_AT, 0L)
+    val snoozed = prefs.getBoolean(SNOOZED, false)
+    val pending = due > 0 && due < next && (snoozed || due in now() - LATE_MS..now())
+    if (pending) at(due, snoozed) else at(next, snoozed = false)
   }
 
   /** The alarm went off: remind, unless the reminder was turned off or today needs none, then set the next one. */
   suspend fun fire() {
+    prefs.edit {
+      remove(DUE_AT)
+      remove(SNOOZED)
+    }
     if (schedule().enabled && !skippedToday() && !practisedToday()) post()
     reschedule()
   }
@@ -61,13 +75,17 @@ class Reminders(
   /** Brings the reminder back in an hour, once. The day's next alarm is replaced, as the reminder is today's. */
   fun snooze() {
     NotificationManagerCompat.from(context).cancel(NOTIFICATION_ID)
-    at(now() + SNOOZE_MS)
+    at(now() + SNOOZE_MS, snoozed = true)
   }
 
   /** No reminder again today, even from a snooze. */
   fun skipToday() {
     NotificationManagerCompat.from(context).cancel(NOTIFICATION_ID)
-    prefs.edit { putString(SKIPPED, today().toString()) }
+    prefs.edit {
+      putString(SKIPPED, today().toString())
+      remove(DUE_AT)
+      remove(SNOOZED)
+    }
     reschedule()
   }
 
@@ -81,7 +99,14 @@ class Reminders(
 
   private fun today() = Instant.ofEpochMilli(now()).atZone(zone()).toLocalDate()
 
-  private fun at(millis: Long) = alarms.setWindow(AlarmManager.RTC_WAKEUP, millis, WINDOW_MS, alarm())
+  /** Sets the one alarm, and remembers it, so an app start or a time change can tell it has not gone off yet. */
+  private fun at(millis: Long, snoozed: Boolean) {
+    alarms.setWindow(AlarmManager.RTC_WAKEUP, millis, WINDOW_MS, alarm())
+    prefs.edit {
+      putLong(DUE_AT, millis)
+      putBoolean(SNOOZED, snoozed)
+    }
+  }
 
   private fun post() {
     if (!NotificationManagerCompat.from(context).areNotificationsEnabled()) return
@@ -124,7 +149,12 @@ class Reminders(
     const val NOTIFICATION_ID = 10
     private const val CHANNEL = "practice_reminder"
     private const val SKIPPED = "reminder_skipped_on"
+    private const val DUE_AT = "reminder_due_at"
+    private const val SNOOZED = "reminder_snoozed"
     private const val SNOOZE_MS = 60 * 60 * 1000L
     private const val WINDOW_MS = 10 * 60 * 1000L
+
+    /** How late a due reminder can still come; past this, as after a force stop, it is let go. */
+    private const val LATE_MS = 30 * 60 * 1000L
   }
 }

@@ -114,6 +114,37 @@ class RemindersTest {
   }
 
   @Test
+  fun aSnoozeOutlastsTheAppStarting() = runTest {
+    reminders.fire()
+    reminders.snooze()
+    // Opening the app sets the alarm again, which must not lose the snooze.
+    now = hoursFromNow(0) + 20 * 60 * 1000L
+    reminders.reschedule()
+    assertEquals(hoursFromNow(1) - 20 * 60 * 1000L, alarm!!.triggerAtTime)
+  }
+
+  @Test
+  fun aReminderDueButNotYetShownOutlastsTheAppStarting() {
+    val sixPm = now
+    now = hoursFromNow(-6)
+    reminders.reschedule()
+    assertEquals(sixPm, alarm!!.triggerAtTime)
+    // The alarm is late, and the app opens at 18:03 before it goes off.
+    now = sixPm + 3 * 60 * 1000L
+    reminders.reschedule()
+    assertEquals(sixPm, alarm!!.triggerAtTime)
+  }
+
+  @Test
+  fun aNewTimeReplacesAnAlarmNotYetDue() {
+    now = hoursFromNow(-6)
+    reminders.reschedule()
+    schedule = schedule.copy(minuteOfDay = 20 * 60)
+    reminders.reschedule()
+    assertEquals(hoursFromNow(8), alarm!!.triggerAtTime)
+  }
+
+  @Test
   fun turningItOffClearsTheAlarm() {
     reminders.reschedule()
     assertEquals(hoursFromNow(24), alarm!!.triggerAtTime)

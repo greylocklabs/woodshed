@@ -36,6 +36,7 @@ val HELP_TOPICS = listOf(
       "Choose the instruments you play in **⚙️ Settings › Instruments**. Keys are then written for your instrument, and exercises are kept to ones that suit it.",
       "Find tunes in the **🎵 Tunes** tab. Open one and tap **🌱 Start learning now** to practise it, or **💭 Add to wishlist** to save it for later.",
       "Then plan a session from the **🎷 Practice** tab.",
+      "To be nudged, turn on the practice reminder in **⚙️ Settings › General**. It comes at your time on the days you choose, and not on a day you've already practised.",
     ),
   ),
   HelpTopic(
