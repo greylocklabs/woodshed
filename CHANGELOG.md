@@ -4,7 +4,7 @@ Notable changes per release. Notes collect under `## Unreleased`, which
 `make release` renames to `## <version>`; that section is published as the
 release's GitHub notes, and a release refuses to go out without one.
 
-## Unreleased
+## 0.7.0 - 2026-11-01
 
 ### Added
 
