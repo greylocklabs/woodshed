@@ -4,6 +4,14 @@ Notable changes per release. Notes collect under `## Unreleased`, which
 `make release` renames to `## <version>`; that section is published as the
 release's GitHub notes, and a release refuses to go out without one.
 
+## Unreleased
+
+### Changed
+
+- **app:** built with newer Android tools and libraries, and with the theme
+  and components the other Greylock Labs apps share. Nothing should look
+  different.
+
 ## 0.6.1
 
 ### Added
