@@ -14,6 +14,7 @@ import com.larakelley.woodshed.R
 import com.larakelley.woodshed.data.db.WoodshedDatabase
 import com.larakelley.woodshed.domain.ReminderSchedule
 import com.larakelley.woodshed.domain.nextReminder
+import com.larakelley.woodshed.session.NotificationGroups
 import java.time.Instant
 import java.time.ZoneId
 import java.time.ZonedDateTime
@@ -34,9 +35,11 @@ class Reminders(
   private val alarms get() = context.getSystemService(AlarmManager::class.java)
 
   fun createChannel() {
+    NotificationGroups.create(context)
     context.getSystemService(NotificationManager::class.java).createNotificationChannel(
       NotificationChannel(CHANNEL, "Practice reminder", NotificationManager.IMPORTANCE_DEFAULT).apply {
         description = "A nudge to practice, on the days and at the time you choose"
+        group = NotificationGroups.PRACTICE
       },
     )
   }
