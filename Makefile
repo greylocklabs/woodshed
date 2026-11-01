@@ -5,7 +5,7 @@ GRADLE := ./gradlew
 EMULATOR_GPU ?= swiftshader_indirect
 
 .DEFAULT_GOAL := help
-.PHONY: help build apk e2e-release test www record-screenshots e2e format lint check clean
+.PHONY: help build apk emulator e2e-release test www record-screenshots e2e format lint check clean
 
 help: ## List the tasks
 	@awk 'BEGIN { FS = ":.*## " } /^[a-z0-9-]+:.*## / { printf "  %-20s %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
@@ -21,6 +21,15 @@ apk: build ## Build the debug app and print where the APK is
 
 clean: ## Remove build output
 	$(GRADLE) clean
+
+# `make emulator pixel-9` names the device after the target; `make emulator DEVICE=pixel-9` works too.
+ifeq (emulator,$(firstword $(MAKECMDGOALS)))
+  DEVICE := $(or $(word 2,$(MAKECMDGOALS)),$(DEVICE))
+  $(eval $(DEVICE):;@:)
+endif
+
+emulator: ## Start a virtual device with the debug app on it: make emulator <device>
+	@scripts/emulator.sh $(DEVICE)
 
 # Testing
 # -------

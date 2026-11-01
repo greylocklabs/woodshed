@@ -91,6 +91,7 @@ Labs app.
 
 ```
 make build               # app/build/outputs/apk/debug/app-debug.apk
+make emulator pixel-9    # starts that virtual device with the debug app installed and open
 make test                # unit, Room and Robolectric tests, comparing screenshots with app/src/test/screenshots
 make record-screenshots  # rewrites the screenshots after a deliberate design change
 make e2e                 # end-to-end tests on an emulator Gradle downloads (*)
