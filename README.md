@@ -58,8 +58,8 @@ The rules that are easy to get wrong:
   `verified` tunes were sourced field by field; the rest were filled from iReal Pro and the corpus below. An
   exercise with no `families` applies to every instrument.
 
-Not built yet: a vocabulary deck of licks practised in all twelve keys, stats and reminders, Bluetooth pedal
-support, and seeded classic recordings for each standard.
+Not built yet: a vocabulary deck of licks practised in all twelve keys, stats, Bluetooth pedal support, and
+seeded classic recordings for each standard.
 
 ## Credit
 
