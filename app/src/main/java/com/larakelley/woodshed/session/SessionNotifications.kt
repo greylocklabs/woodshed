@@ -19,14 +19,17 @@ object SessionNotifications {
 
   fun createChannels(context: Context) {
     val manager = context.getSystemService(NotificationManager::class.java)
+    NotificationGroups.create(context)
     manager.createNotificationChannel(
       NotificationChannel(ONGOING_CHANNEL, "Practice session", NotificationManager.IMPORTANCE_LOW).apply {
         description = "The block you're on and its time left"
+        group = NotificationGroups.PRACTICE
       },
     )
     manager.createNotificationChannel(
       NotificationChannel(ALERT_CHANNEL, "Block time's up", NotificationManager.IMPORTANCE_HIGH).apply {
         description = "When a block's planned time runs out"
+        group = NotificationGroups.PRACTICE
       },
     )
   }
