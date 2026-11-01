@@ -4,6 +4,15 @@ Notable changes per release. Notes collect under `## Unreleased`, which
 `make release` renames to `## <version>`; that section is published as the
 release's GitHub notes, and a release refuses to go out without one.
 
+## Unreleased
+
+### Added
+
+- **settings:** a practice reminder, in ⚙️ Settings › General: a notification
+  at the time and on the days you choose, which stays quiet on days you've
+  already practised. From it, start a session, ask again in an hour, or skip
+  today.
+
 ## 0.6.2 - 2026-11-01
 
 ### Changed

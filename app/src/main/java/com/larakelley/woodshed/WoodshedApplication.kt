@@ -23,6 +23,7 @@ import com.larakelley.woodshed.data.TuneLibrary
 import com.larakelley.woodshed.data.WhatsNew
 import com.larakelley.woodshed.data.WoodshedRepository
 import com.larakelley.woodshed.data.db.WoodshedDatabase
+import com.larakelley.woodshed.reminder.Reminders
 import com.larakelley.woodshed.session.SessionNotifications
 import com.larakelley.woodshed.session.SessionRunner
 import com.larakelley.woodshed.session.SessionService
@@ -80,6 +81,8 @@ class WoodshedApplication : Application() {
 
   val history: HistoryService by lazy { HistoryService(database) }
 
+  val reminders: Reminders by lazy { Reminders(this, prefs, database, { repository.reminder.value }) }
+
   val whatsNew: WhatsNew by lazy { WhatsNew(prefs) { assets.open("CHANGELOG.md").bufferedReader().use { it.readText() } } }
 
   private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -93,6 +96,9 @@ class WoodshedApplication : Application() {
     super.onCreate()
     scope.launch { repository.seedIfChanged() }
     SessionNotifications.createChannels(this)
+    reminders.createChannel()
+    // Set when the app starts, as an update clears alarms, and again whenever the reminder settings change.
+    mainScope.launch { repository.reminder.collect { reminders.reschedule() } }
     sessions.restore()
     // The service runs exactly while a session has a block to show.
     mainScope.launch {

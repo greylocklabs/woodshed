@@ -91,6 +91,16 @@ data class BackupSettings(
   @SerialName("session_focus") val sessionFocus: List<String> = emptyList(),
   /** The main tabs in the user's order, by name; empty for the default. */
   @SerialName("tab_order") val tabOrder: List<String> = emptyList(),
+  /** Absent in backups from before reminders, which leaves the current reminder as it is. */
+  val reminder: BackupReminder? = null,
+)
+
+@Serializable
+data class BackupReminder(
+  val enabled: Boolean,
+  @SerialName("minute_of_day") val minuteOfDay: Int,
+  /** Days of the week by name, such as "MONDAY". */
+  val days: List<String>,
 )
 
 @Serializable
@@ -661,7 +671,7 @@ enum class ResetPart(val label: String, val description: String) {
     "My material",
     "Tunes, exercises and solos you added, your edits to the bundled ones, recordings, playlists and your own changes",
   ),
-  SETTINGS("Settings", "Instruments, key, theme, tab order and session defaults"),
+  SETTINGS("Settings", "Instruments, key, theme, tab order, session defaults and the practice reminder"),
 }
 
 private fun String.splitFields(): List<String> = split(',').filter { it.isNotEmpty() }
