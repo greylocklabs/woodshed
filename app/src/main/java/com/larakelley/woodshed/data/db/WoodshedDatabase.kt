@@ -291,6 +291,9 @@ interface SessionDao {
   @Query("UPDATE sessions SET endedAt = :endedAt, completed = :completed WHERE id = :id")
   suspend fun end(id: Long, endedAt: Long, completed: Boolean)
 
+  @Query("SELECT COUNT(*) FROM sessions WHERE startedAt >= :since")
+  suspend fun countSince(since: Long): Int
+
   @Query("SELECT * FROM sessions ORDER BY startedAt DESC, id DESC")
   suspend fun all(): List<SessionEntity>
 

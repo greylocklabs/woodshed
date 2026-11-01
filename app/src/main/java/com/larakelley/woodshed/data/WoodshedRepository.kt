@@ -18,6 +18,7 @@ import com.larakelley.woodshed.data.seed.Seed
 import com.larakelley.woodshed.data.seed.SeedImporter
 import com.larakelley.woodshed.domain.Focus
 import com.larakelley.woodshed.domain.Instrument
+import com.larakelley.woodshed.domain.ReminderSchedule
 import com.larakelley.woodshed.domain.Transposition
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,6 +26,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import java.security.MessageDigest
+import java.time.DayOfWeek
 
 /** Light or dark: follow the system, or pick one. */
 enum class ThemeMode(val label: String) {
@@ -61,6 +63,9 @@ class WoodshedRepository(
 
   private val _themeMode = MutableStateFlow(enumPref(THEME_MODE) ?: ThemeMode.SYSTEM)
   val themeMode: StateFlow<ThemeMode> = _themeMode.asStateFlow()
+
+  private val _reminder = MutableStateFlow(readReminder())
+  val reminder: StateFlow<ReminderSchedule> = _reminder.asStateFlow()
 
   private val _tabOrder = MutableStateFlow(prefs.getString(TAB_ORDER, null)?.split(',')?.filter { it.isNotEmpty() }.orEmpty())
 
@@ -137,6 +142,23 @@ class WoodshedRepository(
     _themeMode.value = mode
   }
 
+  fun setReminder(schedule: ReminderSchedule) {
+    prefs.edit {
+      putBoolean(REMINDER_ON, schedule.enabled)
+      putInt(REMINDER_MINUTE, schedule.minuteOfDay)
+      putStringSet(REMINDER_DAYS, schedule.days.map { it.name }.toSet())
+    }
+    _reminder.value = schedule
+  }
+
+  private fun readReminder() = ReminderSchedule(
+    enabled = prefs.getBoolean(REMINDER_ON, false),
+    minuteOfDay = prefs.getInt(REMINDER_MINUTE, ReminderSchedule.DEFAULT_MINUTE),
+    days = prefs.getStringSet(REMINDER_DAYS, null)?.let(::days) ?: DayOfWeek.entries.toSet(),
+  )
+
+  private fun days(names: Collection<String>) = names.mapNotNull { n -> DayOfWeek.entries.firstOrNull { it.name == n } }.toSet()
+
   /** Puts the settings a backup carries back to a fresh install's: no instrument chosen, concert key and the rest. */
   fun resetSettings() {
     prefs.edit {
@@ -144,6 +166,9 @@ class WoodshedRepository(
       remove(MY_INSTRUMENTS)
       remove(TRANSPOSITION)
       remove(THEME_MODE)
+      remove(REMINDER_ON)
+      remove(REMINDER_MINUTE)
+      remove(REMINDER_DAYS)
       remove(TAB_ORDER)
       remove(SESSION_MINUTES)
       remove(SESSION_FOCUS)
@@ -153,6 +178,7 @@ class WoodshedRepository(
     _transposition.value = Transposition.C
     _themeMode.value = ThemeMode.SYSTEM
     _tabOrder.value = emptyList()
+    _reminder.value = ReminderSchedule()
   }
 
   fun markBackedUp(at: Long) {
@@ -168,6 +194,7 @@ class WoodshedRepository(
     sessionMinutes = sessionMinutes,
     sessionFocus = sessionFocus.map { it.name },
     tabOrder = tabOrder.value,
+    reminder = reminder.value.let { BackupReminder(it.enabled, it.minuteOfDay, it.days.map { d -> d.name }) },
   )
 
   /** Applies a restored backup's settings, ignoring any value this version does not know. */
@@ -177,6 +204,7 @@ class WoodshedRepository(
     Transposition.entries.firstOrNull { it.name == s.transposition }?.let(::setTransposition)
     ThemeMode.entries.firstOrNull { it.name == s.themeMode }?.let(::setThemeMode)
     setTabOrder(s.tabOrder)
+    s.reminder?.let { r -> setReminder(ReminderSchedule(r.enabled, r.minuteOfDay.coerceIn(0, 24 * 60 - 1), days(r.days))) }
     rememberSession(s.sessionMinutes ?: sessionMinutes, s.sessionFocus.mapNotNull { n -> Focus.entries.firstOrNull { it.name == n } }.toSet())
   }
 
@@ -216,6 +244,9 @@ class WoodshedRepository(
     const val INSTRUMENT = "instrument"
     const val MY_INSTRUMENTS = "my_instruments"
     const val THEME_MODE = "theme_mode"
+    const val REMINDER_ON = "reminder_on"
+    const val REMINDER_MINUTE = "reminder_minute"
+    const val REMINDER_DAYS = "reminder_days"
     const val TAB_ORDER = "tab_order"
     const val LAST_BACKUP_AT = "last_backup_at"
     const val SESSION_MINUTES = "session_minutes"

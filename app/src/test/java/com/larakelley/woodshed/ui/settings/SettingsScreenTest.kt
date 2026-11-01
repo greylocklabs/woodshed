@@ -18,6 +18,7 @@ import androidx.compose.ui.test.performTouchInput
 import com.larakelley.woodshed.data.ResetPart
 import com.larakelley.woodshed.data.ThemeMode
 import com.larakelley.woodshed.domain.Instrument
+import com.larakelley.woodshed.domain.ReminderSchedule
 import com.larakelley.woodshed.ui.browse.DEFAULT_TABS
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -25,6 +26,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
+import java.time.DayOfWeek
 
 @RunWith(RobolectricTestRunner::class)
 @Config(application = Application::class)
@@ -38,6 +40,27 @@ class SettingsScreenTest {
     compose.onNodeWithTag("theme-dark").performClick()
     compose.onNodeWithTag("key-bb").assertDoesNotExist()
     assertEquals(listOf<Any>(ThemeMode.DARK), picked)
+  }
+
+  @Test
+  fun generalTabSetsThePracticeReminder() {
+    val set = mutableListOf<ReminderSchedule>()
+    compose.setContent { SettingsScreen(SettingsUi(), SettingsActions(setReminder = { set += it }), onBack = {}) }
+    // Off, it shows only its switch.
+    compose.onNodeWithTag("reminder-time").assertDoesNotExist()
+    compose.onNodeWithTag("reminder").assertIsOff().performClick()
+    assertEquals(ReminderSchedule(enabled = true), set.last())
+  }
+
+  @Test
+  fun anOnReminderShowsItsTimeAndDays() {
+    val set = mutableListOf<ReminderSchedule>()
+    val on = ReminderSchedule(enabled = true, minuteOfDay = 18 * 60 + 30)
+    compose.setContent { SettingsScreen(SettingsUi(reminder = on), SettingsActions(setReminder = { set += it }), onBack = {}) }
+    compose.onNodeWithTag("reminder").assertIsOn()
+    compose.onNodeWithText("6:30", substring = true).assertExists()
+    compose.onNodeWithTag("reminder-monday").performClick()
+    assertEquals(on.days - DayOfWeek.MONDAY, set.last().days)
   }
 
   @Test

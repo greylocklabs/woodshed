@@ -16,6 +16,7 @@ import com.larakelley.woodshed.domain.Instrument
 import com.larakelley.woodshed.domain.KeyPolicy
 import com.larakelley.woodshed.domain.Lifecycle
 import com.larakelley.woodshed.domain.PlanBlock
+import com.larakelley.woodshed.domain.ReminderSchedule
 import com.larakelley.woodshed.domain.Transposition
 import com.larakelley.woodshed.domain.bars
 import kotlinx.coroutines.flow.first
@@ -30,6 +31,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
+import java.time.DayOfWeek
 import kotlin.random.Random
 
 @RunWith(RobolectricTestRunner::class)
@@ -80,6 +82,7 @@ class BackupTest {
     MyChangesLibrary(db).save(null, "Vamp", bars("I | IV"))
     repository.setInstrument(Instrument.ALTO_SAX)
     repository.setThemeMode(ThemeMode.DARK)
+    repository.setReminder(ReminderSchedule(enabled = true, minuteOfDay = 7 * 60))
     return own
   }
 
@@ -91,6 +94,7 @@ class BackupTest {
     assertEquals(null, repository.instrument.value)
     assertEquals(ThemeMode.SYSTEM, repository.themeMode.value)
     assertEquals(Transposition.C, repository.transposition.value)
+    assertEquals(ReminderSchedule(), repository.reminder.value)
     // Progress, material and the user's own tune stay.
     assertEquals(2, db.tuneStates().all().size)
     assertEquals(1, db.playlists().all().size)
@@ -184,6 +188,8 @@ class BackupTest {
     repository.setThemeMode(ThemeMode.DARK)
     repository.rememberSession(45, setOf(Focus.SPEED))
     repository.setTabOrder(listOf("Tunes", "Practice"))
+    val reminder = ReminderSchedule(enabled = true, minuteOfDay = 7 * 60 + 30, days = setOf(DayOfWeek.MONDAY, DayOfWeek.THURSDAY))
+    repository.setReminder(reminder)
     val states = db.tuneStates().all().sortedBy { it.standardId }
     val knowledge = db.tuneKnowledge().all()
     val events = db.reviewEvents().all().map { it.copy(id = 0) }
@@ -196,6 +202,7 @@ class BackupTest {
     repository.setTransposition(Transposition.C)
     repository.setThemeMode(ThemeMode.SYSTEM)
     repository.setTabOrder(emptyList())
+    repository.setReminder(ReminderSchedule())
 
     val result = backups.restore(text)
     assertEquals(RestoreResult(tunes = 2, knowledge = 1, reviews = 1, skipped = 0), result)
@@ -207,6 +214,7 @@ class BackupTest {
     assertEquals(ThemeMode.DARK, repository.themeMode.value)
     assertEquals(setOf(Focus.SPEED), repository.sessionFocus)
     assertEquals(listOf("Tunes", "Practice"), repository.tabOrder.value)
+    assertEquals(reminder, repository.reminder.value)
   }
 
   @Test

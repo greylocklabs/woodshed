@@ -1,12 +1,19 @@
 package com.larakelley.woodshed.ui.settings
 
+import android.Manifest
 import android.content.ContentResolver
+import android.content.Context
+import android.content.Intent
 import android.net.Uri
+import android.os.Build
+import android.provider.Settings
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
@@ -19,11 +26,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TimePicker
+import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -37,6 +47,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalUriHandler
@@ -51,7 +62,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withLink
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import androidx.core.app.NotificationManagerCompat
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.viewModelScope
 import com.larakelley.woodshed.data.BackupException
 import com.larakelley.woodshed.data.BackupService
@@ -60,6 +73,7 @@ import com.larakelley.woodshed.data.ThemeMode
 import com.larakelley.woodshed.data.WoodshedRepository
 import com.larakelley.woodshed.domain.Instrument
 import com.larakelley.woodshed.domain.InstrumentGroup
+import com.larakelley.woodshed.domain.ReminderSchedule
 import com.larakelley.woodshed.domain.ReportSubject
 import com.larakelley.woodshed.domain.Transposition
 import com.larakelley.woodshed.theme.AppIcons
@@ -79,6 +93,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.greylocklabs.ui.BackButton
+import org.greylocklabs.ui.GreylockChip
 import org.greylocklabs.ui.Helper
 import org.greylocklabs.ui.LocalColors
 import org.greylocklabs.ui.PillChoice
@@ -88,6 +103,9 @@ import org.greylocklabs.ui.SwitchRow
 import org.greylocklabs.ui.neutralSticker
 import java.text.DateFormat
 import java.time.LocalDate
+import java.time.ZoneId
+import java.time.format.TextStyle
+import java.time.temporal.WeekFields
 import java.util.Date
 import kotlin.math.roundToInt
 
@@ -102,6 +120,7 @@ data class SettingsUi(
   val version: String = "",
   /** Every main tab, in the order the user has them. */
   val tabOrder: List<String> = DEFAULT_TABS,
+  val reminder: ReminderSchedule = ReminderSchedule(),
 )
 
 class SettingsViewModel(
@@ -115,12 +134,12 @@ class SettingsViewModel(
   val ui: StateFlow<SettingsUi> =
     combine(
       combine(repository.instrument, repository.myInstruments, repository.transposition, ::Triple),
-      repository.themeMode,
+      combine(repository.themeMode, repository.reminder, ::Pair),
       repository.lastBackupAt,
       message,
       repository.tabOrder,
-    ) { (i, mine, t), m, last, msg, order ->
-      SettingsUi(i, mine, t, m, last, msg, version, orderTabs(DEFAULT_TABS, order))
+    ) { (i, mine, t), (m, reminder), last, msg, order ->
+      SettingsUi(i, mine, t, m, last, msg, version, orderTabs(DEFAULT_TABS, order), reminder)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SettingsUi(version = version))
 
   fun setInstrument(i: Instrument) = repository.setInstrument(i)
@@ -134,6 +153,8 @@ class SettingsViewModel(
   }
 
   fun setThemeMode(m: ThemeMode) = repository.setThemeMode(m)
+
+  fun setReminder(schedule: ReminderSchedule) = repository.setReminder(schedule)
 
   /** Moves a main tab [by] places; negative moves it towards the start. */
   fun moveTab(name: String, by: Int) = repository.setTabOrder(moveTab(orderTabs(DEFAULT_TABS, repository.tabOrder.value), name, by))
@@ -198,6 +219,7 @@ data class SettingsActions(
   val moveTab: (String, Int) -> Unit = { _, _ -> },
   val resetTabs: () -> Unit = {},
   val setTabOrder: (List<String>) -> Unit = {},
+  val setReminder: (ReminderSchedule) -> Unit = {},
 )
 
 enum class SettingsTab(val label: String) {
@@ -244,6 +266,7 @@ fun SettingsScreen(ui: SettingsUi, actions: SettingsActions, onBack: () -> Unit,
 
 @Composable
 private fun GeneralTab(ui: SettingsUi, actions: SettingsActions) {
+  ReminderSection(ui.reminder, actions.setReminder)
   Padded {
     SectionLabel("Appearance")
     PillChoice(ThemeMode.entries.map { it.label to it }, ui.themeMode, actions.setThemeMode, tagPrefix = "theme")
@@ -258,6 +281,93 @@ private fun GeneralTab(ui: SettingsUi, actions: SettingsActions) {
     }
   }
 }
+
+/** The practice reminder: on or off, its time and its days, and a way to fix notifications being off. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ReminderSection(reminder: ReminderSchedule, set: (ReminderSchedule) -> Unit) {
+  val context = LocalContext.current
+  var notificationsOn by remember { mutableStateOf(NotificationManagerCompat.from(context).areNotificationsEnabled()) }
+  // Turned on or off in Android's settings while Woodshed was in the background.
+  LifecycleResumeEffect(Unit) {
+    notificationsOn = NotificationManagerCompat.from(context).areNotificationsEnabled()
+    onPauseOrDispose {}
+  }
+  val askPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+    notificationsOn = granted
+  }
+  var pickingTime by rememberSaveable { mutableStateOf(false) }
+
+  Padded { SectionLabel("Practice reminder") }
+  SwitchRow(
+    label = "Remind me to practise",
+    checked = reminder.enabled,
+    onChange = { on ->
+      set(reminder.copy(enabled = on))
+      if (on && !notificationsOn && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        askPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
+      }
+    },
+    helper = "Not on days you've already practised",
+    horizontalPadding = 16.dp,
+    modifier = Modifier.testTag("reminder"),
+  )
+  if (!reminder.enabled) return
+  Padded {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+      Text("At", style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(end = 12.dp))
+      StickerButton(onClick = { pickingTime = true }, sticker = neutralSticker, modifier = Modifier.testTag("reminder-time")) {
+        Text(timeLabel(context, reminder.minuteOfDay), style = MaterialTheme.typography.labelLarge)
+      }
+    }
+    val locale = LocalConfiguration.current.locales[0]
+    val first = WeekFields.of(locale).firstDayOfWeek
+    Row(
+      Modifier.horizontalScroll(rememberScrollState()).padding(vertical = 8.dp),
+      horizontalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+      (0L..6L).map { first.plus(it) }.forEach { day ->
+        val on = day in reminder.days
+        GreylockChip(
+          selected = on,
+          onClick = { set(reminder.copy(days = if (on) reminder.days - day else reminder.days + day)) },
+          label = { Text(day.getDisplayName(TextStyle.SHORT, locale)) },
+          modifier = Modifier.testTag("reminder-${day.name.lowercase()}"),
+        )
+      }
+    }
+    if (reminder.days.isEmpty()) Helper("Choose at least one day.")
+    if (!notificationsOn) {
+      Helper("Notifications are off for Woodshed, so the reminder can't show. Turn them on in Android's settings.")
+      TextButton(
+        onClick = {
+          context.startActivity(Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName))
+        },
+        modifier = Modifier.testTag("reminder-notification-settings"),
+      ) { Text("Open notification settings") }
+    }
+  }
+  if (pickingTime) {
+    val state = rememberTimePickerState(reminder.minuteOfDay / 60, reminder.minuteOfDay % 60, android.text.format.DateFormat.is24HourFormat(context))
+    AlertDialog(
+      onDismissRequest = { pickingTime = false },
+      title = { Text("Remind me at") },
+      text = { TimePicker(state) },
+      confirmButton = {
+        TextButton(onClick = {
+          set(reminder.copy(minuteOfDay = state.hour * 60 + state.minute))
+          pickingTime = false
+        }, modifier = Modifier.testTag("reminder-time-ok")) { Text("OK") }
+      },
+      dismissButton = { TextButton(onClick = { pickingTime = false }) { Text("Cancel") } },
+    )
+  }
+}
+
+/** A time of day as the phone shows times, in 12 or 24 hours. */
+private fun timeLabel(context: Context, minuteOfDay: Int): String = android.text.format.DateFormat.getTimeFormat(
+  context,
+).format(Date.from(LocalDate.now().atTime(minuteOfDay / 60, minuteOfDay % 60).atZone(ZoneId.systemDefault()).toInstant()))
 
 /** Settings content other than full-width rows sits on the page's 16dp margins. */
 @Composable

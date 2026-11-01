@@ -1,5 +1,6 @@
 package com.larakelley.woodshed
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -25,6 +26,7 @@ import com.larakelley.woodshed.data.recordedLabel
 import com.larakelley.woodshed.domain.ChangelogRelease
 import com.larakelley.woodshed.domain.Key
 import com.larakelley.woodshed.domain.Phase
+import com.larakelley.woodshed.reminder.Reminders
 import com.larakelley.woodshed.theme.WoodshedTheme
 import com.larakelley.woodshed.ui.AppNavigation
 import com.larakelley.woodshed.ui.Destination
@@ -67,8 +69,19 @@ import kotlinx.coroutines.withContext
 class MainActivity : ComponentActivity() {
   private val app get() = application as WoodshedApplication
 
+  /** What a notification asked to open, such as the reminder's Practice tab, until the screen has shown it. */
+  private var opening by mutableStateOf<String?>(null)
+
+  override fun onNewIntent(intent: Intent) {
+    super.onNewIntent(intent)
+    setIntent(intent)
+    opening = intent.getStringExtra(Reminders.EXTRA_OPEN)
+  }
+
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+    // Only a fresh launch: after a rotation the intent has already been handled.
+    if (savedInstanceState == null) opening = intent.getStringExtra(Reminders.EXTRA_OPEN)
     val metronome = app.metronome
 
     enableEdgeToEdge()
@@ -91,6 +104,10 @@ class MainActivity : ComponentActivity() {
           val transcribe: TranscribeViewModel = viewModel { TranscribeViewModel(app.repository, app.transcriptions) }
           val transcribeUi by transcribe.ui.collectAsStateWithLifecycle()
           val navigation = remember { AppNavigation() }
+          LaunchedEffect(opening) {
+            if (opening == Reminders.OPEN_PRACTICE) navigation.go(Destination.Tab("Practice"))
+            opening = null
+          }
           val tuneSolos = remember(transcribeUi.rows) {
             transcribeUi.rows.filter { it.solo.standardId != null }.groupBy({ it.solo.standardId!! }) { r ->
               SoloLink(
@@ -298,6 +315,7 @@ class MainActivity : ComponentActivity() {
                     resetTabs = settings::resetTabs,
                     setTabOrder = settings::setTabOrder,
                     reset = settings::reset,
+                    setReminder = settings::setReminder,
                   ),
                   onBack = {
                     settings.clearMessage()
