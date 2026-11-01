@@ -44,7 +44,7 @@ The rules that are easy to get wrong:
   Eb +9, F +7, G +5), mod 12. A wrong offset makes every displayed key silently wrong.
 - **Key spelling.** Major keys prefer flats and minor keys prefer sharps, so C# minor never shows as Db minor.
   A tune's key is its tonic plus a separate tonality; an unknown key stays null and shows as unknown rather
-  than guessed. Practising round the keys walks the circle of fourths.
+  than guessed. Practicing round the keys walks the circle of fourths.
 - **Cards and scheduling.** A tune is scheduled whole with SM-2 behind a `Scheduler` interface. Each time it
   comes up it is paired with the tune exercise used longest ago on it, in its usual key or the next one round
   the circle. Only learning and repertoire tunes are due; a tune becomes repertoire at a 21-day interval. Every
@@ -58,7 +58,7 @@ The rules that are easy to get wrong:
   `verified` tunes were sourced field by field; the rest were filled from iReal Pro and the corpus below. An
   exercise with no `families` applies to every instrument.
 
-Not built yet: a vocabulary deck of licks practised in all twelve keys, stats, Bluetooth pedal support, and
+Not built yet: a vocabulary deck of licks practiced in all twelve keys, stats, Bluetooth pedal support, and
 seeded classic recordings for each standard.
 
 ## Credit

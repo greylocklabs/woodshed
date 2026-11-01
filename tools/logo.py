@@ -75,7 +75,7 @@ SIDING_PATHS = [f"M{SIDING_X[0]} {y} H{SIDING_X[1]}" for y in SIDING_YS]
 
 # The drawing spans x 20-108 and y 26.5-116 of its 128 units: the rounded roof peaks below its control point.
 CENTER = (64, 71.25)
-# The standalone logo moves the drawing up by this much, so it sits centred in its own 128-unit frame.
+# The standalone logo moves the drawing up by this much, so it sits centered in its own 128-unit frame.
 LIFT = CENTER[1] - 64
 
 
@@ -101,7 +101,7 @@ def svg():
 
 
 def group(scale):
-    """Scales the drawing and centres it in the icon's 108 units."""
+    """Scales the drawing and centers it in the icon's 108 units."""
     tx, ty = 54 - CENTER[0] * scale, 54 - CENTER[1] * scale
     return f'<group android:translateX="{tx:.2f}" android:translateY="{ty:.2f}" android:scaleX="{scale}" android:scaleY="{scale}">'
 
@@ -157,7 +157,7 @@ def monochrome():
 
 def notification():
     """The status bar draws small icons as a white silhouette at 24dp, so the glyph's outline (x 16-112, y 22.5-114
-    with its stroke; the edge is not drawn) is centred in a 100-unit frame."""
+    with its stroke; the edge is not drawn) is centered in a 100-unit frame."""
     head = HEAD.replace('android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108"',
                         'android:width="24dp" android:height="24dp" android:viewportWidth="100" android:viewportHeight="100"')
     return head + f'<group android:translateX="{50 - 64}" android:translateY="{50 - (22.5 + 114) / 2}">\n' + glyph() + "</group>\n</vector>\n"

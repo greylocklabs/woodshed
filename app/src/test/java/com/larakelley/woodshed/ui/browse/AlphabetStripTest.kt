@@ -26,8 +26,8 @@ class AlphabetStripTest {
   fun aTouchOnALettersCentreSelectsThatLetter() {
     val height = 2_800f
     ALPHABET.forEachIndexed { i, letter ->
-      val centre = height * (i + 1) / (ALPHABET.size + 1)
-      assertEquals("$letter", i, letterIndexAt(centre, height))
+      val center = height * (i + 1) / (ALPHABET.size + 1)
+      assertEquals("$letter", i, letterIndexAt(center, height))
     }
     assertEquals(0, letterIndexAt(0f, height))
     assertEquals(ALPHABET.lastIndex, letterIndexAt(height, height))

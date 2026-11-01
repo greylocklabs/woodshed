@@ -20,7 +20,7 @@ import java.time.ZonedDateTime
 
 /**
  * The daily practice reminder: one alarm at a time, for the next chosen day, which posts a notification unless the
- * user has practised today or skipped it. The alarm is inexact, so it needs no exact-alarm permission and may come a
+ * user has practiced today or skipped it. The alarm is inexact, so it needs no exact-alarm permission and may come a
  * few minutes late.
  */
 class Reminders(
@@ -36,7 +36,7 @@ class Reminders(
   fun createChannel() {
     context.getSystemService(NotificationManager::class.java).createNotificationChannel(
       NotificationChannel(CHANNEL, "Practice reminder", NotificationManager.IMPORTANCE_DEFAULT).apply {
-        description = "A nudge to practise, on the days and at the time you choose"
+        description = "A nudge to practice, on the days and at the time you choose"
       },
     )
   }
@@ -112,7 +112,7 @@ class Reminders(
     if (!NotificationManagerCompat.from(context).areNotificationsEnabled()) return
     val notification = NotificationCompat.Builder(context, CHANNEL)
       .setSmallIcon(R.drawable.ic_notification)
-      .setContentTitle("Time to practise")
+      .setContentTitle("Time to practice")
       .setContentText("Ready to plan today's session?")
       .setCategory(NotificationCompat.CATEGORY_REMINDER)
       .setAutoCancel(true)

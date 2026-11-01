@@ -352,7 +352,7 @@ private fun StatsView(stats: PracticeStats) {
         modifier = Modifier.testTag("stat-tunes"),
       )
       if (stats.topTunes.isNotEmpty()) {
-        SectionLabel("Most practised")
+        SectionLabel("Most practiced")
         stats.topTunes.forEach { (title, reps) ->
           Row(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
             Text(title, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
@@ -378,7 +378,7 @@ private fun StatTile(label: String, value: String, modifier: Modifier, tag: Stri
 }
 
 /**
- * One thin bar per key centre from C, each named and counted in text so the bars are never read by color alone. Major
+ * One thin bar per key center from C, each named and counted in text so the bars are never read by color alone. Major
  * and minor reps on the same tonic share a bar, named with the major spelling.
  */
 @Composable

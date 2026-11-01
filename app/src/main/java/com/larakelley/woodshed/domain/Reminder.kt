@@ -4,7 +4,7 @@ import java.time.DayOfWeek
 import java.time.LocalTime
 import java.time.ZonedDateTime
 
-/** When to remind the user to practise: one time of day, on the days they choose. */
+/** When to remind the user to practice: one time of day, on the days they choose. */
 data class ReminderSchedule(
   val enabled: Boolean = false,
   /** Minutes after midnight, local time. */
