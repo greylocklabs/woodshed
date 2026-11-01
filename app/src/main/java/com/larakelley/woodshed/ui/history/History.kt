@@ -32,6 +32,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -61,7 +62,6 @@ import java.time.YearMonth
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
-import java.util.Locale
 
 data class HistoryUi(
   val sessions: List<PastSession> = emptyList(),
@@ -234,13 +234,14 @@ private fun SessionRow(s: PastSession, zone: ZoneId, onDelete: (Long) -> Unit) {
 @Composable
 private fun CalendarView(ui: HistoryUi, actions: HistoryActions, zone: ZoneId) {
   val callie = LocalColors
+  val locale = LocalConfiguration.current.locales[0]
   val month = ui.month
   LazyColumn(Modifier.fillMaxSize().testTag("calendar")) {
     item {
       Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
         TextButton(onClick = { actions.showMonth(month.minusMonths(1)) }, modifier = Modifier.testTag("month-previous")) { Text("‹ Previous") }
         Text(
-          "${month.month.getDisplayName(TextStyle.FULL, Locale.getDefault())} ${month.year}",
+          "${month.month.getDisplayName(TextStyle.FULL, locale)} ${month.year}",
           style = MaterialTheme.typography.titleMedium,
           modifier = Modifier.weight(1f).testTag("month"),
           textAlign = TextAlign.Center,
@@ -251,7 +252,7 @@ private fun CalendarView(ui: HistoryUi, actions: HistoryActions, zone: ZoneId) {
         Row {
           DayOfWeek.entries.forEach { d ->
             Text(
-              d.getDisplayName(TextStyle.NARROW, Locale.getDefault()),
+              d.getDisplayName(TextStyle.NARROW, locale),
               style = MaterialTheme.typography.labelMedium,
               color = callie.textMuted,
               modifier = Modifier.weight(1f),
