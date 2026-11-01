@@ -29,7 +29,8 @@ else
   mkdir -p build
   echo "Starting $device; its output goes to build/emulator.log."
   nohup "$emulator" -avd "$device" -port "$port" > build/emulator.log 2>&1 &
-  timeout 60 "$adb" -s "$serial" wait-for-device
+  timeout 60 "$adb" -s "$serial" wait-for-device ||
+    { echo "$device did not start; see build/emulator.log." >&2; exit 1; }
 fi
 
 for _ in $(seq 90); do
