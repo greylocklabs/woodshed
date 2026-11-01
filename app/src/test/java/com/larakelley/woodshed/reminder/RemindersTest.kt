@@ -22,6 +22,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
+import java.time.DayOfWeek
 import java.time.ZoneId
 import java.time.ZonedDateTime
 
@@ -133,6 +134,38 @@ class RemindersTest {
     now = sixPm + 3 * 60 * 1000L
     reminders.reschedule()
     assertEquals(sixPm, alarm!!.triggerAtTime)
+  }
+
+  @Test
+  fun anAlarmThatStartsTheAppRemindsOnce() = runTest {
+    val sixPm = now
+    now = hoursFromNow(-6)
+    reminders.reschedule()
+    // The alarm starts the app, which sets the alarm again before the alarm is handled, and it comes twice.
+    now = sixPm + 60 * 1000L
+    reminders.reschedule()
+    reminders.fire()
+    assertEquals(1, notifications.size)
+    context.getSystemService(NotificationManager::class.java).cancelAll()
+    reminders.fire()
+    assertEquals(0, notifications.size)
+  }
+
+  @Test
+  fun aSnoozeLeftOvernightIsDropped() = runTest {
+    reminders.fire()
+    reminders.snooze()
+    // The phone was off past the snooze; the next morning's start sets the evening's reminder, not the old snooze.
+    now = hoursFromNow(15)
+    reminders.reschedule()
+    assertEquals(hoursFromNow(9), alarm!!.triggerAtTime)
+  }
+
+  @Test
+  fun aLateAlarmOnADayNotChosenStaysQuiet() = runTest {
+    schedule = schedule.copy(days = setOf(DayOfWeek.MONDAY))
+    reminders.fire()
+    assertEquals(0, notifications.size)
   }
 
   @Test

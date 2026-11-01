@@ -61,17 +61,28 @@ class Reminders(
     }
     val due = prefs.getLong(DUE_AT, 0L)
     val snoozed = prefs.getBoolean(SNOOZED, false)
-    val pending = due > 0 && due < next && (snoozed || due in now() - LATE_MS..now())
+    // A snooze can be still to come; either can be a little late, but not so late it belongs to another day.
+    val pending = due in now() - LATE_MS..<next && (snoozed || due <= now())
     if (pending) at(due, snoozed) else at(next, snoozed = false)
   }
 
-  /** The alarm went off: remind, unless the reminder was turned off or today needs none, then set the next one. */
+  /**
+   * The alarm went off: remind, unless the reminder was turned off or today needs none, then set the next one. A
+   * scheduled reminder shows once a day and only on a chosen day, so an alarm delivered twice, as when it starts the
+   * app and the app sets it again, reminds once; a snooze shows again.
+   */
   suspend fun fire() {
+    val snoozed = prefs.getBoolean(SNOOZED, false)
     prefs.edit {
       remove(DUE_AT)
       remove(SNOOZED)
     }
-    if (schedule().enabled && !skippedToday() && !practisedToday()) post()
+    val reminder = schedule()
+    val wanted = snoozed || (today().dayOfWeek in reminder.days && prefs.getString(SHOWN, null) != today().toString())
+    if (reminder.enabled && wanted && !skippedToday() && !practicedToday()) {
+      post()
+      prefs.edit { putString(SHOWN, today().toString()) }
+    }
     reschedule()
   }
 
@@ -93,7 +104,7 @@ class Reminders(
   }
 
   /** A session started, or anything graded, since midnight. */
-  private suspend fun practisedToday(): Boolean {
+  private suspend fun practicedToday(): Boolean {
     val midnight = today().atStartOfDay(zone()).toInstant().toEpochMilli()
     return db.sessions().countSince(midnight) > 0 || db.reviewEvents().countSince(midnight) > 0
   }
@@ -153,6 +164,7 @@ class Reminders(
     private const val CHANNEL = "practice_reminder"
     private const val SKIPPED = "reminder_skipped_on"
     private const val DUE_AT = "reminder_due_at"
+    private const val SHOWN = "reminder_shown_on"
     private const val SNOOZED = "reminder_snoozed"
     private const val SNOOZE_MS = 60 * 60 * 1000L
     private const val WINDOW_MS = 10 * 60 * 1000L
