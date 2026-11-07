@@ -9,6 +9,11 @@ updates:
     commit-message:
       prefix: build
       include: scope
+    # core sets the Android Gradle plugin for every app that builds it, and Gradle allows one
+    # version of it per build, so it moves when core does.
+    ignore:
+      - dependency-name: "com.android.application"
+      - dependency-name: "com.android.library"
     groups:
       androidx:
         patterns: ["androidx.*", "com.android.*"]
