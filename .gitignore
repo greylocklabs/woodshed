@@ -10,6 +10,7 @@ __pycache__/
 /.idea/assetWizardSettings.xml
 .DS_Store
 build/
+play/
 /captures
 .externalNativeBuild
 .cxx
