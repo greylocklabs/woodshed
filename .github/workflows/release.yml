@@ -2,23 +2,42 @@ name: Release
 
 # Pushing a v<version> tag, as `make release` does, publishes a GitHub release with that version's
 # CHANGELOG.md section as its notes and the app attached. Pull requests that touch the release path run
-# every step but publishing, so a broken release is caught before a tag depends on it.
+# every step but publishing, so a broken release is caught before a tag depends on it. Other pull requests skip
+# the release job, which then still reports, so it can be a required check.
 on:
   push:
     tags: ["v[0-9]+.[0-9]+.[0-9]+"]
   pull_request:
-    paths:
-      - .github/workflows/release.yml
-      - scripts/**
-      - VERSION
-      - CHANGELOG.md
-      - app/build.gradle.kts
 
 permissions:
   contents: write
 
 jobs:
+  # Whether to run: always for a tag, and for a pull request only when it changes the release path.
+  changes:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    outputs:
+      release: ${{ steps.files.outputs.release }}
+    steps:
+      - name: Look at what the pull request changes
+        id: files
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          release=true
+          if [ -n "$PR" ]; then
+            files="$(gh api --paginate "repos/$GITHUB_REPOSITORY/pulls/$PR/files" -q '.[].filename')"
+            grep -qE '^(\.github/workflows/release\.yml|scripts/.*|VERSION|CHANGELOG\.md|app/build\.gradle\.kts)$' <<<"$files" ||
+              release=false
+          fi
+          echo "release=$release" >> "$GITHUB_OUTPUT"
+
   release:
+    needs: changes
+    if: needs.changes.outputs.release == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
