@@ -16,7 +16,7 @@ ksp = "2.3.14"
 room = "2.8.5"
 robolectric = "4.17"
 serializationJson = "1.13.0"
-spotless = "8.11.0"
+spotless = "8.12.0"
 ktlint = "1.8.0"
 roborazzi = "1.77.0"
 
